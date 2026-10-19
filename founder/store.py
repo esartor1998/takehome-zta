@@ -5,6 +5,7 @@ cite or display is read back out of sqlite, so the two cannot disagree about
 what an item says.
 """
 import json
+import re
 import sqlite3
 
 import chromadb
@@ -115,3 +116,14 @@ def write_vectors(collection, items, vectors):
             embeddings=[vectors[i['id']] for i in chunk],
             metadatas=[{'source': i['source'], 'kind': i['kind'], 'state': i['state']}
                        for i in chunk])
+
+
+def topic_label(conn, topic):
+    """A readable name for a decision topic: the linear title if the topic has
+    an issue, else the earliest email subject without its Re: prefix"""
+    row = conn.execute(
+        "SELECT title FROM items WHERE topic=? AND source='linear' ORDER BY ts LIMIT 1", (topic,)).fetchone()
+    if not row:
+        row = conn.execute(
+            "SELECT title FROM items WHERE topic=? AND kind='email' ORDER BY ts LIMIT 1", (topic,)).fetchone()
+    return re.sub(r'^(re:\s*)+', '', row['title'], flags=re.I) if row else 'plan'

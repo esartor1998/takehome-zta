@@ -129,7 +129,7 @@ def run(judge_model=None, only=None):
             'id': q['id'], 'category': q['category'], 'question': q['question'],
             'answer': result['answer'], 'correct': correct, 'judge_reason': reason,
             'found': result['found'], 'cited': result['cited'], **{f'cite_{k}': v for k, v in cites.items()},
-            'ungrounded': len(result['ungrounded_sentences']), 'seconds': result['seconds'],
+            'ungrounded': len(result['ungrounded_sentences']), 'cites_dropped': result['cites_dropped'], 'cites_added': result['cites_added'], 'seconds': result['seconds'],
             'prompt_tokens': result['prompt_tokens'], 'completion_tokens': result['completion_tokens'],
             'projected_cost': projected_cost(result),
         })

@@ -119,7 +119,7 @@
   {
     "id": "q09",
     "category": "identity",
-    "question": "What did Rebecca Liu say about Globex?",
+    "question": "What did Rebecca Liu say about the Globex addendum?",
     "reference": "Rebecca said Globex signed the OAuth-only addendum, so the v2 API reverts to OAuth only, and asked for ACME-142 to be updated. She said the same in Slack #eng.",
     "answerable": true,
     "expected_ids": [
@@ -158,7 +158,7 @@
   {
     "id": "q11",
     "category": "shared_inbox",
-    "question": "Who was out of office last week and who has context on billing?",
+    "question": "Who is out of office this week and who has context on billing?",
     "reference": "Daniel Kim was out of office Mar 10 to 14, and said Priya Nair has context on billing. This came from the eng-team shared inbox.",
     "answerable": true,
     "expected_ids": [

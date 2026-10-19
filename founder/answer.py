@@ -6,6 +6,7 @@ mangle it sometimes, and a dropped digit is a citation to nothing.
 """
 import re
 import time
+from datetime import datetime
 
 from . import config, llm, retrieve, store
 
@@ -34,6 +35,8 @@ Answer: Priya Nair owns the billing migration [2]. Daniel Kim asked to push it b
 MODE_HINTS = {
     'meetings': 'Cover: the meeting title, its time, who attends, and anything that changed '
                 '(a reschedule, a cancelled earlier slot) with the reason.',
+    'cancel': 'Say whether the event is CANCELLED or CONFIRMED. Quote the calendar note for where '
+              'or when it moved. Do not invent a reason.',
     'blocked': 'List each blocked issue as: identifier, title, owner.',
     'decisions': 'State the current decision first, then what it replaced and who changed it.',
 }
@@ -78,7 +81,10 @@ def render_item(conn, item, label, people_names):
     if row['flags']:
         tags.append('data issues: ' + ','.join(row['flags']))
     line = head + (f" ({'; '.join(tags)})" if tags else '')
-    return f"{line}\n    {row['body'][:BODY_CHARS]}"
+    body = row['body'][:BODY_CHARS]
+    if row['kind'] == 'event' and body:
+        body = f'calendar note: {body}'
+    return f"{line}\n    {body}"
 
 
 def expand_decision_context(conn, ids, limit=3):
@@ -104,10 +110,74 @@ def context_block(context, number):
     return match.group(0) if match else ''
 
 
-def build_context(conn, ids):
+MAX_PREVIOUS_STAGES = 2   # newest first, older history is rarely what was asked
+STAGE_GAP_HOURS = 12      # events closer than this belong to one change of plan
+SOURCE_RANK = {'linear': 0, 'slack': 1, 'gmail': 2}   # cleanest phrasing first
+
+
+def _day(ts):
+    return datetime.fromisoformat(ts.replace('Z', '+00:00')).strftime('%b %d').replace(' 0', ' ')
+
+
+def _stages(rows):
+    """Group decision events into stages (newest stage first). The email, the
+    slack post and the linear edit for one change land minutes apart, and
+    listing each separately made the model count them as separate decisions"""
+    stages = []
+    for row in sorted(rows, key=lambda r: r['ts']):
+        t = datetime.fromisoformat(row['ts'].replace('Z', '+00:00'))
+        if stages and (t - stages[-1][-1]['_t']).total_seconds() < STAGE_GAP_HOURS * 3600:
+            stages[-1].append(dict(row, _t=t))
+        else:
+            stages.append([dict(row, _t=t)])
+    return stages[::-1]
+
+
+def _pick(stage):
+    return min(stage, key=lambda r: SOURCE_RANK.get(r['source'], 3))
+
+
+def decision_timelines(conn, ids, limit=2):
+    """One distilled entry per decision topic among the retrieved items:
+    current state first, then what it replaced, then any record still carrying
+    a retracted value. Shown raw, a reversal thread made the 3B model answer
+    with whichever side it read last. Each entry cites the current item"""
+    names = {r['id']: r['name'] for r in conn.execute('SELECT id, name FROM people')}
+    topics = []
+    for item_id in ids:
+        row = conn.execute('SELECT topic FROM decisions WHERE item_id=?', (item_id,)).fetchone()
+        if row and row['topic'] not in topics:
+            topics.append(row['topic'])
+    out = []
+    for topic in topics[:limit]:
+        rows = [dict(r) for r in conn.execute(
+            'SELECT d.*, i.author FROM decisions d JOIN items i ON i.id=d.item_id '
+            'WHERE d.topic=? ORDER BY d.ts DESC', (topic,))]
+        current = [r for r in rows if r['status'] == 'current']
+        if not current:
+            continue
+        who = lambda r: names.get(r['author'], 'unknown')
+        stages = _stages([r for r in rows if r['status'] == 'superseded'])
+        lines = [f"DECISION TIMELINE for '{store.topic_label(conn, topic)}'. CURRENT: {_pick(current)['value']} "
+                 f"({who(_pick(current))}, {_day(current[0]['ts'])})."]
+        for stage in stages[:MAX_PREVIOUS_STAGES]:
+            lines.append(f"PREVIOUS, replaced: {_pick(stage)['value']} ({who(_pick(stage))}, {_day(stage[0]['ts'])}).")
+        for r in rows:
+            if r['status'] == 'stale':
+                lines.append(f"OUTDATED record still says: {r['value']} ({r['item_id'].split('@')[0].split(':')[1]}).")
+        out.append(('\n    '.join(lines), current[0]['item_id']))
+    return out
+
+
+def build_context(conn, ids, timelines=()):
     names = {r['id']: r['name'] for r in conn.execute('SELECT id, name FROM people')}
     labels, lines = {}, []
-    for number, item_id in enumerate(ids, 1):
+    for text, cite_id in timelines:
+        number = len(labels) + 1
+        labels[number] = cite_id
+        lines.append(f'[{number}] {text}')
+    for item_id in ids:
+        number = len(labels) + 1
         row = conn.execute('SELECT * FROM items WHERE id=?', (item_id,)).fetchone()
         labels[number] = item_id
         lines.append(render_item(conn, row, number, names))
@@ -115,27 +185,52 @@ def build_context(conn, ids):
 
 
 def _content_words(text):
-    return {w for w in re.findall(r'[a-z0-9]+', text.lower()) if len(w) > 2 and w not in retrieve.STOP}
+    return {w for w in re.findall(r'[a-z0-9]+', CITE_RE.sub('', text).lower())
+            if len(w) > 2 and w not in retrieve.STOP}
 
 
-def repair_citations(text, context_by_label):
-    """Attach a citation to sentences the model left bare, but only when one
-    retrieved item clearly says the same thing: at least two shared content
-    words and half of the sentence covered. The 3B model drops markers on short
-    answers about 1 time in 5, and a bare correct sentence is a harness miss,
-    not a hallucination. Anything weaker stays uncited and is reported"""
-    out = []
-    for sentence in re.split(r'(?<=[.!?])\s+', text):
-        if sentence.strip() and not CITE_RE.search(sentence) and len(sentence.split()) > 3 \
-                and CANT_FIND.lower().rstrip('.') not in sentence.lower():
+# a cited item only survives if it supports the sentence about as well as the
+# best retrieved item does. the 3B model cited two unrelated linear issues for
+# 'Daniel asked to push the billing migration', because they shared his name and
+# 'migration'. the email shared six words, the issues three
+KEEP_RATIO = 0.7
+MIN_SHARED = 2
+ADD_MIN_RATIO = 0.5   # share of the sentence the item must cover to be added
+
+
+def ground_citations(text, blocks, current):
+    """Check every citation against the words it is supposed to support.
+
+    blocks: label -> rendered context text for every label
+    current: labels that are not STALE, SUPERSEDED or CANCELLED. only these can
+    be added to a sentence, so a bare 'ship date is Mar 22' is never pinned on
+    the stale record that says Mar 20.
+    Returns (text, dropped, added) where the counts feed the eval."""
+    dropped = added = 0
+    out_lines = []
+    for line in text.split('\n'):
+        pieces = []
+        for sentence in re.split(r'(?<=[.!?])\s+', line):
             words = _content_words(sentence)
-            best = max(context_by_label, key=lambda n: len(words & _content_words(context_by_label[n])),
-                       default=None)
-            shared = len(words & _content_words(context_by_label[best])) if best else 0
-            if best and shared >= 2 and shared / max(1, len(words)) >= 0.5:
-                sentence = sentence.rstrip() + f' [{best}]'
-        out.append(sentence)
-    return ' '.join(out)
+            if len(sentence.split()) <= 3 or CANT_FIND.lower().rstrip('.') in sentence.lower() or not words:
+                pieces.append(sentence)
+                continue
+            support = {n: len(words & _content_words(blocks[n])) for n in blocks}
+            best = max(support.values(), default=0)
+            marks = [int(n) for m in CITE_RE.finditer(sentence) for n in re.split(r'\s*,\s*', m.group(1))]
+            kept = [n for n in dict.fromkeys(marks)
+                    if n in blocks and support[n] >= MIN_SHARED and support[n] >= KEEP_RATIO * best]
+            dropped += len([n for n in marks if n in blocks]) - len(kept)
+            if not kept:
+                cands = [n for n in current if support[n] >= MIN_SHARED
+                         and support[n] / len(words) >= ADD_MIN_RATIO]
+                if cands:
+                    kept = [max(cands, key=lambda n: support[n])]
+                    added += 1
+            bare = CITE_RE.sub('', sentence).rstrip()
+            pieces.append(bare + ''.join(f' [{n}]' for n in kept))
+        out_lines.append(' '.join(pieces))
+    return '\n'.join(out_lines), dropped, added
 
 
 def verify(text, labels):
@@ -160,18 +255,17 @@ def ask(conn, question, k=10):
     found = retrieve.retrieve(conn, question, k=k)
     hints = ' '.join(MODE_HINTS[i] for i in found['intents'] if i in MODE_HINTS)
     ids = expand_decision_context(conn, found['ids'])
-    labels, context = build_context(conn, ids)
+    labels, context = build_context(conn, ids, decision_timelines(conn, ids))
     result = llm.chat(SYSTEM, f'Context items:\n\n{context}\n\nQuestion: {question}\n{hints}', max_tokens=300)
-    # history is never a repair target: a bare 'ship date is Mar 22' must not
-    # get pinned on the stale record that says Mar 20 just because they share words
-    bodies = {n: block for n in labels if not re.search(
-        r'\((?:[^)]*; )?(STALE|SUPERSEDED|CANCELLED)', block := context_block(context, n))}
-    repaired = repair_citations(result['text'].strip(), bodies)
+    blocks = {n: context_block(context, n) for n in labels}
+    current = [n for n, block in blocks.items() if not re.search(
+        r'\((?:[^)]*; )?(STALE|SUPERSEDED|CANCELLED)', block)]
+    repaired, dropped, added = ground_citations(result['text'].strip(), blocks, current)
     text, cited, ungrounded = verify(repaired, labels)
     cant = CANT_FIND.lower().rstrip('.') in text.lower()
     return {
         'question': question, 'answer': text, 'cited': [] if cant else cited,
-        'found': not cant, 'ungrounded_sentences': [] if cant else ungrounded,
+        'found': not cant, 'cites_dropped': dropped, 'cites_added': added, 'ungrounded_sentences': [] if cant else ungrounded,
         'retrieved': ids, 'intents': found['intents'], 'pulls': found['pulls'],
         'prompt_tokens': result['prompt_tokens'], 'completion_tokens': result['completion_tokens'],
         'seconds': time.time() - started,

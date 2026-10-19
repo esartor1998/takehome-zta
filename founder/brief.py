@@ -37,17 +37,6 @@ def _hhmm(text):
     return text[11:16]
 
 
-def _topic_label(conn, topic):
-    """A readable name for a decision topic: the linear title if the topic has
-    an issue, else the earliest email subject without its Re: prefix"""
-    row = conn.execute(
-        "SELECT title FROM items WHERE topic=? AND source='linear' ORDER BY ts LIMIT 1", (topic,)).fetchone()
-    if not row:
-        row = conn.execute(
-            "SELECT title FROM items WHERE topic=? AND kind='email' ORDER BY ts LIMIT 1", (topic,)).fetchone()
-    return re.sub(r'^(re:\s*)+', '', row['title'], flags=re.I) if row else 'plan'
-
-
 PRIORITY_NAMES = {0: 'no priority', 1: 'urgent', 2: 'high', 3: 'medium', 4: 'low'}
 
 
@@ -98,7 +87,7 @@ def recent_decisions(conn):
         current = [r for r in rows if r['status'] == 'current']
         if not current:
             continue
-        out.append({'label': _topic_label(conn, topic), 'current': current[-1], 'history': [r for r in rows if r['status'] == 'superseded'],
+        out.append({'label': store.topic_label(conn, topic), 'current': current[-1], 'history': [r for r in rows if r['status'] == 'superseded'],
                     'stale': [r for r in rows if r['status'] == 'stale']})
     return out
 

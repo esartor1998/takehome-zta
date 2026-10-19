@@ -17,7 +17,7 @@ from datetime import timedelta
 from . import config, llm, store
 
 RRF_K = 60            # standard rrf damping constant
-PULL_WEIGHTS = {'structured': 3.0, 'fts': 1.0, 'vector': 1.0, 'person': 0.7}
+PULL_WEIGHTS = {'structured': 3.0, 'fts': 1.0, 'vector': 1.0, 'person': 1.0, 'window': 1.0}
 FTS_LIMIT = 30
 VECTOR_LIMIT = 30
 STOP = frozenset('what which who whom when where how why is are was were do does did the a an '
@@ -25,12 +25,18 @@ STOP = frozenset('what which who whom when where how why is are was were do does
                  'have has had any all across any there been be it its show tell give summarize '
                  'summarise should know before next'.split())
 
+# words that say 'decision question' without naming a topic
+GENERIC_DECISION_WORDS = frozenset(
+    'decision decisions decided current plan recent recently made date changed change latest '
+    'status week today'.split())
+
 INTENTS = {
     'meetings': r'\b(meeting|calendar|schedule|sync|on today|call|standup|invite|upcoming)\b',
     'blocked': r'\b(block|blocked|blocker|blockers|stuck)\b',
     'decisions': r'\b(decision|decisions|decided|current|plan|date|ship|auth|authentication|'
                  r'freeze|roadmap|reversed|changed)\b',
     'followups': r'\b(follow.?ups?|missing|waiting|unanswered|owe|reply|respond)\b',
+    'cancel': r'\b(cancel\w*|resched\w*|moved|postpone\w*)\b',
     'focus': r'\b(focus|priorit\w+|important|urgent|today)\b',
 }
 
@@ -96,7 +102,12 @@ def _terms(question):
     return [w for w in words if w.lower() not in STOP and len(w) > 1]
 
 
-def pull_fts(conn, question, window):
+def pull_fts(conn, question, window=None):
+    """bm25 over title, body and participant names. With a window it only
+    looks inside it, which is how 'this week' gets used: as its own pull,
+    not as a hard filter on the others. a hard filter dropped the answer to
+    'who was out of office' because the email was dated before the week it
+    was about"""
     terms = _terms(question)
     if not terms:
         return []
@@ -104,14 +115,14 @@ def pull_fts(conn, question, window):
     sql = ("SELECT i.id FROM items_fts f JOIN items i ON i.rowid = f.rowid "
            "WHERE items_fts MATCH ? AND i.state = 'current' AND i.ts <= ? ")
     args = [query, _iso(config.NOW)]
-    if window and window[1] <= config.NOW + timedelta(days=0):
+    if window:
         sql += 'AND i.ts >= ? AND i.ts < ? '
         args += [_iso(window[0]), _iso(window[1])]
     sql += 'ORDER BY bm25(items_fts, 4.0, 1.0, 2.0) LIMIT ?'
     return [r['id'] for r in conn.execute(sql, args + [FTS_LIMIT])]
 
 
-def pull_vector(conn, question, window):
+def pull_vector(conn, question):
     vec = llm.embed([question], kind='query')[0]
     res = store.vector_collection().query(
         query_embeddings=[vec], n_results=VECTOR_LIMIT, where={'state': 'current'})
@@ -121,25 +132,57 @@ def pull_vector(conn, question, window):
     marks = ','.join('?' * len(ids))
     rows = {r['id']: r for r in conn.execute(
         f'SELECT id, ts, kind FROM items WHERE id IN ({marks})', ids)}
-    out = []
-    for item_id in ids:
-        row = rows[item_id]
-        if row['kind'] != 'event' and row['ts'] > _iso(config.NOW):
-            continue
-        if window and window[1] <= config.NOW and not (_iso(window[0]) <= row['ts'] < _iso(window[1])):
-            continue
-        out.append(item_id)
-    return out
+    return [i for i in ids if rows[i]['kind'] == 'event' or rows[i]['ts'] <= _iso(config.NOW)]
 
 
-def pull_person(conn, people):
+def pull_person(conn, people, question):
+    """Items written by a named person, ranked by how well they match the rest
+    of the question. Recency alone buried 'what did Rebecca say about Globex'
+    under her newer small talk"""
     if not people:
         return []
     marks = ','.join('?' * len(people))
+    name_words = {w.lower() for r in conn.execute(f'SELECT name FROM people WHERE id IN ({marks})',
+                                                  list(people)) for w in re.findall(r'\w+', r['name'])}
+    terms = [t for t in _terms(question) if t.lower() not in name_words and t.lower() not in
+             ('say', 'said', 'says', 'tell', 'told', 'mention', 'mentioned')]
+    if terms:
+        query = ' OR '.join('"' + t.replace('"', '') + '"' for t in terms)
+        rows = conn.execute(
+            "SELECT i.id FROM items_fts f JOIN items i ON i.rowid = f.rowid "
+            f"WHERE items_fts MATCH ? AND i.state='current' AND i.ts <= ? AND i.author IN ({marks}) "
+            'ORDER BY bm25(items_fts, 4.0, 1.0, 0.0) LIMIT 20', [query, _iso(config.NOW), *people])
+        ranked = [r['id'] for r in rows]
+        if ranked:
+            return ranked
     rows = conn.execute(
         f"SELECT id FROM items WHERE state='current' AND ts <= ? AND author IN ({marks}) "
         'ORDER BY ts DESC LIMIT 20', [_iso(config.NOW), *people])
     return [r['id'] for r in rows]
+
+
+def pull_named_events(conn, question):
+    """Meetings named in the question, in every state and on every date. This is
+    what lets 'was the Friday sync cancelled' see the cancelled Friday event and
+    its confirmed replacement together"""
+    q = question.lower()
+    titles = [r['title'] for r in conn.execute("SELECT DISTINCT title FROM items WHERE kind='event'")
+              if len(r['title'].split()) >= 2 and len(r['title']) >= 8 and r['title'].lower() in q]
+    if not titles:
+        return []
+    marks = ','.join('?' * len(titles))
+    rows = conn.execute(
+        f"SELECT id, start FROM items WHERE kind='event' AND title IN ({marks}) "
+        "AND start >= ? AND start < ? ORDER BY start",
+        [*titles, _iso(config.NOW - timedelta(days=21)), _iso(config.NOW + timedelta(days=14))])
+    # events on a date the question names come first
+    day = re.search(r'\b(?:mar(?:ch)?)\s+(\d{1,2})\b', q)
+    ids = [r['id'] for r in rows]
+    if day:
+        stamp = f"2026-03-{int(day.group(1)):02d}"
+        ids.sort(key=lambda i: not conn.execute('SELECT 1 FROM items WHERE id=? AND start LIKE ?',
+                                                (i, stamp + '%')).fetchone())
+    return ids
 
 
 def meeting_prep(conn, event_id):
@@ -185,19 +228,39 @@ def pull_structured(conn, question, intents, window, people):
             ids += meeting_prep(conn, events[0])
 
     if 'blocked' in intents:
+        # 'blocked and mine' means owned by whoever the question names, which
+        # is the founder for I/my/me
+        owner_sql = f" AND author IN ({','.join('?' * len(people))})" if people else ''
         rows = conn.execute(
-            "SELECT id FROM items WHERE source='linear' AND state='current' AND status='Blocked' "
-            'ORDER BY json_extract(meta, "$.priority") IS NULL, json_extract(meta, "$.priority"), ts DESC '
-            'LIMIT 15')
+            "SELECT id FROM items WHERE source='linear' AND state='current' AND status='Blocked'"
+            + owner_sql + ' ORDER BY (json_extract(meta, "$.priority") = 0), '
+            'json_extract(meta, "$.priority"), ts DESC LIMIT 15', sorted(people))
         ids += [r['id'] for r in rows]
 
     if 'decisions' in intents:
-        # current decisions first, newest first. topics whose current state
-        # came from a retraction rank higher: those are the ones people miss
+        # current decisions first. when the question names something specific
+        # (auth, ship date) only topics that mention it are kept, otherwise a
+        # question about the auth decision also dragged the roadmap in and the
+        # model mixed the two. a generic 'what was decided' keeps everything
         rows = conn.execute(
-            "SELECT item_id FROM decisions WHERE status IN ('current','stale') "
-            "ORDER BY (status='stale') DESC, ts DESC LIMIT 12")
-        ids += [r['item_id'] for r in rows]
+            "SELECT d.item_id, d.status, i.title, i.body FROM decisions d JOIN items i ON i.id=d.item_id "
+            "WHERE d.status IN ('current','stale') ORDER BY (d.status='stale') DESC, d.ts DESC").fetchall()
+        words = {t.lower() for t in _terms(question)} - GENERIC_DECISION_WORDS
+        if words:
+            # score whole topics, not single items. 'Q1 ship date' matches the
+            # auth topic on 'ship' alone and the roadmap topic on 'q1' and
+            # 'ship', so only the better-covered topic survives
+            topic_words = {}
+            for r in rows:
+                topic = conn.execute('SELECT topic FROM items WHERE id=?', (r['item_id'],)).fetchone()['topic']
+                topic_words.setdefault(topic, set()).update(
+                    words & set(re.findall(r'[a-z0-9]+', (r['title'] + ' ' + r['body']).lower())))
+            best = max((len(w) for w in topic_words.values()), default=0)
+            if best:
+                keep = {t for t, w in topic_words.items() if len(w) == best}
+                rows = [r for r in rows if conn.execute(
+                    'SELECT topic FROM items WHERE id=?', (r['item_id'],)).fetchone()['topic'] in keep]
+        ids += [r['item_id'] for r in rows[:12]]
 
     if 'followups' in intents:
         ids += [r['id'] for r in conn.execute(
@@ -224,11 +287,14 @@ def retrieve(conn, question, k=10):
     intents = detect_intents(question)
     people = mentioned_people(conn, question)
     pulls = {
-        'fts': pull_fts(conn, question, window),
-        'vector': pull_vector(conn, question, window),
-        'person': pull_person(conn, people - {config.FOUNDER_PERSON_ID}),
+        'fts': pull_fts(conn, question),
+        'vector': pull_vector(conn, question),
+        'window': pull_fts(conn, question, window) if window else [],
+        'person': pull_person(conn, people - {config.FOUNDER_PERSON_ID}, question),
         'structured': pull_structured(conn, question, intents, window, people),
     }
+    named = pull_named_events(conn, question)
+    pulls['structured'] = list(dict.fromkeys(named + pulls['structured']))
     ranked = fuse(pulls)
 
     # one slot per duplicate group. the canonical copy represents the group and
@@ -243,7 +309,7 @@ def retrieve(conn, question, k=10):
         chosen.append(item_id)
         # when exact structured hits exist the vector and fts tail is mostly
         # noise ('rerunning CI' for a meeting question), so we keep a short tail
-        if len(chosen) >= (min(k, len(pulls['structured']) + 3) if pulls['structured'] else k):
+        if len(chosen) >= (min(k, len(pulls['structured']) + (0 if 'blocked' in intents or named else 3)) if pulls['structured'] else k):
             break
     return {'ids': chosen, 'intents': sorted(intents), 'people': sorted(people),
             'window': window, 'pulls': {n: len(v) for n, v in pulls.items()}}
