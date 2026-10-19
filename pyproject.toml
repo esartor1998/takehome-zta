@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "founder"
+version = "0.1.0"
+description = "context engine and assistant for a startup founder"
+requires-python = ">=3.11"
+dependencies = ["chromadb==1.5.9"]
+
+[project.scripts]
+founder = "founder.cli:main"
+
+[tool.setuptools]
+packages = ["founder"]
