@@ -1,19 +1,19 @@
 {
   "summary": {
-    "questions": 15,
+    "questions": 18,
     "model": "llama3.2:latest",
     "judge_model": "llama3.2:latest",
-    "accuracy": 0.8666666666666667,
-    "citation_recall": 0.8555555555555555,
-    "citation_precision": 0.85,
+    "accuracy": 0.7777777777777778,
+    "citation_recall": 0.8796296296296297,
+    "citation_precision": 0.8101851851851852,
     "forbidden_cites": 0,
-    "ungrounded_sentences": 1,
-    "latency_p50": 0.6445925235748291,
-    "latency_max": 1.697742223739624,
+    "ungrounded_sentences": 4,
+    "latency_p50": 0.7180142402648926,
+    "latency_max": 1.8653552532196045,
     "latency_over_budget": 0,
-    "tokens_in_mean": 798.8666666666667,
-    "tokens_out_mean": 48.2,
-    "projected_cost_mean": 0.0010398666666666667,
+    "tokens_in_mean": 732.8333333333334,
+    "tokens_out_mean": 57.72222222222222,
+    "projected_cost_mean": 0.0010214444444444444,
     "actual_cost": 0.0
   },
   "rows": [
@@ -34,7 +34,7 @@
       "ungrounded": 0,
       "cites_dropped": 2,
       "cites_added": 0,
-      "seconds": 0.5527455806732178,
+      "seconds": 0.6964478492736816,
       "prompt_tokens": 730,
       "completion_tokens": 18,
       "projected_cost": 0.00082
@@ -57,7 +57,7 @@
       "ungrounded": 0,
       "cites_dropped": 1,
       "cites_added": 2,
-      "seconds": 0.80265212059021,
+      "seconds": 0.7567915916442871,
       "prompt_tokens": 832,
       "completion_tokens": 55,
       "projected_cost": 0.001107
@@ -79,7 +79,7 @@
       "ungrounded": 0,
       "cites_dropped": 0,
       "cites_added": 2,
-      "seconds": 0.7405238151550293,
+      "seconds": 0.7960042953491211,
       "prompt_tokens": 488,
       "completion_tokens": 61,
       "projected_cost": 0.000793
@@ -101,7 +101,7 @@
       "ungrounded": 0,
       "cites_dropped": 0,
       "cites_added": 2,
-      "seconds": 0.5689620971679688,
+      "seconds": 0.6257266998291016,
       "prompt_tokens": 796,
       "completion_tokens": 33,
       "projected_cost": 0.000961
@@ -121,7 +121,7 @@
       "ungrounded": 0,
       "cites_dropped": 0,
       "cites_added": 0,
-      "seconds": 0.4441215991973877,
+      "seconds": 0.2437744140625,
       "prompt_tokens": 976,
       "completion_tokens": 11,
       "projected_cost": 0.001031
@@ -143,7 +143,7 @@
       "ungrounded": 1,
       "cites_dropped": 4,
       "cites_added": 0,
-      "seconds": 0.6445925235748291,
+      "seconds": 0.5726466178894043,
       "prompt_tokens": 521,
       "completion_tokens": 48,
       "projected_cost": 0.000761
@@ -165,7 +165,7 @@
       "ungrounded": 0,
       "cites_dropped": 0,
       "cites_added": 0,
-      "seconds": 0.6147682666778564,
+      "seconds": 0.6338152885437012,
       "prompt_tokens": 596,
       "completion_tokens": 44,
       "projected_cost": 0.000816
@@ -174,24 +174,25 @@
       "id": "q08",
       "category": "history",
       "question": "What was the original v2 API auth decision on March 6 and who made it?",
-      "answer": "The current decision is: Ship v2 API with OAuth only (v2 API authentication; this is the CURRENT decision) [slack:C01ENG:1773522000.994933].\n\nThis decision replaced the original decision made by Priya Nair on Mar 6, which was: Ship v2 API with OAuth only (v2 API authentication; this was later replaced) [slack:C01ENG:1772812800.963148].",
+      "answer": "The current decision is: Ship v2 API with OAuth only (v2 API authentication; this is the CURRENT decision) [slack:C01ENG:1773522000.994933].\n\nThis decision replaced the previous decision: Ship v2 API with OAuth + API keys (v2 API authentication; this was later replaced) by Marcus Webb on Mar 8 [slack:C01ENG:1772992800.207664].\n\nThe original decision on Mar 6 was made by Priya Nair, who decided: Ship v2 API with OAuth only (v2 API authentication; this was later replaced) [slack:C01ENG:1772812800.963148].",
       "correct": false,
-      "judge_reason": "ref: Priya Nair decided on Mar 6 to ship the v2 API with OAuth only | cand: The current decision is: Ship v2 API with OAuth only (v2 API authentication; this is the CURRENT decision) [slack:C01ENG:1773522000.994933].",
+      "judge_reason": "ref: Priya Nair decided on March 6 to ship the v2 API with OAuth only | cand: The current decision is: Ship v2 API with OAuth only (v2 API authentication; this is the CURRENT decision) [slack:C01ENG:1773522000.994933].",
       "found": true,
       "cited": [
         "slack:C01ENG:1773522000.994933",
+        "slack:C01ENG:1772992800.207664",
         "slack:C01ENG:1772812800.963148"
       ],
       "cite_recall": 1.0,
-      "cite_precision": 0.5,
+      "cite_precision": 0.3333333333333333,
       "cite_forbidden": 0,
       "ungrounded": 0,
       "cites_dropped": 0,
-      "cites_added": 2,
-      "seconds": 0.8703470230102539,
+      "cites_added": 3,
+      "seconds": 1.1073544025421143,
       "prompt_tokens": 838,
-      "completion_tokens": 63,
-      "projected_cost": 0.001153
+      "completion_tokens": 96,
+      "projected_cost": 0.001318
     },
     {
       "id": "q09",
@@ -210,7 +211,7 @@
       "ungrounded": 0,
       "cites_dropped": 0,
       "cites_added": 0,
-      "seconds": 0.528059720993042,
+      "seconds": 0.3415555953979492,
       "prompt_tokens": 895,
       "completion_tokens": 25,
       "projected_cost": 0.00102
@@ -236,7 +237,7 @@
       "ungrounded": 0,
       "cites_dropped": 0,
       "cites_added": 5,
-      "seconds": 0.748631477355957,
+      "seconds": 0.7398760318756104,
       "prompt_tokens": 565,
       "completion_tokens": 58,
       "projected_cost": 0.000855
@@ -245,9 +246,9 @@
       "id": "q11",
       "category": "shared_inbox",
       "question": "Who is out of office this week and who has context on billing?",
-      "answer": "Daniel Kim is out of office from March 10-14 [gmail:469b8c07901db7d8]. Priya Nair has context on billing [gmail:469b8c07901db7d8].",
+      "answer": "Daniel Kim is out of office from March 10-14 [gmail:469b8c07901db7d8]. Priya has context on billing [gmail:469b8c07901db7d8].",
       "correct": true,
-      "judge_reason": "ref: Daniel Kim was out of office Mar 10 to 14, and said Priya Nair has context on billing | cand: Daniel Kim is out of office from March 10-14 [gmail:469b8c07901db7d8]. Priya Nair has context on billing [gmail:469b8c07901db7d8].",
+      "judge_reason": "ref: Daniel Kim was out of office Mar 10 to 14, and said Priya Nair has context on billing | cand: Daniel Kim is out of office from March 10-14 [gmail:469b8c07901db7d8]. Priya has context on billing [gmail:469b8c07901db7d8]",
       "found": true,
       "cited": [
         "gmail:469b8c07901db7d8"
@@ -258,10 +259,10 @@
       "ungrounded": 0,
       "cites_dropped": 1,
       "cites_added": 1,
-      "seconds": 0.486255407333374,
+      "seconds": 0.5019834041595459,
       "prompt_tokens": 680,
-      "completion_tokens": 27,
-      "projected_cost": 0.000815
+      "completion_tokens": 25,
+      "projected_cost": 0.000805
     },
     {
       "id": "q12",
@@ -278,7 +279,7 @@
       "ungrounded": 0,
       "cites_dropped": 0,
       "cites_added": 0,
-      "seconds": 0.42868614196777344,
+      "seconds": 0.22301650047302246,
       "prompt_tokens": 970,
       "completion_tokens": 11,
       "projected_cost": 0.001025
@@ -287,72 +288,142 @@
       "id": "q13",
       "category": "decisions",
       "question": "What decisions were made recently?",
-      "answer": "1. The current decision is to ship v2 API with OAuth only (v2 API authentication; this is the CURRENT decision) [gmail:ceece9b31878fe40] [linear:ACME-142@20260314T2200].\n2. It replaced the previous decision to ship v2 API with OAuth + API keys (v2 API authentication; this was later replaced) [slack:C01ENG:1772992800.207664].\n3. The previous decision to ship v2 API with OAuth + API keys was changed by Marcus Webb [slack:C01ENG:1772992800.207664].\n4. The current decision to ship v2 API with OAuth only was changed by Rebecca Liu [gmail:ceece9b31878fe40].\n5. The current decision to ship v2 API with OAuth only was also changed by Priya Nair [slack:C01ENG:1773522000.994933].",
+      "answer": "1. The current decision is to ship v2 API with OAuth only [slack:C01ENG:1773522000.994933].\n2. It replaced the previous decision to ship v2 API with OAuth + API keys, which was changed by Marcus Webb [slack:C01ENG:1772992800.207664].\n3. The current decision is to ship v2 API with OAuth only, which replaced the previous decision to ship v2 API with OAuth only, made by Priya Nair [gmail:403df41545d6ec2d].\n4. The current decision is to ship v2 API with OAuth only, which replaced the previous decision to ship v2 API with OAuth + API keys, made by Priya Nair [slack:C01ENG:1772812800.963148].\n5. The current decision is to ship v2 API with OAuth only, which replaced the previous decision to ship v2 API with OAuth + API keys, made by Marcus Webb [slack:C01ENG:1772992800.207664].",
       "correct": true,
-      "judge_reason": "ref: The v2 API auth decision went back to OAuth only on Mar 14. The Q1 ship date was corrected to Mar 22. The Weekly Product Sync moved to Sunday Mar 15 at 16:00 UTC | cand: 1. The current decision is to ship v2 API with OAuth only (v2 API authentication; this is the CURRENT decision) [gmail:ceece9b31878fe40] [linear:ACME-142@20260314T2200]. 2. It replaced the previous decision to ship v2 API with OAuth + API keys (v2 API authentication; this was later replaced) [slack:C01ENG:1772992800.207664]. 3. The previous decision to ship v2 API with OAuth + API keys was changed by Marcus Webb [slack:C01ENG:1772992800.207664]. 4. The current decision to ship v2 API with OAuth only was changed by Rebecca Liu [gmail:ceece9b31878fe40]. 5. The current decision to ship v2 API with OAuth only was also changed by Priya Nair [slack:C01ENG:1773522000.994933]",
+      "judge_reason": "ref: v2 API auth decision went back to OAuth only on Mar 14. Q1 ship date was corrected to Mar 22. Weekly Product Sync moved to Sunday Mar 15 at 16:00 UTC | cand: 1. The current decision is to ship v2 API with OAuth only [slack:C01ENG:1773522000.994933]. 2. It replaced the previous decision to ship v2 API with OAuth + API keys, which was changed by Marcus Webb [slack:C01ENG:1772992800.207664]. 3. The current decision is to ship v2 API with OAuth only, which replaced the previous decision to ship v2 API with OAuth only, made by Priya Nair [gmail:403df41545d6ec2d]. 4. The current decision is to ship v2 API with OAuth only, which replaced the previous decision to ship v2 API with OAuth + API keys, made by Priya Nair [slack:C01ENG:1772812800.963148]. 5. The current decision is to ship v2 API with OAuth only, which replaced the previous decision to ship v2 API with OAuth + API keys, made by Marcus Webb [slack:C01ENG:1772992800.207664].",
       "found": true,
       "cited": [
-        "gmail:ceece9b31878fe40",
-        "linear:ACME-142@20260314T2200",
+        "slack:C01ENG:1773522000.994933",
         "slack:C01ENG:1772992800.207664",
-        "slack:C01ENG:1773522000.994933"
+        "gmail:403df41545d6ec2d",
+        "slack:C01ENG:1772812800.963148"
       ],
       "cite_recall": 0.3333333333333333,
-      "cite_precision": 0.75,
+      "cite_precision": 0.25,
       "cite_forbidden": 0,
       "ungrounded": 0,
-      "cites_dropped": 4,
+      "cites_dropped": 2,
       "cites_added": 2,
-      "seconds": 1.697742223739624,
+      "seconds": 1.8653552532196045,
       "prompt_tokens": 1226,
-      "completion_tokens": 135,
-      "projected_cost": 0.001901
+      "completion_tokens": 161,
+      "projected_cost": 0.002031
     },
     {
       "id": "q14",
       "category": "meeting_prep",
       "question": "What should I know before my next meeting?",
-      "answer": "Before your next meeting, you should know that the meeting title is 'Weekly Product Sync', it is scheduled for Sunday 2026-03-15 16:00 UTC, and it will be attended by Alex Chen, Priya Nair, Marcus Webb, and Hannah Park [calendar:2ded3454537257a5518fa9905e]. The meeting was rescheduled from Friday 2026-03-13 10:00 UTC, which was initially cancelled due to a Globex call moved [slack:C02PROD:1772866800.609886].",
+      "answer": "Before your next meeting, you should know that the Weekly Product Sync meeting has been rescheduled from Friday, March 13 to Sunday, March 15 at 16:00 UTC. The attendees are Alex Chen, Priya Nair, Marcus Webb, and Hannah Park [calendar:2ded3454537257a5518fa9905e]. The meeting was originally scheduled for Friday, March 13 but was moved due to a calendar note.",
       "correct": true,
-      "judge_reason": "ref: Weekly Product Sync today at 16:00 UTC with Priya Nair, Marcus Webb and Hannah Park. It was rescheduled from Friday Mar 13 | cand: Weekly Product Sync, Sunday 2026-03-15 16:00 UTC, attended by Alex Chen, Priya Nair, Marcus Webb, and Hannah Park, rescheduled from Friday 2026-03-13 10:00 UTC, initially cancelled due to Globex call",
+      "judge_reason": "ref: Weekly Product Sync meeting rescheduled from Friday Mar 13 | cand: Weekly Product Sync meeting has been rescheduled from Friday, March 13 to Sunday, March 15 at 16:00 UTC",
       "found": true,
       "cited": [
-        "calendar:2ded3454537257a5518fa9905e",
-        "slack:C02PROD:1772866800.609886"
+        "calendar:2ded3454537257a5518fa9905e"
       ],
       "cite_recall": 0.5,
-      "cite_precision": 0.5,
+      "cite_precision": 1.0,
       "cite_forbidden": 0,
-      "ungrounded": 0,
+      "ungrounded": 2,
       "cites_dropped": 0,
       "cites_added": 1,
-      "seconds": 1.1720936298370361,
+      "seconds": 0.8336904048919678,
       "prompt_tokens": 774,
-      "completion_tokens": 92,
-      "projected_cost": 0.001234
+      "completion_tokens": 76,
+      "projected_cost": 0.001154
     },
     {
       "id": "q15",
       "category": "stale_record",
       "question": "Is the Linear issue ACME-231 up to date?",
-      "answer": "The current decision for Linear issue ACME-231 is: ship Mar 22 [linear:ACME-142@20260314T2200].\nIt replaced the previous decision: Freeze Mar 10, ship Mar 20 [slack:C02PROD:1772640000.222201].\nThis change was made by Sofia Reyes [slack:C02PROD:1772640000.222201].",
-      "correct": true,
-      "judge_reason": "ref: ACME-231 still says freeze Mar 10 and ship Mar 20, but the ship date was corrected to Mar 22 | cand: The current decision for Linear issue ACME-231 is: ship Mar 22 [linear:ACME-142@20260314T2200].",
+      "answer": "The current decision for Linear issue ACME-231 is: Ship v2 API with OAuth only (v2 API authentication; this is the CURRENT decision) [linear:ACME-142@20260314T2200].\n\nIt replaced the previous decision: Ship v2 API with OAuth + API keys (v2 API authentication; this was later replaced) [slack:C01ENG:1772992800.207664].\n\nIt was changed by Sofia Reyes [slack:C02PROD:1772640000.222201].",
+      "correct": false,
+      "judge_reason": "ref: ACME-231 still says freeze Mar 10 and ship Mar 20, but the ship date was corrected to Mar 22 | cand: The current decision for Linear issue ACME-231 is: Ship v2 API with OAuth only (v2 API authentication; this is the CURRENT decision) [linear:ACME-142@20260314T2200].",
       "found": true,
       "cited": [
         "linear:ACME-142@20260314T2200",
+        "slack:C01ENG:1772992800.207664",
         "slack:C02PROD:1772640000.222201"
       ],
       "cite_recall": 0.5,
-      "cite_precision": 0.5,
+      "cite_precision": 0.3333333333333333,
       "cite_forbidden": 0,
       "ungrounded": 0,
       "cites_dropped": 0,
       "cites_added": 3,
-      "seconds": 0.720942497253418,
+      "seconds": 0.7395806312561035,
       "prompt_tokens": 1096,
-      "completion_tokens": 42,
-      "projected_cost": 0.001306
+      "completion_tokens": 65,
+      "projected_cost": 0.001421
+    },
+    {
+      "id": "q16",
+      "category": "daily_priorities",
+      "question": "What should I focus on today?",
+      "answer": "1. Confirm attendance at the rescheduled Weekly Product Sync meeting at 16:00 UTC today, as it's crucial for aligning the team's efforts. [calendar:2ded3454537257a5518fa9905e]\n2. Update the record ACME-231 to reflect the new ship date of Mar 22, ensuring the Q1 roadmap stays on track. [slack:C02PROD:1772640000.222201]\n3. Review and address the Rate limit tuning issue, as it's currently blocked and owned by you, requiring your attention to resolve. [linear:ACME-365@20260222T0500]",
+      "correct": false,
+      "judge_reason": "ref: Weekly Product Sync at 16:00 UTC today, update Linear issue ACME-231 ship date to Mar 22 | cand: Confirm attendance at the rescheduled Weekly Product Sync meeting at 16:00 UTC today, as it's crucial for aligning the team's efforts. Update the record ACME-231 to reflect the new ship date of Mar 22, ensuring the Q1 roadmap stays on track.",
+      "found": true,
+      "cited": [
+        "calendar:2ded3454537257a5518fa9905e",
+        "slack:C02PROD:1772640000.222201",
+        "linear:ACME-365@20260222T0500"
+      ],
+      "cite_recall": 1.0,
+      "cite_precision": 0.6666666666666666,
+      "cite_forbidden": 0,
+      "ungrounded": 0,
+      "cites_dropped": 0,
+      "cites_added": 0,
+      "seconds": 1.1766784191131592,
+      "prompt_tokens": 220,
+      "completion_tokens": 117,
+      "projected_cost": 0.000805
+    },
+    {
+      "id": "q17",
+      "category": "followups",
+      "question": "What follow-ups am I missing?",
+      "answer": "Rebecca Liu's ask is already handled, no action needed [gmail:ceece9b31878fe40]. Hannah Park's ask is already handled, no action needed [gmail:ff9c102bbfa27a06].",
+      "correct": true,
+      "judge_reason": "ref: None are outstanding | cand: Rebecca Liu's ask is already handled, no action needed [gmail:ceece9b31878fe40]. Hannah Park",
+      "found": true,
+      "cited": [
+        "gmail:ceece9b31878fe40",
+        "gmail:ff9c102bbfa27a06"
+      ],
+      "cite_recall": 1.0,
+      "cite_precision": 1.0,
+      "cite_forbidden": 0,
+      "ungrounded": 0,
+      "cites_dropped": 0,
+      "cites_added": 0,
+      "seconds": 0.38631606101989746,
+      "prompt_tokens": 417,
+      "completion_tokens": 30,
+      "projected_cost": 0.000567
+    },
+    {
+      "id": "q18",
+      "category": "meeting_prep",
+      "question": "Which emails relate to upcoming meetings?",
+      "answer": "Here are the emails related to upcoming meetings:\n\n1. Hannah Park, subject: Weekly Product Sync moved, Tue 2026-03-10 18:00 UTC, Weekly Product Sync [gmail:ff9c102bbfa27a06]\n2. Hannah Park, subject: Weekly Product Sync moved, Sun 2026-03-15 16:00 UTC, Weekly Product Sync [gmail:ff9c102bbfa27a06]\n3. Priya Nair, subject: Pushing Weekly Product Sync by a week, Sun 2026-03-15 14:00 UTC, Weekly Product Sync [calendar:2ded3454537257a5518fa9905e]",
+      "correct": true,
+      "judge_reason": "ref: Hannah Park's email 'Weekly Product Sync moved' (Mar 10), about the Weekly Product Sync on Sunday Mar 15 at 16:00 UTC | cand: Here are the emails related to upcoming meetings:\n1. Hannah Park, subject: Weekly Product Sync moved, Tue 2026-03-10 18:00 UTC, Weekly Product Sync [gmail:ff9c102bbfa27a06]\n2. Hannah Park, subject: Weekly Product Sync moved, Sun 2026-03-15 16:00 UTC, Weekly Product Sync [gmail:ff9c102bbfa27a06]\n3. Priya Nair, subject: Pushing Weekly Product Sync by a week, Sun 2026-03-15 14:00 UTC, Weekly Product Sync [calendar:2ded3454537257a5518fa9905e]",
+      "found": true,
+      "cited": [
+        "gmail:ff9c102bbfa27a06",
+        "calendar:2ded3454537257a5518fa9905e"
+      ],
+      "cite_recall": 1.0,
+      "cite_precision": 0.5,
+      "cite_forbidden": 0,
+      "ungrounded": 1,
+      "cites_dropped": 0,
+      "cites_added": 3,
+      "seconds": 1.1353437900543213,
+      "prompt_tokens": 571,
+      "completion_tokens": 105,
+      "projected_cost": 0.001096
     }
   ]
 }

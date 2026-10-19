@@ -2,9 +2,9 @@
 as of 14:00 UTC
 
 ## Focus today
-1. Confirm attendance at the rescheduled Weekly Product Sync meeting at 16:00 UTC today with Priya Nair, Marcus Webb, and Hannah Park. [calendar:2ded3454537257a5518fa9905e]
-2. Update the ACME-231 record to reflect the new Q1 roadmap date of Mar 22, replacing the original 'Freeze Mar 10, ship Mar 20' plan. [slack:C02PROD:1772640000.222201]
-3. Ensure the v2 API authentication plan is updated to 'Ship v2 API with OAuth only', replacing the previous 'OAuth + API keys' approach. [linear:ACME-142@20260314T2200]
+1. Confirm attendance at the rescheduled Weekly Product Sync meeting at 16:00 UTC today, as it's crucial for aligning the team's efforts. [calendar:2ded3454537257a5518fa9905e]
+2. Update the record ACME-231 to reflect the new ship date of Mar 22, ensuring the Q1 roadmap stays on track. [slack:C02PROD:1772640000.222201]
+3. Review and address the Rate limit tuning issue, as it's currently blocked and owned by you, requiring your attention to resolve. [linear:ACME-365@20260222T0500]
 
 ## Today
 - 16:00-17:00 UTC Weekly Product Sync with Priya Nair, Marcus Webb, Hannah Park - rescheduled from Fri Mar 13 [calendar:2ded3454537257a5518fa9905e]

@@ -233,5 +233,54 @@
       ]
     ],
     "forbidden_ids": []
+  },
+  {
+    "id": "q16",
+    "category": "daily_priorities",
+    "question": "What should I focus on today?",
+    "reference": "The Weekly Product Sync at 16:00 UTC today, and updating the Linear issue ACME-231 so it says the ship date is Mar 22.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "calendar:2ded3454537257a5518fa9905e"
+      ],
+      [
+        "linear:ACME-231@20260304T1800",
+        "slack:C02PROD:1772640000.222201",
+        "gmail:69d12ca0960f4a7d"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "q17",
+    "category": "followups",
+    "question": "What follow-ups am I missing?",
+    "reference": "None are outstanding. Rebecca Liu asked you to update ACME-142, which is already Done, and Hannah Park asked you to decline the old Weekly Product Sync invite, which is already cancelled.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:ceece9b31878fe40",
+        "linear:ACME-142@20260314T2200"
+      ],
+      [
+        "gmail:ff9c102bbfa27a06",
+        "calendar:7d2712a17add94eb1a82e92b23"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "q18",
+    "category": "meeting_prep",
+    "question": "Which emails relate to upcoming meetings?",
+    "reference": "Hannah Park's email 'Weekly Product Sync moved' (Mar 10), about the Weekly Product Sync on Sunday Mar 15 at 16:00 UTC.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:ff9c102bbfa27a06"
+      ]
+    ],
+    "forbidden_ids": []
   }
 ]

@@ -155,43 +155,74 @@ def repeated_customer_issues(conn):
     return sorted(out, key=lambda c: -len(c['items']))
 
 
-def build_facts(conn, names, schedule, decisions, blocked, asks, customers):
-    """Scored facts: (score, text, ids). The score is what makes this a brief
-    and not a dump. Rough order: a meeting soon, a record you must fix, an ask
-    nobody handled, a changed plan, your blocked work, repeating customers"""
+def meeting_changes(conn, names):
+    """Cancelled or moved meetings this week that involve the founder, so the
+    'what happened this week' digest sees them without a model reading the
+    calendar"""
+    since = _iso(config.WEEK_START)
+    out = []
+    for row in conn.execute(
+            "SELECT * FROM items WHERE kind='event' AND start >= ? AND start < ? ORDER BY start",
+            (since, _iso(config.NOW + timedelta(days=1)))):
+        item = store.row_to_item(row)
+        text = f"{item['title']} {item['body']}".lower()
+        if config.FOUNDER_PERSON_ID in item['people'] and (
+                item['status'] == 'cancelled' or re.search(r'resched|moved', text)):
+            out.append(item)
+    return out
+
+
+def build_facts(conn, names, schedule, decisions, blocked, asks, customers, changes=()):
+    """Scored facts as dicts: score, text, ids, cat, handled. The score is what
+    makes this a brief and not a dump. Rough order: a meeting soon, a record
+    you must fix, an ask nobody handled, a changed plan, your blocked work,
+    repeating customers. The same facts feed the question path for open
+    questions like 'what should I focus on', so ask and brief cannot disagree"""
     facts = []
+
+    def add(score, text, ids, cat, handled=False):
+        facts.append({'score': score, 'text': text, 'ids': ids, 'cat': cat, 'handled': handled})
+
     for e in schedule:
         item = e['item']
         if e['upcoming']:
             hours = (_parse(item['start']) - config.NOW).total_seconds() / 3600
             note = f" ({'; '.join(e['notes'])})" if e['notes'] else ''
-            facts.append((100 - hours, f"Meeting today {_hhmm(item['start'])} UTC: {item['title']} with "
-                          f"{', '.join(e['attendees'])}{note}", [item['id']]))
+            add(100 - hours, f"Meeting today {_hhmm(item['start'])} UTC: {item['title']} with "
+                f"{', '.join(e['attendees'])}{note}", [item['id']], 'meeting')
+    for item in changes:
+        state = 'is CANCELLED' if item['status'] == 'cancelled' else 'was moved'
+        add(20, f"Meeting change: {item['title']} on {item['start'][:10]} {state}"
+            + (f" (calendar note: {item['body']})" if item['body'] else ''), [item['id']], 'meeting_change')
     for d in decisions:
         text = f"{d['label']}: current plan is '{d['current']['value']}'"
         if d['history']:
             text += f", replacing '{d['history'][-1]['value']}'"
         ids = [d['current']['item_id']]
-        score = 60
+        # a changed plan with every record already updated is news, not a task
+        score = 25
+        text += '. Records already reflect this, no action needed'
         for stale in d['stale']:
             text += (f". The record {stale['item_id'].split('@')[0].split(':')[1]} still says "
                      f"'{stale['value']}' and must be updated")
             ids.append(stale['item_id'])
             score = 90
-        facts.append((score, text, ids))
+        add(score, text, ids, 'change', handled=score < 90)
     for a in asks:
-        if a['handled_by']:
-            continue
         sender = names.get(a['item']['author'], 'someone')
-        facts.append((80, f"{sender} asked you and nobody has handled it: '{a['item']['body'][:100]}'",
-                      [a['item']['id']]))
+        body = a['item']['body'][:100].replace('\n', ' ')
+        if a['handled_by']:
+            add(10, f"{sender} asked you: '{body}'. It looks already handled, no action needed",
+                [a['item']['id']], 'ask', handled=True)
+        else:
+            add(80, f"{sender} asked you and nobody has handled it: '{body}'", [a['item']['id']], 'ask')
     for item in blocked:
-        facts.append((50 - _rank(item), f"Blocked, owned by you: {item['meta']['identifier']} "
-                      f"{_clean_title(item)}", [item['id']]))
-    for c in customers[:2]:
-        facts.append((30 + len(c['items']), f"{c['customer']} issue mentioned {len(c['items'])} times "
-                      f"in {WINDOW_DAYS} days", [i['id'] for i in c['items']][:3]))
-    return sorted(facts, key=lambda f: -f[0])
+        add(50 - _rank(item), f"Blocked, owned by you: {item['meta']['identifier']} "
+            f"{_clean_title(item)}", [item['id']], 'blocked')
+    for c in customers:
+        add(30 + len(c['items']), f"{c['customer']} issue mentioned {len(c['items'])} times "
+            f"in {WINDOW_DAYS} days", [i['id'] for i in c['items']][:3], 'customer')
+    return sorted(facts, key=lambda f: -f['score'])
 
 
 def _parse(text):
@@ -207,12 +238,12 @@ def focus_section(facts):
     exactly the facts to phrase so it has nothing to rank, and nothing to
     invent a link between: an earlier version given all facts joined two
     unrelated issues in one line"""
-    top = facts[:FOCUS_COUNT]
+    top = [f for f in facts if not f['handled']][:FOCUS_COUNT]
     if not top:
         return '', [], None
-    numbered = '\n'.join(f'[{n}] {text}' for n, (_, text, _) in enumerate(top, 1))
+    numbered = '\n'.join(f"[{n}] {f['text']}" for n, f in enumerate(top, 1))
     result = llm.chat(FOCUS_SYSTEM, f'Facts:\n{numbered}', max_tokens=260)
-    labels = {n: ids for n, (_, _, ids) in enumerate(top, 1)}
+    labels = {n: f['ids'] for n, f in enumerate(top, 1)}
     cited = []
 
     def swap(match):
@@ -227,6 +258,14 @@ def focus_section(facts):
     return answer.CITE_RE.sub(swap, '\n'.join(lines) or result['text'].strip()), cited, result
 
 
+def collect_facts(conn):
+    """All scored facts, without the narrative. Used by the question path"""
+    names = _names(conn)
+    return build_facts(conn, names, todays_schedule(conn, names), recent_decisions(conn),
+                       blocked_for_founder(conn), unanswered_asks(conn),
+                       repeated_customer_issues(conn), meeting_changes(conn, names))
+
+
 def generate(conn):
     names = _names(conn)
     schedule = todays_schedule(conn, names)
@@ -234,7 +273,8 @@ def generate(conn):
     blocked = blocked_for_founder(conn)
     asks = unanswered_asks(conn)
     customers = repeated_customer_issues(conn)
-    facts = build_facts(conn, names, schedule, decisions, blocked, asks, customers)
+    facts = build_facts(conn, names, schedule, decisions, blocked, asks, customers,
+                        meeting_changes(conn, names))
     focus, cited, llm_result = focus_section(facts)
 
     lines = [f"# Morning brief, {config.NOW.strftime('%A %B %d, %Y')}",

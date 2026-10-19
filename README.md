@@ -13,7 +13,7 @@ Everything runs locally: llama 3.2 3B and nomic-embed-text through Ollama, SQLit
 - cancelled and rescheduled meetings
 - hybrid retrieval (fts5, vectors, structured sql) with a fixed clock
 - cited answers where every citation is checked in code
-- a morning brief, and an eval harness with 15 questions
+- a morning brief, and an eval harness with 18 questions
 
 ## How to run
 
@@ -79,41 +79,45 @@ Retrieval is hybrid on purpose. Embeddings are weak on exact ids, dates and stat
 
 ## Evaluation
 
-`eval/questions.json` has 15 questions with a reference answer and the item ids that support it. Each expected-id entry is a group of interchangeable copies (the gmail and slack posts of one update). `founder eval` reports:
+`eval/questions.json` has 18 questions with a reference answer and the item ids that support it. Each expected-id entry is a group of interchangeable copies (the gmail and slack posts of one update). They cover identity, a reversed decision, a stale record, a duplicate, a rescheduled and a cancelled meeting, a shared inbox, two unanswerable questions, and the spec's open questions (focus, follow-ups, emails for upcoming meetings). `founder eval` reports:
 
 - accuracy from an LLM judge
 - citation recall (share of expected groups with at least one cited member) and precision (share of cited ids that are expected)
 - forbidden cites (stale or superseded items cited as current)
 - latency and tokens per question, and a projected hosted cost
 
-Latest results are in `eval/results/latest.md`, the starting point is `eval/results/baseline.md`.
+Latest results are in `eval/results/latest.md`. `eval/results/baseline.md` is the system as it stood at the first harness run (commit `159e235`), graded on the same 18 questions with the same judge, so the two files are comparable. The system had already been hand-tuned before the harness existed (it had hints, a meeting-prep pull and a first citation repair), so the baseline is not a naive one.
 
 | | baseline | latest |
 | --- | --- | --- |
-| accuracy (judge) | 64% | 87% |
-| citation recall | 67% | 86% |
-| citation precision | 67% | 85% |
-| sentences without a citation | 14 | 1 |
-| latency p50 / max | 0.7s / 1.5s | 0.6s / 1.7s |
+| accuracy (3B judge) | 78% | 78% |
+| citation recall | 71% | 88% |
+| citation precision | 63% | 81% |
+| sentences without a citation | 10 | 4 |
+| latency p50 / max | 0.6s / 1.5s | 0.7s / 1.9s |
 
-Changes that moved those numbers, in order:
+Accuracy did not move on the judge, and I do not trust it for before and after: it fails q16 (a correct focus answer with one extra item) and passes q18 (a list with a fabricated third email). The citation numbers are plain id comparison, and those moved. Precision of 0.5 on q18 is the fabricated email showing up.
 
-1. **Judge.** The first judge passed 86% on the baseline answers, including an answer about the wrong topic. Asking for lists of missing and wrong facts made it flag the reference's own facts as wrong. The version that behaved writes the reference key fact and what the candidate says before the verdict, with two worked examples, and abstention is decided in code. Same answers, regraded: 64%. The baseline above is the regraded number.
-2. **Citation grounding.** The model cited two unrelated Linear issues for Daniel's billing question and left bare sentences uncited. The verifier raised citation recall from 67% to 76% on its own and dropped uncited sentences from 16 to 2 after a punctuation fix.
+What I changed because of the results:
+
+1. **Judge.** The first judge passed 86% on the early answers, including one about the wrong topic. Asking for lists of missing and wrong facts made it flag the reference's own facts as wrong. The version that behaved writes the reference key fact and what the candidate says before the verdict, with two worked examples. Abstention is decided in code (see limits).
+2. **Citation grounding.** The model cited two unrelated Linear issues for Daniel's billing question and left sentences bare. Every citation is now checked against the words it supports. Uncited sentences went from 16 to 2 in the run after it landed, and recall went from 58% to 76% (the intermediate runs were 71/58 after retrieval changes, then 93/76 with the verifier, then 71/88 and 86/88 as punctuation and timeline wording were fixed, so recall climbed unevenly and judged accuracy swung 71% to 93% on near-identical answers, which is the judge noise).
 3. **Retrieval scoping.** Window became its own pull instead of a hard filter (a hard filter lost the out-of-office email, dated before the week it was about). Person results are ranked by the rest of the question instead of recency. Blocked is filtered to the named owner. Named meetings are pulled in every state, scoped to the named date. Decision topics are scored whole, so "Q1 ship date" stops pulling in the auth thread.
 4. **Decision timelines.** A raw reversal thread made the model answer with whichever side it read last. Each topic is now a short set of plain sentences ("On Mar 14, Rebecca Liu reversed it to: ..."), one numbered entry per stage, each citing a person's own message. A labelled field list was garbled into the wrong person, so it is sentences.
+5. **Open questions use the brief's facts.** Running the spec's example questions by hand showed "what happened across the company this week" answering with invented "PR merged" claims, and "what follow-ups am I missing" returning any email with a question mark. Focus, follow-up, customer and company-digest questions are now answered from the same verified, scored facts the morning brief uses, so `ask` and `brief` agree. q16 to q18 were added for these after the fact, so the baseline column is their first measurement.
 
-Two questions (q09, q11) were reworded after the baseline because they were ambiguous (Rebecca also reported unrelated Globex flakes, and "last week" on a Sunday is ambiguous), and q15 was added afterward. The baseline file reflects the original wording.
+Questions q09 and q11 were reworded early because they were ambiguous (Rebecca also reported unrelated Globex flakes, and "last week" on a Sunday is ambiguous).
 
 ### Performance budget
 
-Under 5 seconds and under $0.02 per question: both met. Worst case is 1.7s on an RTX 2060 (the models are warmed before the run, so cold load is not charged to a question), and cost is $0 locally. At hosted prices of $1 and $5 per million tokens, the projected cost is about $0.001 per question (about 800 prompt tokens, 50 to 100 out). Ingest takes about 6s with cached model calls, or about 25s cold.
+Under 5 seconds and under $0.02 per question: both met. Worst case is 1.7s on an RTX 2060 (the models are warmed before the run, so cold load is not charged to a question), and cost is $0 locally. At hosted prices of $1 and $5 per million tokens, the projected cost is about $0.001 per question (about 800 prompt tokens, 50 to 100 out). Ingest takes about 6s with cached model calls, and 11s on a fresh clone.
 
 ## Notes and limits
 
-- **The judge is the weak link.** The same 3B model grades its own answers. q15 ("Is ACME-231 up to date?") passes the judge although the answer is wrong, because it says "ship Mar 22" without saying the record is stale. Treat accuracy as a rough signal with roughly plus or minus two questions of noise. Citation numbers are plain id comparison and are the more trustworthy ones. A stronger judge model is the first thing to change when a hosted model is allowed.
+- **The judge is the weak link.** The same 3B model grades its own answers, and abstention is the one place code overrides it (`apply_abstention` in `founder/evaluate.py`): an answerable question the system refused is marked wrong, and an unanswerable one it answered is marked wrong, regardless of the judge. That was added because the judge passed "I cannot find that" for answerable questions. It is easy to remove if you want accuracy to come from the judge alone. Treat accuracy as a rough signal with roughly plus or minus two questions of noise. q15 ("Is ACME-231 up to date?") passes the judge although the answer does not say the record is stale. Citation numbers are plain id comparison and are the more trustworthy ones. A stronger judge model is the first thing to change when a hosted model is allowed.
 - **A 3B model blends topics.** With two decision topics in one context it sometimes attributes one topic's facts to the other. Scoping retrieval to the named topic helps. "What decisions were made recently?" still produces tangled answers, and q02 and q08 (the auth history questions) fail on the judge for that reason. The brief avoids it by not asking the model to reason.
-- **"Is X up to date" questions** are answered by the brief deterministically, not by the question path.
+- **"Is X up to date" questions** are answered correctly by the brief, not by the question path. The model reads "ACME-231" and states the new date without saying the record is stale.
+- **Lists can still contain a fabricated row.** q18 ("which emails relate to upcoming meetings") returns a third email that does not exist. The citation check flags it as precision 0.5, but nothing in the system removes it.
 - **The gate for decision extraction is a regex.** It is narrow on purpose (hundreds of filler items would otherwise hit the model), so a decision phrased without those words is missed. Recall of the gate is not measured.
 - **Filler is random.** Roughly 600 of 666 items are generated filler. The customer-issue section of the brief counts mentions of customer names near words like "reported", which is noisy on this data.
 - **Dedupe thresholds** (3h window, 0.8 cosine, 2 shared words) were tuned on 7 true pairs. One of the 7 pairs found is a loose match ("customer reported flake" and a Hooli email), and the Daniel billing pair is not detected as a duplicate because the wording differs. It is related, not a repeat.

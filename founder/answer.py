@@ -8,7 +8,7 @@ import re
 import time
 from datetime import datetime
 
-from . import config, llm, retrieve, store
+from . import brief, config, llm, retrieve, store
 
 BODY_CHARS = 450
 CANT_FIND = "I can't find that in the available data."
@@ -37,9 +37,27 @@ MODE_HINTS = {
                 '(a reschedule, a cancelled earlier slot) with the reason.',
     'cancel': 'Say whether the event is CANCELLED or CONFIRMED. Quote the calendar note for where '
               'or when it moved. Do not invent a reason.',
+    'emails': 'List each email as: sender, subject, date. Give the meeting it relates to.',
     'blocked': 'List each blocked issue as: identifier, title, owner.',
     'decisions': 'State the current decision first, then what it replaced and who changed it.',
 }
+
+# open questions with no single item as the answer. we answer these from the
+# same verified facts the morning brief is built from, because retrieval over
+# raw items gave 'the PR for the billing migration was merged' (nothing in the
+# data says that) for 'what happened this week'
+DIGEST_INTENTS = (
+    ('followups', r'follow.?ups?|\bmissing\b|waiting on me|unanswered|owe a reply', {'ask'},
+     'Say which asks are still open and which already look handled, with the reason. If none '
+     'is open, say nothing is waiting on you.'),
+    ('customers', r'\bcustomers?\b', {'customer'},
+     'List each customer with how often it came up.'),
+    ('focus', r'\bfocus\b|priorit\w+|what should i (do|work)', None,
+     'Give up to 3 priorities, most urgent first, one line each. Skip items marked no action needed.'),
+    ('company', r'across the company|what happened|what.s going on|company', None,
+     'Summarise each item in one sentence, most important first.'),
+)
+DIGEST_LIMIT = 8
 
 CITE_RE = re.compile(r'\[(\d+(?:\s*,\s*\d+)*)\]')
 
@@ -254,11 +272,32 @@ def verify(text, labels):
     return mapped, list(dict.fromkeys(cited)), ungrounded
 
 
+def digest_facts(conn, question):
+    """(intent, facts) when the question is an open one, else None"""
+    for name, pattern, cats, instruction in DIGEST_INTENTS:
+        if re.search(pattern, question, re.I):
+            facts = brief.collect_facts(conn)
+            if cats:
+                facts = [f for f in facts if f['cat'] in cats]
+            return name, facts[:DIGEST_LIMIT], instruction
+    return None
+
+
 def ask(conn, question, k=10):
     started = time.time()
+    digest = digest_facts(conn, question)
+    if digest:
+        return ask_digest(conn, question, digest, started)
     found = retrieve.retrieve(conn, question, k=k)
-    hints = ' '.join(MODE_HINTS[i] for i in found['intents'] if i in MODE_HINTS)
+    intents = list(found['intents'])
+    if re.search(r'\bemails?\b', question, re.I) and 'meetings' in intents:
+        intents.append('emails')
+    hints = ' '.join(MODE_HINTS[i] for i in intents if i in MODE_HINTS)
     ids = expand_decision_context(conn, found['ids'], found['decision_topics'])
+    if re.search(r'\bemails?\b', question, re.I):
+        # a question about emails gets emails (and the events they relate to).
+        # slack chatter in the list was presented as email
+        ids = [i for i in ids if i.startswith(('gmail:', 'calendar:'))]
     labels, context = build_context(conn, ids, decision_timelines(conn, found['decision_topics']))
     result = llm.chat(SYSTEM, f'Context items:\n\n{context}\n\nQuestion: {question}\n{hints}', max_tokens=300)
     blocks = {n: context_block(context, n) for n in labels}
@@ -271,6 +310,40 @@ def ask(conn, question, k=10):
         'question': question, 'answer': text, 'cited': [] if cant else cited,
         'found': not cant, 'cites_dropped': dropped, 'cites_added': added, 'ungrounded_sentences': [] if cant else ungrounded,
         'retrieved': ids, 'intents': found['intents'], 'pulls': found['pulls'],
+        'prompt_tokens': result['prompt_tokens'], 'completion_tokens': result['completion_tokens'],
+        'seconds': time.time() - started,
+    }
+
+
+def ask_digest(conn, question, digest, started):
+    name, facts, instruction = digest
+    if not facts:
+        return {'question': question, 'answer': 'Nothing needs your attention here.', 'cited': [],
+                'found': True, 'cites_dropped': 0, 'cites_added': 0, 'ungrounded_sentences': [],
+                'retrieved': [], 'intents': [name], 'pulls': {'digest': 0}, 'prompt_tokens': 0,
+                'completion_tokens': 0, 'seconds': time.time() - started}
+    if name == 'focus':
+        # same ranking and phrasing as the brief's focus section, so the two
+        # cannot disagree about what matters today
+        text, cited, result = brief.focus_section(facts)
+        return {'question': question, 'answer': text, 'cited': cited, 'found': True,
+                'cites_dropped': 0, 'cites_added': 0, 'ungrounded_sentences': [],
+                'retrieved': [i for f in facts for i in f['ids']], 'intents': [name],
+                'pulls': {'digest': len(facts)}, 'prompt_tokens': result['prompt_tokens'],
+                'completion_tokens': result['completion_tokens'], 'seconds': time.time() - started}
+    labels = {n: f['ids'][0] for n, f in enumerate(facts, 1)}
+    context = '\n\n'.join(f"[{n}] {f['text']}" for n, f in enumerate(facts, 1))
+    result = llm.chat(SYSTEM, f'Context items:\n\n{context}\n\nQuestion: {question}\n{instruction}',
+                      max_tokens=300)
+    blocks = {n: context_block(context, n) for n in labels}
+    text, dropped, added = ground_citations(result['text'].strip(), blocks, list(labels))
+    text, cited, ungrounded = verify(text, labels)
+    cant = CANT_FIND.lower().rstrip('.') in text.lower()
+    return {
+        'question': question, 'answer': text, 'cited': [] if cant else cited, 'found': not cant,
+        'cites_dropped': dropped, 'cites_added': added,
+        'ungrounded_sentences': [] if cant else ungrounded, 'retrieved': list(labels.values()),
+        'intents': [name], 'pulls': {'digest': len(facts)},
         'prompt_tokens': result['prompt_tokens'], 'completion_tokens': result['completion_tokens'],
         'seconds': time.time() - started,
     }
