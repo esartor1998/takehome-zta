@@ -13,7 +13,6 @@ to matter, and because code is testable.
   4. resolve     per topic: latest decision-bearing event is current, anything
                  whose value was explicitly retracted is stale even if newer
 """
-import json
 import re
 
 from . import llm
@@ -104,12 +103,8 @@ def candidates(items):
 def label(item):
     text = f"{item['title']}\n{item['body']}"
     result = llm.chat(SYSTEM, f"source: {item['source']}\ntext: {text}", schema=SCHEMA,
-                      cache=True, max_tokens=120)
-    try:
-        parsed = json.loads(result['text'])
-    except ValueError:
-        parsed = {'kind': 'none', 'value': '', 'retracts': ''}
-    return parsed
+                      cache=True, max_tokens=120, role='extract')
+    return llm.parse_json(result['text'], {'kind': 'none', 'value': '', 'retracts': ''})
 
 
 def validate(item, parsed):

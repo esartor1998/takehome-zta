@@ -242,7 +242,7 @@ def focus_section(facts):
     if not top:
         return '', [], None
     numbered = '\n'.join(f"[{n}] {f['text']}" for n, f in enumerate(top, 1))
-    result = llm.chat(FOCUS_SYSTEM, f'Facts:\n{numbered}', max_tokens=260)
+    result = llm.chat(FOCUS_SYSTEM, f'Facts:\n{numbered}', max_tokens=260, role='brief')
     labels = {n: f['ids'] for n, f in enumerate(top, 1)}
     cited = []
 

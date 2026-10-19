@@ -311,6 +311,7 @@ def ask(conn, question, k=10):
         'found': not cant, 'cites_dropped': dropped, 'cites_added': added, 'ungrounded_sentences': [] if cant else ungrounded,
         'retrieved': ids, 'intents': found['intents'], 'pulls': found['pulls'],
         'prompt_tokens': result['prompt_tokens'], 'completion_tokens': result['completion_tokens'],
+        'cost': result['cost'], 'projected_cost': result['projected_cost'],
         'seconds': time.time() - started,
     }
 
@@ -321,16 +322,21 @@ def ask_digest(conn, question, digest, started):
         return {'question': question, 'answer': 'Nothing needs your attention here.', 'cited': [],
                 'found': True, 'cites_dropped': 0, 'cites_added': 0, 'ungrounded_sentences': [],
                 'retrieved': [], 'intents': [name], 'pulls': {'digest': 0}, 'prompt_tokens': 0,
-                'completion_tokens': 0, 'seconds': time.time() - started}
+                'completion_tokens': 0, 'cost': 0.0, 'projected_cost': 0.0,
+                'seconds': time.time() - started}
     if name == 'focus':
         # same ranking and phrasing as the brief's focus section, so the two
         # cannot disagree about what matters today
         text, cited, result = brief.focus_section(facts)
+        if result is None:
+            return ask_digest(conn, question, (name, [], instruction), started)
         return {'question': question, 'answer': text, 'cited': cited, 'found': True,
                 'cites_dropped': 0, 'cites_added': 0, 'ungrounded_sentences': [],
                 'retrieved': [i for f in facts for i in f['ids']], 'intents': [name],
                 'pulls': {'digest': len(facts)}, 'prompt_tokens': result['prompt_tokens'],
-                'completion_tokens': result['completion_tokens'], 'seconds': time.time() - started}
+                'completion_tokens': result['completion_tokens'],
+                'cost': result['cost'], 'projected_cost': result['projected_cost'],
+                'seconds': time.time() - started}
     labels = {n: f['ids'][0] for n, f in enumerate(facts, 1)}
     context = '\n\n'.join(f"[{n}] {f['text']}" for n, f in enumerate(facts, 1))
     result = llm.chat(SYSTEM, f'Context items:\n\n{context}\n\nQuestion: {question}\n{instruction}',
@@ -345,5 +351,6 @@ def ask_digest(conn, question, digest, started):
         'ungrounded_sentences': [] if cant else ungrounded, 'retrieved': list(labels.values()),
         'intents': [name], 'pulls': {'digest': len(facts)},
         'prompt_tokens': result['prompt_tokens'], 'completion_tokens': result['completion_tokens'],
+        'cost': result['cost'], 'projected_cost': result['projected_cost'],
         'seconds': time.time() - started,
     }

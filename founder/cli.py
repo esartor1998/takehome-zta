@@ -41,6 +41,11 @@ def cmd_eval(args):
     evaluate.run(judge_model=args.judge_model, only=args.only)
 
 
+def cmd_bench(args):
+    from . import bench
+    bench.run(args.models, args.judge, cold=not args.warm_cache)
+
+
 def cmd_chat(args):
     from . import answer
     conn = _ready()
@@ -72,6 +77,12 @@ def main(argv=None):
     ev.add_argument('--judge-model', help='ollama model for the judge (default: same as answers)')
     ev.add_argument('--only', nargs='*', help='question ids to run')
     ev.set_defaults(func=cmd_eval)
+    bn = sub.add_parser('bench', help='run ingest, brief and eval on each model and compare')
+    bn.add_argument('models', nargs='+', help="e.g. ollama:llama3.2:latest anthropic:claude-haiku-4-5-20251001")
+    bn.add_argument('--judge', default='anthropic:claude-haiku-4-5-20251001',
+                    help='fixed judge for every model (default: hosted haiku)')
+    bn.add_argument('--warm-cache', action='store_true', help='reuse cached ingest labels')
+    bn.set_defaults(func=cmd_bench)
     sub.add_parser('chat', help='interactive questions').set_defaults(func=cmd_chat)
 
     args = parser.parse_args(argv)

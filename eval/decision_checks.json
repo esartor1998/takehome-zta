@@ -1,0 +1,10 @@
+[
+  {"name": "auth reversal resolved to the latest state",
+   "item_id": "linear:ACME-142@20260314T2200", "status": "current"},
+  {"name": "middle reversal (OAuth plus API keys) superseded",
+   "item_id": "gmail:10db167a8a1afba8", "status": "superseded", "allow_missing": true},
+  {"name": "stale linear record flagged although edited after the correction",
+   "item_id": "linear:ACME-231@20260304T1800", "status": "stale"},
+  {"name": "corrected ship date is current",
+   "item_id": "gmail:69d12ca0960f4a7d", "status": "current", "allow_missing": true}
+]

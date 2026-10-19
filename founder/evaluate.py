@@ -59,10 +59,10 @@ JUDGE_SYSTEM = (
 
 def judge(question, reference, candidate, model):
     prompt = f'Question: {question}\nReference: {reference}\nCandidate: {candidate}'
-    result = llm.chat(JUDGE_SYSTEM, prompt, schema=JUDGE_SCHEMA, model=model, max_tokens=300)
-    try:
-        parsed = json.loads(result['text'])
-    except ValueError:
+    result = llm.chat(JUDGE_SYSTEM, prompt, schema=JUDGE_SCHEMA, model=model, max_tokens=300,
+                      role='judge')
+    parsed = llm.parse_json(result['text'], None)
+    if not parsed or 'correct' not in parsed:
         return False, 'judge returned invalid json'
     return bool(parsed['correct']), f"ref: {parsed['reference_key_fact']} | cand: {parsed['candidate_says']}"
 
@@ -93,11 +93,6 @@ def citation_scores(question, result):
     }
 
 
-def projected_cost(result):
-    return (result['prompt_tokens'] * config.PROJECTED_PRICE_IN
-            + result['completion_tokens'] * config.PROJECTED_PRICE_OUT) / 1e6
-
-
 def rejudge(path, judge_model=None):
     """Re-grade saved answers with the current judge. Lets a judge change be
     measured on its own, without re-running the system under test"""
@@ -112,13 +107,14 @@ def rejudge(path, judge_model=None):
     return data
 
 
-def run(judge_model=None, only=None):
+def run(judge_model=None, only=None, save=True):
     judge_model = judge_model or config.CHAT_MODEL
     questions = json.loads(QUESTIONS_PATH.read_text())
     if only:
         questions = [q for q in questions if q['id'] in only]
     conn = store.connect()
-    llm.warm()
+    warm_seconds = llm.warm()
+    llm.warm(judge_model) if judge_model != config.CHAT_MODEL else None
     rows = []
     for q in questions:
         result = answer.ask(conn, q['question'])
@@ -131,14 +127,16 @@ def run(judge_model=None, only=None):
             'found': result['found'], 'cited': result['cited'], **{f'cite_{k}': v for k, v in cites.items()},
             'ungrounded': len(result['ungrounded_sentences']), 'cites_dropped': result['cites_dropped'], 'cites_added': result['cites_added'], 'seconds': result['seconds'],
             'prompt_tokens': result['prompt_tokens'], 'completion_tokens': result['completion_tokens'],
-            'projected_cost': projected_cost(result),
+            'cost': result['cost'], 'projected_cost': result['projected_cost'],
         })
         print(f"{q['id']} {'PASS' if correct else 'FAIL'} cite r={cites['recall']:.2f} "
               f"p={cites['precision']:.2f} f={cites['forbidden']} {result['seconds']:.1f}s  {q['question']}")
     summary = summarize(rows, judge_model)
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    (RESULTS_DIR / 'latest.json').write_text(json.dumps({'summary': summary, 'rows': rows}, indent=2))
-    (RESULTS_DIR / 'latest.md').write_text(render_markdown(summary, rows))
+    summary['warm_seconds'] = warm_seconds
+    if save:
+        RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+        (RESULTS_DIR / 'latest.json').write_text(json.dumps({'summary': summary, 'rows': rows}, indent=2))
+        (RESULTS_DIR / 'latest.md').write_text(render_markdown(summary, rows))
     print(render_summary(summary))
     return summary, rows
 
@@ -154,11 +152,15 @@ def summarize(rows, judge_model):
         'forbidden_cites': sum(r['cite_forbidden'] for r in rows),
         'ungrounded_sentences': sum(r['ungrounded'] for r in rows),
         'latency_p50': statistics.median(secs), 'latency_max': secs[-1],
+        'latency_p95': secs[min(len(secs) - 1, int(round(0.95 * (len(secs) - 1))))],
+        'latency_mean': mean(secs), 'schema_failures': llm.COUNTERS['schema_failures'],
+        'refusals': sum(not r['found'] for r in rows),
         'latency_over_budget': sum(s > BUDGET_SECONDS for s in secs),
         'tokens_in_mean': mean(r['prompt_tokens'] for r in rows),
         'tokens_out_mean': mean(r['completion_tokens'] for r in rows),
         'projected_cost_mean': mean(r['projected_cost'] for r in rows),
-        'actual_cost': 0.0,
+        'actual_cost_mean': mean(r['cost'] for r in rows),
+        'actual_cost_total': sum(r['cost'] for r in rows),
     }
 
 
@@ -168,7 +170,7 @@ def render_summary(s):
             f"ungrounded sentences {s['ungrounded_sentences']}\n"
             f"latency p50 {s['latency_p50']:.1f}s max {s['latency_max']:.1f}s "
             f"({s['latency_over_budget']} over {BUDGET_SECONDS:.0f}s) | "
-            f"projected hosted cost ${s['projected_cost_mean']:.4f}/question, actual $0 (local)")
+            f"cost ${s['actual_cost_mean']:.5f}/question actual, ${s['projected_cost_mean']:.5f} at hosted rates")
 
 
 def render_markdown(s, rows):
