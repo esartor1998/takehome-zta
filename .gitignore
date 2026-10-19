@@ -5,3 +5,4 @@ takehome.pdf
 .chroma/
 __pycache__/
 *.egg-info/
+.venv/

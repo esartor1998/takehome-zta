@@ -344,6 +344,31 @@ def write_jsonl(path, rows):
     with open(path, "w") as f:
         for r in rows: f.write(json.dumps(r) + "\n")
 
+# ---- directory exports ----
+# no randomness below, so ids and filler above are unchanged. real tenants expose
+# these through slack users.list, linear users and the google people api
+SLACK_USERS = {"members": [
+    {"id": v["slack_id"], "name": v["slack_handle"].lstrip("@"), "real_name": v["name"],
+     "profile": {"display_name": v["slack_handle"].lstrip("@"), "email": v["work"]}}
+    for v in PEOPLE.values()]}
+LINEAR_USERS = {"nodes": [
+    {"id": v["linear_id"], "name": v["linear_name"], "displayName": v["linear_name"],
+     "email": v["work"]} for v in PEOPLE.values()]}
+# personal addresses are missing for P5 and P8 on purpose, so the resolver has
+# to fall back on signatures and handle matching for them
+NO_PERSONAL_IN_CONTACTS = {"P5", "P8"}
+CONTACTS = {"connections": [
+    {"resourceName": f"people/{k}",
+     "names": [{"displayName": v["name"]}],
+     "emailAddresses": [{"value": v["work"], "type": "work"}] + (
+         [] if k in NO_PERSONAL_IN_CONTACTS else
+         [{"value": v["personal"], "type": "home"}])}
+    for k, v in PEOPLE.items()]}
+for fname, payload in (("slack_users.json", SLACK_USERS), ("linear_users.json", LINEAR_USERS),
+                       ("contacts.json", CONTACTS)):
+    with open(f"{RAW}/{fname}", "w") as f:
+        json.dump(payload, f, indent=2)
+
 write_jsonl(f"{RAW}/gmail_messages.jsonl", gmail_raw)
 write_jsonl(f"{RAW}/calendar_events.jsonl", cal_raw)
 write_jsonl(f"{RAW}/slack_messages.jsonl", slack_raw)
@@ -372,11 +397,11 @@ for c in cal_raw:
         "organizer":c["organizer"]["email"],
         "description":c.get("description",""),
     })
-slack_users = {v["slack_id"]: v["slack_handle"] for v in PEOPLE.values()}
+slack_handles = {v["slack_id"]: v["slack_handle"] for v in PEOPLE.values()}
 for s in slack_raw:
     norm.append({
         "source":"slack","source_id":s["ts"],"timestamp":datetime.fromtimestamp(float(s["ts"]), tz=timezone.utc).isoformat(),
-        "user":slack_users.get(s.get("user"), s.get("user","")),"text":s["text"],
+        "user":slack_handles.get(s.get("user"), s.get("user","")),"text":s["text"],
         "thread_ts":s.get("thread_ts"),"edited":bool(s.get("edited")),"channel":s.get("channel_id",""),
     })
 for l in linear_raw:
