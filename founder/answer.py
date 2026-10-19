@@ -2,7 +2,7 @@
 
 The model cites with short numbers like [3]. We map them back to real item ids
 in code, because a 3B model copying a 16 character hex id or a slack ts will
-mangle it sometimes, and a dropped digit is a citation to nothing.
+mangle it sometimes, and a dropped digit is a citation to nothing
 """
 import re
 import time
@@ -28,7 +28,7 @@ Rules:
 
 Example
 Question: Who owns the billing migration?
-Answer: Priya Nair owns the billing migration [2]. Daniel Kim asked to push it by a week [4][5]."""
+Answer: Priya Nair owns the billing migration [2]. Daniel Kim asked to push it by a week [4][5]"""
 
 # extra instruction by detected intent. a bare 'what should I know' makes the
 # 3B model refuse, so we say what a good answer to that kind of question covers
@@ -71,7 +71,11 @@ def render_item(conn, item, label, people_names):
 
     decision = conn.execute('SELECT * FROM decisions WHERE item_id=?', (row['id'],)).fetchone()
     if decision:
-        tags.append(decision['status'].upper())
+        if decision['status'] == 'stale':
+            tags.append('STALE: this record still states a value that was corrected later, '
+                        'so it is NOT up to date')
+        else:
+            tags.append(decision['status'].upper())
     siblings = [r for r in conn.execute(
         'SELECT source, title FROM items WHERE dup_group=? AND id!=?', (row['dup_group'], row['id']))] \
         if row['dup_group'] else []
@@ -87,15 +91,10 @@ def render_item(conn, item, label, people_names):
     return f"{line}\n    {body}"
 
 
-def expand_decision_context(conn, ids, limit=3):
+def expand_decision_context(conn, ids, topics, limit=3):
     """For retrieved items that belong to a decision topic, make sure the
     current state of that topic is in the context. Otherwise a question that
-    matches the old wording retrieves only the superseded side of a reversal."""
-    topics = []
-    for item_id in ids:
-        row = conn.execute('SELECT topic FROM decisions WHERE item_id=?', (item_id,)).fetchone()
-        if row and row['topic'] not in topics:
-            topics.append(row['topic'])
+    matches the old wording retrieves only the superseded side of a reversal"""
     extra = []
     for topic in topics:
         rows = conn.execute(
@@ -137,17 +136,12 @@ def _pick(stage):
     return min(stage, key=lambda r: SOURCE_RANK.get(r['source'], 3))
 
 
-def decision_timelines(conn, ids, limit=2):
+def decision_timelines(conn, topics, limit=2):
     """One distilled entry per decision topic among the retrieved items:
     current state first, then what it replaced, then any record still carrying
     a retracted value. Shown raw, a reversal thread made the 3B model answer
     with whichever side it read last. Each entry cites the current item"""
     names = {r['id']: r['name'] for r in conn.execute('SELECT id, name FROM people')}
-    topics = []
-    for item_id in ids:
-        row = conn.execute('SELECT topic FROM decisions WHERE item_id=?', (item_id,)).fetchone()
-        if row and row['topic'] not in topics:
-            topics.append(row['topic'])
     out = []
     for topic in topics[:limit]:
         rows = [dict(r) for r in conn.execute(
@@ -156,16 +150,24 @@ def decision_timelines(conn, ids, limit=2):
         current = [r for r in rows if r['status'] == 'current']
         if not current:
             continue
-        who = lambda r: names.get(r['author'], 'unknown')
-        stages = _stages([r for r in rows if r['status'] == 'superseded'])
-        lines = [f"DECISION TIMELINE for '{store.topic_label(conn, topic)}'. CURRENT: {_pick(current)['value']} "
-                 f"({who(_pick(current))}, {_day(current[0]['ts'])})."]
-        for stage in stages[:MAX_PREVIOUS_STAGES]:
-            lines.append(f"PREVIOUS, replaced: {_pick(stage)['value']} ({who(_pick(stage))}, {_day(stage[0]['ts'])}).")
+        stages = [[dict(r) for r in current]] + _stages([r for r in rows if r['status'] == 'superseded'])[:MAX_PREVIOUS_STAGES]
+        label = store.topic_label(conn, topic)
+        for number, stage in enumerate(stages):
+            # the phrasing comes from the cleanest source (linear), but who made
+            # the call and the item we cite come from a person's own message
+            # a linear record's author is its assignee, not the decider
+            human = min(stage, key=lambda r: (r['source'] == 'linear', SOURCE_RANK.get(r['source'], 3)))
+            status = 'this is the CURRENT decision' if number == 0 else 'this was later replaced'
+            verb = {'decision': 'decided', 'reversal': 'reversed it to',
+                    'correction': 'corrected it to'}.get(human['kind'], 'decided')
+            # a plain sentence relays far better on the 3B model than a labelled
+            # field list, which it garbled into 'changed by <wrong person>'
+            out.append((f"On {_day(stage[0]['ts'])}, {names.get(human['author'], 'unknown')} {verb}: "
+                        f"{_pick(stage)['value']} ({label}; {status})", human['item_id']))
         for r in rows:
             if r['status'] == 'stale':
-                lines.append(f"OUTDATED record still says: {r['value']} ({r['item_id'].split('@')[0].split(':')[1]}).")
-        out.append(('\n    '.join(lines), current[0]['item_id']))
+                out.append((f"The record {r['item_id'].split('@')[0].split(':')[1]} is NOT up to date ({label}). "
+                            f"It still says: {r['value']}. The plan was corrected after it was written", r['item_id']))
     return out
 
 
@@ -205,7 +207,7 @@ def ground_citations(text, blocks, current):
     current: labels that are not STALE, SUPERSEDED or CANCELLED. only these can
     be added to a sentence, so a bare 'ship date is Mar 22' is never pinned on
     the stale record that says Mar 20.
-    Returns (text, dropped, added) where the counts feed the eval."""
+    Returns (text, dropped, added) where the counts feed the eval"""
     dropped = added = 0
     out_lines = []
     for line in text.split('\n'):
@@ -227,15 +229,17 @@ def ground_citations(text, blocks, current):
                 if cands:
                     kept = [max(cands, key=lambda n: support[n])]
                     added += 1
-            bare = CITE_RE.sub('', sentence).rstrip()
-            pieces.append(bare + ''.join(f' [{n}]' for n in kept))
+            # markers go before the closing punctuation. after it, the sentence
+            # splitter reads them as the start of the next sentence
+            bare, tail = re.match(r'(.*?)([.!?]*)\s*$', CITE_RE.sub('', sentence).strip(), re.S).groups()
+            pieces.append(bare.rstrip() + ''.join(f' [{n}]' for n in kept) + tail)
         out_lines.append(' '.join(pieces))
     return '\n'.join(out_lines), dropped, added
 
 
 def verify(text, labels):
     """Map [n] to ids, drop markers that point at nothing, and count sentences
-    that state something without a valid citation. Returns (text, cited, ungrounded)."""
+    that state something without a valid citation. Returns (text, cited, ungrounded)"""
     cited = []
 
     def swap(match):
@@ -254,8 +258,8 @@ def ask(conn, question, k=10):
     started = time.time()
     found = retrieve.retrieve(conn, question, k=k)
     hints = ' '.join(MODE_HINTS[i] for i in found['intents'] if i in MODE_HINTS)
-    ids = expand_decision_context(conn, found['ids'])
-    labels, context = build_context(conn, ids, decision_timelines(conn, ids))
+    ids = expand_decision_context(conn, found['ids'], found['decision_topics'])
+    labels, context = build_context(conn, ids, decision_timelines(conn, found['decision_topics']))
     result = llm.chat(SYSTEM, f'Context items:\n\n{context}\n\nQuestion: {question}\n{hints}', max_tokens=300)
     blocks = {n: context_block(context, n) for n in labels}
     current = [n for n, block in blocks.items() if not re.search(

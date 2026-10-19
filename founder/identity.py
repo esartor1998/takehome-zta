@@ -7,7 +7,7 @@ Sources of truth, in the order we trust them:
 
 Every resolution records how it was made, so a wrong merge can be traced.
 We never merge on first name alone: 'Alex Chen' and 'Alex C. Morgan' are two
-people and a first-name rule folds them together.
+people and a first-name rule folds them together
 """
 import json
 import re
@@ -84,7 +84,7 @@ class IdentityResolver:
     # ---- lookups ------------------------------------------------------
 
     def from_email(self, address):
-        """Return (person id or None, how). Display names are stripped first."""
+        """Return (person id or None, how). Display names are stripped first"""
         match = re.search(r'[\w.+-]+@[\w.-]+', address or '')
         if not match:
             return None, 'none'
@@ -94,7 +94,7 @@ class IdentityResolver:
         if email in self.by_email:
             return self.by_email[email], 'directory'
         # an unknown mailbox on our own domain is a role address (eng-team@),
-        # not a person, and the signature inside it is who actually wrote
+        # not a person, and the signature inside it is who wrote
         if email.endswith('@' + self.company_domain):
             self.shared_inboxes.add(email)
             return None, 'shared_inbox'
@@ -111,7 +111,7 @@ class IdentityResolver:
         return None, 'unresolved'
 
     def from_signature(self, body):
-        """Resolve by a trailing '-- Name' when the first name is unambiguous."""
+        """Resolve by a trailing '-- Name' when the first name is unambiguous"""
         match = SIGNATURE_RE.search(body.strip())
         if not match:
             return None

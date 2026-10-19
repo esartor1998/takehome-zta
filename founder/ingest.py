@@ -1,5 +1,5 @@
-"""Ingest pipeline: raw exports -> identity -> normalize -> dedupe -> topics ->
-decisions -> sqlite + chroma. Run as `founder ingest`."""
+"""Ingest pipeline: raw exports -> identity -> normalise -> dedupe -> topics ->
+decisions -> sqlite + chroma. Run as `founder ingest`"""
 import subprocess
 import sys
 import time

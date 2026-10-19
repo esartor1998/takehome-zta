@@ -58,9 +58,7 @@
         "slack:C02PROD:1772640000.222201"
       ]
     ],
-    "forbidden_ids": [
-      "linear:ACME-231@20260304T1800"
-    ]
+    "forbidden_ids": []
   },
   {
     "id": "q05",
@@ -215,6 +213,23 @@
         "gmail:ff9c102bbfa27a06",
         "slack:C03GEN:1773172800.739474",
         "calendar:7d2712a17add94eb1a82e92b23"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "q15",
+    "category": "stale_record",
+    "question": "Is the Linear issue ACME-231 up to date?",
+    "reference": "No. ACME-231 still says freeze Mar 10 and ship Mar 20, but the ship date was corrected to Mar 22 in email and Slack.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "linear:ACME-231@20260304T1800"
+      ],
+      [
+        "gmail:69d12ca0960f4a7d",
+        "slack:C02PROD:1772640000.222201"
       ]
     ],
     "forbidden_ids": []

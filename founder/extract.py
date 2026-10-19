@@ -78,7 +78,7 @@ def _rule_kind(text):
 
 
 def candidates(items):
-    """Items worth sending to the model, as described in the module header."""
+    """Items worth sending to the model, as described in the module header"""
     live = [i for i in items if i['state'] != 'quarantined']
     hinted = [i for i in live if i['source'] != 'calendar'
               and HINT_RE.search(i['title'] + ' ' + i['body'])]
@@ -113,7 +113,7 @@ def label(item):
 
 
 def validate(item, parsed):
-    """Apply the rules over the model's label. Returns (event dict, disagreed)."""
+    """Apply the rules over the model's label. Returns (event dict, disagreed)"""
     text = f"{item['title']} {item['body']}"
     rule_kind = _rule_kind(text)
     kind = rule_kind or parsed.get('kind', 'none')

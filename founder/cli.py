@@ -1,4 +1,4 @@
-"""Command line entry. `founder` alone prints the morning brief."""
+"""Command line entry. `founder` alone prints the morning brief"""
 import argparse
 import sys
 from pathlib import Path

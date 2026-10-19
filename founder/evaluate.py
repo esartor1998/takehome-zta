@@ -11,7 +11,7 @@ Reports, per question and overall:
 
 The judge is the same local 3B model unless --judge-model says otherwise, so
 treat accuracy as a rough signal. Citation numbers are plain id comparison and
-do not depend on any model.
+do not depend on any model
 """
 import json
 import statistics
@@ -36,7 +36,7 @@ JUDGE_SCHEMA = {
 # two judge designs failed on this model and are why this one has the fields
 # in this order. a bare verdict passed answers about the wrong topic (a reply
 # about a moved Globex call to a question about an addendum). asking for lists
-# of missing and wrong facts made it flag the reference's own facts as wrong.
+# of missing and wrong facts made it flag the reference's own facts as wrong
 # writing the key fact and what the candidate says before the verdict, plus two
 # worked examples, is the version that behaved
 JUDGE_SYSTEM = (
@@ -59,7 +59,7 @@ JUDGE_SYSTEM = (
 
 def judge(question, reference, candidate, model):
     prompt = f'Question: {question}\nReference: {reference}\nCandidate: {candidate}'
-    result = llm.chat(JUDGE_SYSTEM, prompt, schema=JUDGE_SCHEMA, model=model, max_tokens=150)
+    result = llm.chat(JUDGE_SYSTEM, prompt, schema=JUDGE_SCHEMA, model=model, max_tokens=300)
     try:
         parsed = json.loads(result['text'])
     except ValueError:

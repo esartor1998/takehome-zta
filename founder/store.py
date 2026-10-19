@@ -2,7 +2,7 @@
 
 Chroma only ever holds item ids, vectors and a few filter fields. Anything we
 cite or display is read back out of sqlite, so the two cannot disagree about
-what an item says.
+what an item says
 """
 import json
 import re

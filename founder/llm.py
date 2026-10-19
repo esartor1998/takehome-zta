@@ -1,7 +1,7 @@
 """Thin ollama client on urllib, so the only third-party dependency is chroma.
 
 Everything model-shaped goes through chat() and embed(). Swapping in a hosted
-model later means rewriting this file and nothing else.
+model later means rewriting this file and nothing else
 """
 import hashlib
 import json
@@ -41,7 +41,7 @@ def chat(system, user, schema=None, cache=False, max_tokens=700, model=None):
 
     schema is a json schema passed as ollama's `format`, which constrains
     decoding. cache=True is for ingest-time extraction only: the key is the
-    full prompt, so re-ingesting unchanged data costs no model calls.
+    full prompt, so re-ingesting unchanged data costs no model calls
     """
     model = model or config.CHAT_MODEL
     key = hashlib.sha256(json.dumps([model, system, user, schema]).encode()).hexdigest()
@@ -72,7 +72,7 @@ def chat(system, user, schema=None, cache=False, max_tokens=700, model=None):
 
 
 def embed(texts, kind='document'):
-    """Embed with nomic's task prefixes. Without them retrieval quality drops."""
+    """Embed with nomic's task prefixes. Without them retrieval quality drops"""
     prefix = 'search_document: ' if kind == 'document' else 'search_query: '
     vectors = []
     for start in range(0, len(texts), 32):
@@ -83,6 +83,6 @@ def embed(texts, kind='document'):
 
 
 def warm():
-    """Load both models so first-call latency is not charged to a question."""
+    """Load both models so first-call latency is not charged to a question"""
     chat('ok', 'ok', max_tokens=1)
     embed(['ok'])

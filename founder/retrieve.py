@@ -8,7 +8,7 @@ Pulls, each returning ranked item ids:
              embeddings are weak on dates and status
   person     items written by or sent to a person named in the question
 
-Time is resolved against the fixed clock in config.NOW, never the machine's.
+Time is resolved against the fixed clock in config.NOW, never the machine's
 """
 import json
 import re
@@ -46,7 +46,7 @@ def _day_start(dt):
 
 
 def time_window(question):
-    """Return (start, end) datetimes for words like today, or None."""
+    """Return (start, end) datetimes for words like today, or None"""
     q = question.lower()
     today = _day_start(config.NOW)
     if 'tomorrow' in q:
@@ -171,18 +171,25 @@ def pull_named_events(conn, question):
     if not titles:
         return []
     marks = ','.join('?' * len(titles))
-    rows = conn.execute(
-        f"SELECT id, start FROM items WHERE kind='event' AND title IN ({marks}) "
+    rows = [dict(r) for r in conn.execute(
+        f"SELECT id, start, status, title FROM items WHERE kind='event' AND title IN ({marks}) "
         "AND start >= ? AND start < ? ORDER BY start",
-        [*titles, _iso(config.NOW - timedelta(days=21)), _iso(config.NOW + timedelta(days=14))])
-    # events on a date the question names come first
+        [*titles, _iso(config.NOW - timedelta(days=21)), _iso(config.NOW + timedelta(days=14))])]
     day = re.search(r'\b(?:mar(?:ch)?)\s+(\d{1,2})\b', q)
-    ids = [r['id'] for r in rows]
-    if day:
-        stamp = f"2026-03-{int(day.group(1)):02d}"
-        ids.sort(key=lambda i: not conn.execute('SELECT 1 FROM items WHERE id=? AND start LIKE ?',
-                                                (i, stamp + '%')).fetchone())
-    return ids
+    if not day:
+        return [r['id'] for r in rows]
+    # a named date means that day's events. if one was cancelled, the next
+    # confirmed event with the same title is where it went. without this a
+    # question about March 13 returned the standup from March 12 as well, and
+    # the model answered about the wrong day
+    stamp = f"2026-03-{int(day.group(1)):02d}"
+    on_day = [r for r in rows if r['start'].startswith(stamp)]
+    extra = []
+    for r in on_day:
+        if r['status'] == 'cancelled':
+            extra += [n['id'] for n in rows if n['title'] == r['title'] and n['status'] == 'confirmed'
+                      and n['start'] > r['start']][:1]
+    return [r['id'] for r in on_day] + extra or [r['id'] for r in rows]
 
 
 def meeting_prep(conn, event_id):
@@ -203,7 +210,7 @@ def meeting_prep(conn, event_id):
     return [i for i in linked if i != event_id] + recent
 
 
-def pull_structured(conn, question, intents, window, people):
+def pull_structured(conn, question, intents, window, people, extras=None):
     ids = []
     now = _iso(config.NOW)
     founder = config.FOUNDER_PERSON_ID
@@ -261,6 +268,10 @@ def pull_structured(conn, question, intents, window, people):
                 rows = [r for r in rows if conn.execute(
                     'SELECT topic FROM items WHERE id=?', (r['item_id'],)).fetchone()['topic'] in keep]
         ids += [r['item_id'] for r in rows[:12]]
+        if extras is not None:
+            extras['decision_topics'] = list(dict.fromkeys(
+                conn.execute('SELECT topic FROM decisions WHERE item_id=?', (r['item_id'],)).fetchone()['topic']
+                for r in rows[:12]))
 
     if 'followups' in intents:
         ids += [r['id'] for r in conn.execute(
@@ -286,12 +297,13 @@ def retrieve(conn, question, k=10):
     window = time_window(question)
     intents = detect_intents(question)
     people = mentioned_people(conn, question)
+    extras = {}
     pulls = {
         'fts': pull_fts(conn, question),
         'vector': pull_vector(conn, question),
         'window': pull_fts(conn, question, window) if window else [],
         'person': pull_person(conn, people - {config.FOUNDER_PERSON_ID}, question),
-        'structured': pull_structured(conn, question, intents, window, people),
+        'structured': pull_structured(conn, question, intents, window, people, extras),
     }
     named = pull_named_events(conn, question)
     pulls['structured'] = list(dict.fromkeys(named + pulls['structured']))
@@ -311,5 +323,5 @@ def retrieve(conn, question, k=10):
         # noise ('rerunning CI' for a meeting question), so we keep a short tail
         if len(chosen) >= (min(k, len(pulls['structured']) + (0 if 'blocked' in intents or named else 3)) if pulls['structured'] else k):
             break
-    return {'ids': chosen, 'intents': sorted(intents), 'people': sorted(people),
+    return {'ids': chosen, 'decision_topics': extras.get('decision_topics', []), 'intents': sorted(intents), 'people': sorted(people),
             'window': window, 'pulls': {n: len(v) for n, v in pulls.items()}}

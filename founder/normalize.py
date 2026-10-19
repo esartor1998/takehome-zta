@@ -160,7 +160,7 @@ def normalize_all(raw_dir, ident):
     now = _iso(config.NOW)
     for item in items:
         # filler timestamps run up to 23h past the fixed clock. an item from
-        # the future cannot exist yet, so we quarantine it rather than let it
+        # the future cannot exist yet, so we quarantine it instead of let it
         # show up as 'latest'. events are the exception: scheduled ones are
         # supposed to be in the future
         if item['kind'] != 'event' and item['ts'] > now:

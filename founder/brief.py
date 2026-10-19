@@ -4,7 +4,7 @@ the model only picks and phrases the top focus items.
 Why not let the model read everything and 'write a brief': a 3B model skims,
 misses the one stale record, and its output is not testable. Here every
 section is a query we can assert on, and the model is limited to ranking a
-short list of facts we already verified."""
+short list of facts we already verified"""
 import re
 from datetime import timedelta
 
@@ -158,7 +158,7 @@ def repeated_customer_issues(conn):
 def build_facts(conn, names, schedule, decisions, blocked, asks, customers):
     """Scored facts: (score, text, ids). The score is what makes this a brief
     and not a dump. Rough order: a meeting soon, a record you must fix, an ask
-    nobody handled, a changed plan, your blocked work, repeating customers."""
+    nobody handled, a changed plan, your blocked work, repeating customers"""
     facts = []
     for e in schedule:
         item = e['item']

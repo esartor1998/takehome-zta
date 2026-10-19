@@ -6,3 +6,4 @@ takehome.pdf
 __pycache__/
 *.egg-info/
 .venv/
+.state/

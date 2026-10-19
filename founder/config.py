@@ -1,4 +1,4 @@
-"""Paths, the fixed clock and model settings."""
+"""Paths, the fixed clock and model settings"""
 import os
 from datetime import datetime, timezone
 from pathlib import Path

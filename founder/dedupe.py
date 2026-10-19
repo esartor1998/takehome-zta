@@ -1,4 +1,4 @@
-"""Dedupe and topic linking over normalized items.
+"""Dedupe and topic linking over normalised items.
 
 Three separate jobs:
   collapse_linear_snapshots  several records share one issue identifier, only
@@ -40,7 +40,7 @@ def _ts(item):
 
 
 def collapse_linear_snapshots(items):
-    """Mark every linear record except the newest per identifier as superseded."""
+    """Mark every linear record except the newest per identifier as superseded"""
     by_ident = {}
     for item in items:
         if item['source'] == 'linear':
@@ -72,7 +72,7 @@ def _overlaps(first, second):
 
 
 def find_cross_source_dupes(items, vectors):
-    """Group same-author near-duplicates across sources. Returns list of pairs."""
+    """Group same-author near-duplicates across sources. Returns list of pairs"""
     by_author = {}
     for item in items:
         if item['author'] and item['source'] in ('gmail', 'slack') and 'after_now' not in item['flags']:
@@ -116,8 +116,8 @@ def _norm_title(text):
 def build_topics(items, dupe_pairs):
     """Assign each item a topic id. Returns (topics, links).
 
-    Link reasons: thread, ref (shared ACME id), title (normalized subject equals
-    an issue title, or an event title appears in a message), dupe.
+    Link reasons: thread, ref (shared ACME id), title (normalised subject equals
+    an issue title, or an event title appears in a message), dupe
     """
     uf = _UnionFind()
     links = []
@@ -148,7 +148,7 @@ def build_topics(items, dupe_pairs):
             else:
                 ref_owner[ref] = item['id']
 
-    # issue title equals a normalized email subject
+    # issue title equals a normalised email subject
     title_owner = {}
     for item in items:
         if item['source'] == 'linear':
