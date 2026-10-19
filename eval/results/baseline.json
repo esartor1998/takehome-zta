@@ -3,7 +3,7 @@
     "questions": 14,
     "model": "llama3.2:latest",
     "judge_model": "llama3.2:latest",
-    "accuracy": 0.8571428571428571,
+    "accuracy": 0.6428571428571429,
     "citation_recall": 0.6666666666666666,
     "citation_precision": 0.6726190476190477,
     "forbidden_cites": 0,
@@ -23,7 +23,7 @@
       "question": "What did Daniel Kim say about the billing migration?",
       "answer": "Daniel Kim asked to push the billing migration a week [gmail:c1abbf680fedaacd].",
       "correct": true,
-      "judge_reason": "Matches key facts, including date and email address",
+      "judge_reason": "ref: Daniel Kim asked Priya to push the billing migration back by a week | cand: Daniel Kim asked to push the billing migration a week [gmail:c1abbf680fedaacd]",
       "found": true,
       "cited": [
         "gmail:c1abbf680fedaacd"
@@ -43,7 +43,7 @@
       "question": "What is the current authentication decision for the v2 API?",
       "answer": "The current authentication decision for the v2 API is: OAuth + API keys. [linear:ACME-142@20260314T2200] This replaced the previous decision of \"ship v2 API with OAuth only\" which was changed by Alex Chen. [linear:ACME-142@20260314T2200]",
       "correct": false,
-      "judge_reason": "Incorrect authentication decision, should be OAuth only",
+      "judge_reason": "ref: OAuth only, then OAuth + API keys | cand: OAuth + API keys",
       "found": true,
       "cited": [
         "linear:ACME-142@20260314T2200"
@@ -63,7 +63,7 @@
       "question": "What time is the Weekly Product Sync today?",
       "answer": "The Weekly Product Sync is today at 16:00 UTC. [calendar:2ded3454537257a5518fa9905e] The meeting title is 'Weekly Product Sync', its time is 16:00 UTC, attendees are Alex Chen, Priya Nair, Marcus Webb, and Hannah Park. [calendar:2ded3454537257a5518fa9905e] The meeting was rescheduled from its original time on Friday, March 13, 10:00-11:00 UTC, which was cancelled.",
       "correct": true,
-      "judge_reason": "Matches reference time and details, including rescheduled event cancellation",
+      "judge_reason": "ref: Weekly Product Sync today 16:00 UTC | cand: The Weekly Product Sync is today at 16:00 UTC. [calendar:2ded3454537257a5518fa9905e] The meeting title is 'Weekly Product Sync', its time is 16:00 UTC, attendees are Alex Chen, Priya Nair, Marcus Webb, and Hannah Park. [calendar:2ded3454537257a5518fa9905e] The meeting was rescheduled from its original time on Friday, March 13, 10:00-11:00 UTC, which was cancelled.",
       "found": true,
       "cited": [
         "calendar:2ded3454537257a5518fa9905e"
@@ -82,8 +82,8 @@
       "category": "duplicate_conflict",
       "question": "What is the Q1 ship date?",
       "answer": "The current Q1 ship date is Mar 22. [gmail:69d12ca0960f4a7d] This decision replaced the previous ship date of Mar 20, which was corrected from the original plan of Mar 20. Sofia Reyes changed the ship date. [gmail:69d12ca0960f4a7d]",
-      "correct": true,
-      "judge_reason": "Matches reference with corrected ship date",
+      "correct": false,
+      "judge_reason": "ref: March 20 | cand: Mar 22",
       "found": true,
       "cited": [
         "gmail:69d12ca0960f4a7d"
@@ -103,7 +103,7 @@
       "question": "What is the exact revenue impact of the v2 API delay?",
       "answer": "I can't find that in the available data.",
       "correct": true,
-      "judge_reason": "Candidate acknowledges lack of information, matches reference's 'not available' statement",
+      "judge_reason": "correctly abstained",
       "found": false,
       "cited": [],
       "cite_recall": 1.0,
@@ -121,7 +121,7 @@
       "question": "Was the Weekly Product Sync on Friday March 13 cancelled?",
       "answer": "The Weekly Product Sync on Friday March 13 was initially CANCELLED [calendar:7d2712a17add94eb1a82e92b23] due to a meeting with Alex Chen, Priya Nair, Marcus Webb, Hannah Park, and Sofia Reyes [calendar:4554e5cfc14461dcdd7a91842f].",
       "correct": true,
-      "judge_reason": "Matches reference, including cancelled event and attendees",
+      "judge_reason": "ref: Weekly Product Sync on Friday Mar 13 was initially CANCELLED | cand: The Weekly Product Sync on Friday March 13 was initially CANCELLED [calendar:7d2712a17add94eb1a82e92b23] due to a meeting with Alex Chen, Priya Nair, Marcus Webb, Hannah Park, and Sofia Reyes [calendar:4554e5cfc14461dcdd7a91842f]",
       "found": true,
       "cited": [
         "calendar:7d2712a17add94eb1a82e92b23",
@@ -142,7 +142,7 @@
       "question": "Was the Daily Standup on March 13 cancelled?",
       "answer": "The Daily Standup on March 13 was cancelled due to offsite [calendar:4554e5cfc14461dcdd7a91842f].",
       "correct": true,
-      "judge_reason": "Matches reference with correct detail",
+      "judge_reason": "ref: Daily Standup on March 13 was cancelled | cand: The Daily Standup on March 13 was cancelled due to offsite [calendar:4554e5cfc14461dcdd7a91842f]",
       "found": true,
       "cited": [
         "calendar:4554e5cfc14461dcdd7a91842f"
@@ -162,7 +162,7 @@
       "question": "What was the original v2 API auth decision on March 6 and who made it?",
       "answer": "The current decision is: ship v2 API with OAuth only [gmail:ceece9b31878fe40][slack:C02PROD:1772640000.222201]. The original decision on March 6 was: ship v2 API with OAuth only [gmail:403df41545d6ec2d], made by Priya Nair. Priya Nair changed the decision to ship v2 API with OAuth only, replacing the original decision [gmail:403df41545d6ec2d], and Alex Chen updated the Linear issue to reflect this change [gmail:10db167a8a1afba8].",
       "correct": true,
-      "judge_reason": "Matches reference, including date, decision, and decision maker.",
+      "judge_reason": "ref: Priya Nair decided on March 6 to ship the v2 API with OAuth only | cand: The current decision is: ship v2 API with OAuth only [gmail:ceece9b31878fe40][slack:C02PROD:1772640000.222201]. The original decision on March 6 was: ship v2 API with OAuth only [gmail:403df41545d6ec2d], made by Priya Nair.",
       "found": true,
       "cited": [
         "gmail:ceece9b31878fe40",
@@ -184,8 +184,8 @@
       "category": "identity",
       "question": "What did Rebecca Liu say about Globex?",
       "answer": "Rebecca Liu said Globex call was moved [slack:C01ENG:1772528400.200772][slack:C02PROD:1773057600.343529][slack:C01ENG:1772100000.278901]. She also mentioned Globex sync #160, #19, and #250 [gmail:a8b6be6230717ae2][gmail:d69f5f805cec364c][gmail:51b0025c92175c4d]. Additionally, she mentioned Globex renewal is still pending legal review [gmail:ab8aaf5585d14de2].",
-      "correct": true,
-      "judge_reason": "Matches key facts, including dates and Slack channel",
+      "correct": false,
+      "judge_reason": "ref: Globex signed the OAuth-only addendum, and asked for ACME-142 to be updated | cand: Globex call was moved to Slack, and mentioned Globex sync #160, #19, and #250, and Globex renewal is still pending legal review",
       "found": true,
       "cited": [
         "slack:C01ENG:1772528400.200772",
@@ -210,8 +210,8 @@
       "category": "tasks",
       "question": "Which Linear issues owned by me are blocked?",
       "answer": "ACME-369, Billing webhook retry, Marcus Webb\nACME-310, Cache warming, Omar Haddad\nACME-380, Improve logging, Omar Haddad\nACME-331, Update dependency, Sofia Reyes\nACME-316, Billing webhook retry, Alex Chen\nACME-304, Fix flaky test, Sofia Reyes\nACME-325, Rate limit tuning, Marcus Webb\nACME-371, Fix flaky test, Daniel Kim\nACME-363, Rate limit tuning, Alex C. Morgan\nACME-311, Billing webhook retry, Omar Haddad [linear:ACME-311@20260225T0900]",
-      "correct": true,
-      "judge_reason": "Matches reference with correct issue numbers and owners",
+      "correct": false,
+      "judge_reason": "ref: ACME-316 (Billing webhook retry), ACME-342 (Add pagination), ACME-349 (Rate limit tuning), ACME-352 (Update dependency) and ACME-365 (Rate limit tuning) | cand: ACME-369, Billing webhook retry, Marcus Webb",
       "found": true,
       "cited": [
         "linear:ACME-311@20260225T0900"
@@ -231,7 +231,7 @@
       "question": "Who was out of office last week and who has context on billing?",
       "answer": "I can't find that in the available data.",
       "correct": false,
-      "judge_reason": "Candidate couldn't find information in available data",
+      "judge_reason": "abstained on an answerable question",
       "found": false,
       "cited": [],
       "cite_recall": 0.0,
@@ -249,7 +249,7 @@
       "question": "Summarize investor-related activity this week.",
       "answer": "I can't find that in the available data.",
       "correct": true,
-      "judge_reason": "Candidate correctly states they couldn't find information, no contradiction or extra detail.",
+      "judge_reason": "correctly abstained",
       "found": false,
       "cited": [],
       "cite_recall": 1.0,
@@ -267,7 +267,7 @@
       "question": "What decisions were made recently?",
       "answer": "The current decision is to ship v2 API with OAuth only [linear:ACME-142@20260314T2200]. This replaced the previous decision to ship v2 API with OAuth + API keys, which was made by Alex Chen on Sun 2026-03-08 19:00 UTC [gmail:10db167a8a1afba8]. The decision was also made by Rebecca Liu on Sat 2026-03-14 21:00 UTC [slack:C01ENG:1773522000.994933].",
       "correct": true,
-      "judge_reason": "Matches reference decisions with correct dates and names",
+      "judge_reason": "ref: v2 API auth decision went back to OAuth only on Mar 14 | cand: The current decision is to ship v2 API with OAuth only [linear:ACME-142@20260314T2200].",
       "found": true,
       "cited": [
         "linear:ACME-142@20260314T2200",
@@ -289,7 +289,7 @@
       "question": "What should I know before my next meeting?",
       "answer": "Before your next meeting, you should know that the meeting title is 'Weekly Product Sync', it will be held on Sunday, 2026-03-15 16:00 UTC, and attendees include Alex Chen, Priya Nair, Marcus Webb, and Hannah Park. [calendar:2ded3454537257a5518fa9905e] The meeting was rescheduled from its original time on Friday, 2026-03-13 10:00 UTC, which was cancelled due to a Globex call moved by Sofia Reyes on Saturday, 2026-03-07 07:00 UTC.",
       "correct": true,
-      "judge_reason": "Matches reference details, including rescheduled date and attendees",
+      "judge_reason": "ref: Weekly Product Sync today at 16:00 UTC with Priya Nair, Marcus Webb and Hannah Park. It was rescheduled from Friday Mar 13 | cand: Weekly Product Sync, Sunday, 2026-03-15 16:00 UTC, Priya Nair, Marcus Webb, and Hannah Park. The meeting was rescheduled from its original time on Friday, 2026-03-13 10:00 UTC, which was cancelled due to a Globex call moved by Sofia Reyes on Saturday, 2026-03-07 07:00 UTC.",
       "found": true,
       "cited": [
         "calendar:2ded3454537257a5518fa9905e"

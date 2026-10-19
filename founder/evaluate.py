@@ -26,27 +26,56 @@ BUDGET_DOLLARS = 0.02
 
 JUDGE_SCHEMA = {
     'type': 'object',
-    'properties': {'correct': {'type': 'boolean'}, 'reason': {'type': 'string'}},
-    'required': ['correct', 'reason'],
+    'properties': {
+        'reference_key_fact': {'type': 'string'},
+        'candidate_says': {'type': 'string'},
+        'correct': {'type': 'boolean'},
+    },
+    'required': ['reference_key_fact', 'candidate_says', 'correct'],
 }
+# two judge designs failed on this model and are why this one has the fields
+# in this order. a bare verdict passed answers about the wrong topic (a reply
+# about a moved Globex call to a question about an addendum). asking for lists
+# of missing and wrong facts made it flag the reference's own facts as wrong.
+# writing the key fact and what the candidate says before the verdict, plus two
+# worked examples, is the version that behaved
 JUDGE_SYSTEM = (
-    'You grade an assistant answer against a reference answer. Reply with JSON only.\n'
-    'correct = true when the candidate states the same key facts as the reference '
-    '(same dates, times, names, decision) and does not contradict it or present '
-    'outdated information as current. Extra true detail is fine.\n'
-    'When the reference says the information is not available, correct = true only if '
-    'the candidate says it cannot find the information and gives no specific figures.\n'
-    'Keep reason under 20 words.')
+    'You grade a candidate answer against a reference answer. Reply with JSON only, '
+    'fields in this order.\n'
+    'reference_key_fact: the one or two facts the reference is about, in under 20 words.\n'
+    'candidate_says: what the candidate states about those facts, in under 20 words.\n'
+    'correct: true only if the candidate states the same facts as the reference and does not '
+    'present outdated information as current. false if it is about something else, misses a '
+    'listed item, or gives a different date, time, name or decision. Extra true detail is fine. '
+    'When the reference says the information is not available, correct is true only if the '
+    'candidate says it cannot find it.\n\n'
+    'Example 1\nQuestion: When is the launch?\nReference: The launch is March 22, corrected from March 20.\n'
+    'Candidate: The launch is on March 20.\n'
+    '{"reference_key_fact": "launch is March 22", "candidate_says": "launch is March 20", "correct": false}\n\n'
+    'Example 2\nQuestion: Who owns billing?\nReference: Priya Nair owns billing.\n'
+    'Candidate: Billing is owned by Priya Nair, who joined in January.\n'
+    '{"reference_key_fact": "Priya Nair owns billing", "candidate_says": "Priya Nair owns billing", "correct": true}')
 
 
 def judge(question, reference, candidate, model):
     prompt = f'Question: {question}\nReference: {reference}\nCandidate: {candidate}'
-    result = llm.chat(JUDGE_SYSTEM, prompt, schema=JUDGE_SCHEMA, model=model, max_tokens=80)
+    result = llm.chat(JUDGE_SYSTEM, prompt, schema=JUDGE_SCHEMA, model=model, max_tokens=150)
     try:
         parsed = json.loads(result['text'])
-        return bool(parsed['correct']), parsed.get('reason', '')
-    except (ValueError, KeyError):
+    except ValueError:
         return False, 'judge returned invalid json'
+    return bool(parsed['correct']), f"ref: {parsed['reference_key_fact']} | cand: {parsed['candidate_says']}"
+
+
+def apply_abstention(question, found, correct, reason):
+    """Abstention is a fact about the run (the system said it could not find
+    it), not an opinion. the 3B judge passed 'I cannot find that' for answerable
+    questions, so this overrides it in both directions"""
+    if question['answerable'] and not found:
+        return False, 'abstained on an answerable question'
+    if not question['answerable']:
+        return (not found), ('correctly abstained' if not found else 'answered an unanswerable question')
+    return correct, reason
 
 
 def citation_scores(question, result):
@@ -69,6 +98,20 @@ def projected_cost(result):
             + result['completion_tokens'] * config.PROJECTED_PRICE_OUT) / 1e6
 
 
+def rejudge(path, judge_model=None):
+    """Re-grade saved answers with the current judge. Lets a judge change be
+    measured on its own, without re-running the system under test"""
+    judge_model = judge_model or config.CHAT_MODEL
+    questions = {q['id']: q for q in json.loads(QUESTIONS_PATH.read_text())}
+    data = json.loads(path.read_text())
+    for row in data['rows']:
+        q = questions[row['id']]
+        correct, reason = judge(q['question'], q['reference'], row['answer'], judge_model)
+        row['correct'], row['judge_reason'] = apply_abstention(q, row['found'], correct, reason)
+    data['summary'] = summarize(data['rows'], judge_model)
+    return data
+
+
 def run(judge_model=None, only=None):
     judge_model = judge_model or config.CHAT_MODEL
     questions = json.loads(QUESTIONS_PATH.read_text())
@@ -80,6 +123,7 @@ def run(judge_model=None, only=None):
     for q in questions:
         result = answer.ask(conn, q['question'])
         correct, reason = judge(q['question'], q['reference'], result['answer'], judge_model)
+        correct, reason = apply_abstention(q, result['found'], correct, reason)
         cites = citation_scores(q, result)
         rows.append({
             'id': q['id'], 'category': q['category'], 'question': q['question'],
