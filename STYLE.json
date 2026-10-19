@@ -1,0 +1,149 @@
+{
+  "handoff_version": "1.0",
+  "type": "style_guide",
+  "generated": "2026-09-02",
+  "scope": "Code and documentation style only. Portable across projects. Contains no project-specific architecture.",
+  "precedence": "If this file disagrees with surrounding code, match the surrounding code and flag the conflict.",
+
+  "comments": {
+    "hard_rules": [
+      "ASCII characters only. No em dashes, en dashes, arrows, degree signs, multiplication signs, ellipsis characters, curly quotes, or accented letters. Write -> not an arrow character, write 1x1 not a multiplication sign, write 90 degrees or 90deg not a degree symbol.",
+      "Canadian English spelling. colour, centre, normalise, behaviour, licence (noun), grey, metre, catalogue, travelled.",
+      "No trailing period at the end of a comment. This applies to the last sentence only; periods between sentences inside a multi-sentence comment are correct and expected.",
+      "No non-restrictive modifier words. Cut anything that softens or inflates without adding information."
+    ],
+    "banned_words": {
+      "note": "These are the non-restrictive modifiers to avoid. The list is illustrative, not exhaustive.",
+      "words": ["simply", "just (when it means merely)", "obviously", "clearly", "of course", "basically", "genuinely", "essentially", "actually", "really", "very", "quite", "rather", "somewhat", "fairly", "pretty (as intensifier)", "note that", "it should be noted", "important to note", "as you can see", "needless to say", "in order to (use 'to')"],
+      "rationale": "They either soften a claim that should stand on its own or pad a sentence that is already clear."
+    },
+    "terminology": {
+      "preference": "Older, traditional technical terms over their newer replacements. This is a deliberate style choice, not an oversight.",
+      "examples": {
+        "whitelist / blacklist": "not allowlist / denylist",
+        "master": "not main, for a primary branch or primary/replica relationship",
+        "slave": "not replica or secondary, where the codebase already uses master"
+      },
+      "scope": "Applies to comments, variable and function names, and documentation. Match whatever term the surrounding codebase already uses; do not silently swap in a newer synonym while editing nearby code."
+    },
+    "voice": {
+      "register": "Casual and plain-spoken, like explaining to a colleague at the next desk. Lowercase-leaning starts are fine and normal.",
+      "technical_terms": "Use precise terms when they keep the comment shorter. Do not simplify 'quaternion' into 'rotation thing'.",
+      "contractions": "Fine and preferred. do not, does not, cannot as words is too stiff for this voice.",
+      "person": "First person plural for what the code does ('we strip the sheen', 'so we block'). Second person for consequences to the reader ('you get no geometry')."
+    },
+    "content": {
+      "principle": "Explain WHY, not WHAT. The code says what it does.",
+      "write_comments_for": [
+        "A non-obvious cause, especially one discovered by debugging",
+        "A past bug this code prevents, with enough detail that nobody reverts it",
+        "An external library's surprising behaviour or units",
+        "A deliberate trade-off and what was given up",
+        "An invariant that looks like dead code and invites deletion"
+      ],
+      "do_not_write": [
+        "Restating the line below it",
+        "Ceremonial headers on self-evident functions",
+        "TODO without context on what and why"
+      ],
+      "good_example": "// gifenc's writeFrame wants the delay in MILLISECONDS (it stores round(ms/10)\n// as centiseconds). we track delayCs, so multiply by 10 on the way in. if this\n// is scaled wrong the fps dial will do nothing",
+      "why_good": "Names the external behaviour, the unit, the conversion, and the bug it caused. Nobody will 'clean up' the multiplication.",
+      "bad_example": "// Multiply the delay by 10.",
+      "why_bad": "Restates the code, explains nothing, and ends with a period."
+    },
+    "formatting": {
+      "wrap_width": "Wrap comment lines at about 80 characters. Median in this codebase is 77, p90 is 80.",
+      "block_comments": "Use // on every line. Do not use /* */ in JavaScript.",
+      "section_rules": "Major sections get a banner: a line of 75 dashes after '// ', then a lowercase title line, then another rule if it opens a large region. Smaller sections use a single trailing-dash line: '// ---- the proxy endpoint itself ----------------------------------------------'",
+      "inline_comments": "Align trailing comments in a run of related declarations so the // characters line up. Keep them to one short clause.",
+      "inline_example": "let currentModel = null;   // the centred/scaled group sitting in the pivot\nlet currentName = 'model'; // name of the loaded model, used for the gif filename\nlet baseDistance = 5;      // the camera Z that framed the model at zoom 1"
+    }
+  },
+
+  "code": {
+    "javascript": {
+      "modules": "ES modules. import/export, never require.",
+      "quotes": "Single quotes for strings. Double quotes only inside JSON or when the string contains an apostrophe. Template literals for interpolation.",
+      "indent": "2 spaces. Never tabs.",
+      "semicolons": "Always.",
+      "declarations": "const by default, let when reassigned, never var.",
+      "functions": "Named function declarations for anything called from more than one place or hoisted. Arrow functions for callbacks, handlers, and one-liners.",
+      "naming": {
+        "functions_variables": "camelCase",
+        "constants": "SCREAMING_SNAKE_CASE for true module-level constants and tuning values",
+        "private_scratch": "leading underscore for module-level reused scratch objects and stashed state, e.g. _alphaCanvas, _matteSaved",
+        "style": "Descriptive over short. loadGeneration not gen, classifyTextureAlpha not checkAlpha."
+      },
+      "tuning_values": "Pull magic numbers out into named constants at the top of their section, with an inline comment giving the unit or reason.",
+      "error_handling": "try/catch around anything touching untrusted input, external libraries, or canvas. Fail to a safe default rather than throwing. Comment the fallback with why it is safe.",
+      "guard_clauses": "Prefer early return over nesting."
+    },
+    "css": {
+      "location": "In a <style> block in the HTML, not a separate file, unless the project already splits them.",
+      "custom_properties": "Define the palette and fonts as CSS variables in :root and reference them everywhere. Never hardcode a repeated colour.",
+      "section_comments": "Same banner style as JavaScript, using /* ---- lowercase title ------ */",
+      "responsive": "One breakpoint block at the end rather than scattered media queries.",
+      "naming": "Lowercase with hyphens for classes, camelCase for ids that JavaScript reaches for."
+    },
+    "html": {
+      "structure": "Semantic where it matters, but do not add wrappers with no purpose.",
+      "ids": "Every id referenced from JavaScript must exist exactly once. Verify before shipping.",
+      "attributes": "Double quotes."
+    },
+    "general": [
+      "No build step unless the project already has one. Ask before introducing a bundler.",
+      "Pin external dependencies to exact versions.",
+      "Prefer doing untrusted work client-side when a server alternative would add attack surface."
+    ]
+  },
+
+  "documentation": {
+    "readme": {
+      "voice": "Same casual register as comments, slightly more complete sentences. Written as the project owner talking, not as marketing copy.",
+      "sentence_case": "Headings in sentence case, not Title Case.",
+      "formatting": "Light. Bold for the occasional key term. Avoid heavy nesting, decorative separators, and emoji.",
+      "trailing_periods": "Prose sentences in prose paragraphs keep their periods. Bullet list items do NOT get a trailing period.",
+      "tables": "Good for env vars and options. Lowercase the Purpose column entries and skip trailing periods.",
+      "code_blocks": "Always tag the language. Include copy-pasteable commands, not descriptions of commands.",
+      "structure_order": ["title and one-or-two-line description", "what it supports", "how to run", "configuration", "deployment specifics", "notes and limits"],
+      "honesty": "State limits plainly in a notes section. A known limitation written down is worth more than an unqualified claim."
+    },
+    "commit_messages": {
+      "subject": "Imperative mood, lowercase after any prefix, no trailing period, under 72 characters.",
+      "body": "Explain why, and name the symptom if it is a fix. Wrap at 72.",
+      "example": "fix gif delay unit so the fps control works\n\ngifenc's writeFrame takes milliseconds and stores round(ms/10) as\ncentiseconds. we were passing centiseconds, so every delay collapsed to\n0-1cs and browsers clamped it to ~100ms. that made the fps dial appear\nto do nothing and duration track only frame count."
+    }
+  },
+
+  "communication": {
+    "note": "How to report work back, not how to write code.",
+    "rules": [
+      "Lead with what changed and whether it worked. Do not open with a preamble.",
+      "State the root cause when fixing a bug. 'Fixed the flicker' is less useful than naming the sorting behaviour that caused it.",
+      "Report what was verified and what could not be. Never imply a visual result was confirmed when only syntax was checked.",
+      "Flag assumptions and residual risks without being asked.",
+      "Say when something is best-effort rather than solid.",
+      "Do not pad with restatements of the request."
+    ]
+  },
+
+  "verification": {
+    "comment_style_check": "python3 - <<'PY'\nimport io,re\nFILES=['public/viewer.js','public/index.html','server.js']\nBANNED=r'\\b(simply|obviously|clearly|basically|essentially|needless to say|note that)\\b'\nUS=r'\\b(color|center|normalize|behavior|gray|catalog|traveled)\\b'\nbad=[]\nfor p in FILES:\n    try: txt=io.open(p,encoding='utf-8').read()\n    except IOError: continue\n    for i,l in enumerate(txt.splitlines(),1):\n        s=l.strip()\n        seg=s if s.startswith(('//','<!--','/*','*')) else (l.split('//',1)[1] if ('//' in l and not re.search(r'https?://',l)) else None)\n        if not seg: continue\n        t=seg.rstrip()\n        if any(ord(c)>127 for c in seg): bad.append((p,i,'non-ascii',t[:50]))\n        if t.endswith('.') and not re.search(r'\\.\\.$|e\\.g\\.$|i\\.e\\.$',t): bad.append((p,i,'trailing period',t[-45:]))\n        if re.search(BANNED,t,re.I): bad.append((p,i,'banned word',t[:50]))\n        if re.search(US,t): bad.append((p,i,'us spelling',t[:50]))\nprint('\\n'.join(map(str,bad)) if bad else 'clean')\nPY",
+    "usage": "Run from the project root before shipping. Adjust the FILES list per project.",
+    "note": "The US-spelling and banned-word patterns are a starting point, not exhaustive. They catch the common cases."
+  },
+
+  "quick_checklist": [
+    "Comments ASCII only",
+    "Canadian spelling",
+    "No trailing period on the final sentence of a comment",
+    "No softening modifiers",
+    "Comments explain why, not what",
+    "Older term used over its newer replacement (whitelist, master, etc), matching what the codebase already uses",
+    "Wrapped near 80 characters",
+    "Single quotes, 2-space indent, const by default",
+    "Every JavaScript-referenced id exists in the HTML",
+    "README bullets have no trailing periods",
+    "Limits and residual risks written down"
+  ]
+}

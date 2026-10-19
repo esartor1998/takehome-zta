@@ -1,22 +1,26 @@
 """
 API-shaped synthetic dataset for Founder AI Assistant take-home.
-Run: python generate_dataset_api_shaped.py
+Run: python synthetic_data_generator.py
 Outputs:
-  synthetic_data/raw/          <- API-shaped payloads (what real APIs return)
-  synthetic_data/normalized/   <- your context layer's output
-  synthetic_data/answer_key.json
-  synthetic_data/SOURCES.md
+  data/raw/          <- API-shaped payloads (what real APIs return)
+  data/normalized/   <- your context layer's output
+  data/answer_key.json
+  data/SOURCES.md
 
 Sources modeled: Gmail API, Google Calendar API, Slack conversations.history, Linear GraphQL.
 Shape fidelity notes cited in SOURCES.md.
 """
 
-import json, os, random, uuid, base64
+import json, os, random, base64
 from datetime import datetime, timedelta, timezone
 
 random.seed(20260315)
-RAW = "synthetic_data/raw"
-NORM = "synthetic_data/normalized"
+# separate seeded RNG for ids: reproducible output without perturbing the
+# content RNG stream
+_id_rng = random.Random(20260316)
+def _hex(n): return f"{_id_rng.getrandbits(128):032x}"[:n]
+RAW = "data/raw"
+NORM = "data/normalized"
 os.makedirs(RAW, exist_ok=True)
 os.makedirs(NORM, exist_ok=True)
 
@@ -58,8 +62,8 @@ SHARED_INBOX = "eng-team@acmerobotics.com"
 # ============================================================
 gmail_raw = []
 def gmail_msg(frm, to, subject, body, when, thread_id=None):
-    msg_id = uuid.uuid4().hex[:16]
-    thread_id = thread_id or uuid.uuid4().hex[:16]
+    msg_id = _hex(16)
+    thread_id = thread_id or _hex(16)
     raw_mime = f"From: {frm}\r\nTo: {to}\r\nSubject: {subject}\r\nDate: {when.strftime('%a, %d %b %Y %H:%M:%S +0000')}\r\n\r\n{body}"
     rec = {
         "id": msg_id,
@@ -176,7 +180,7 @@ cal_raw = []
 def cal_event(summary, start, end, attendees, status="confirmed", organizer=None,
               note=None, recurring_id=None):
     rec = {
-        "id": uuid.uuid4().hex[:26],
+        "id": _hex(26),
         "status": status,
         "summary": summary,
         "start": {"dateTime": iso(start), "timeZone": "UTC"},
@@ -227,14 +231,16 @@ CHANNELS = {"C01ENG":"#eng","C02PROD":"#product","C03GEN":"#general",
             "C04INC":"#incidents","C05DES":"#design","C06RAND":"#random"}
 def slack_msg(user_id, channel_id, text, when, thread_ts=None, edited=False, bot=False):
     ts = f"{int(when.timestamp())}.{random.randint(100000,999999):06d}"
-    rec = {"type":"message","user":user_id,"text":text,"ts":ts}
+    # channel_id is not in real conversations.history rows (the call is per-channel);
+    # it is added here to model an export that tags each row with its source channel
+    rec = {"type":"message","channel_id":channel_id,"user":user_id,"text":text,"ts":ts}
     if thread_ts: rec["thread_ts"] = thread_ts
     if edited:
         rec["edited"] = {"user": user_id, "ts": f"{int(when.timestamp())+60}.000000"}
     if random.random() < 0.2:
         rec["reactions"] = [{"name": random.choice(["eyes","+1","tada"]),
                              "count": random.randint(1,5), "users": []}]
-    if bot: rec["bot_id"] = "B" + uuid.uuid4().hex[:8].upper()
+    if bot: rec["bot_id"] = "B" + _hex(8).upper()
     slack_raw.append(rec)
     return rec
 
@@ -281,7 +287,7 @@ linear_raw = []
 def linear_issue(identifier, title, desc, state, assignee_key, when, created_when,
                  priority=None, labels=None):
     rec = {
-        "id": uuid.uuid4().hex[:24],
+        "id": _hex(24),
         "identifier": identifier,
         "title": title,
         "description": desc,
@@ -322,6 +328,14 @@ for i in range(110):
                  t(-random.randint(26,40), 0),
                  priority=random.choice([0,1,2,3,None]),
                  labels=random.choice([["backend"],["frontend"],["infra"],["security"]]))
+
+# R3: Daniel's Slack mention of the billing migration (added after all random-driven
+# filler so the seeded filler data is unchanged). Appended directly: slack_msg would
+# consume RNG state
+_ts = t(-4,3)
+slack_raw.append({"type":"message","channel_id":"C01ENG","user":PEOPLE["P5"]["slack_id"],
+    "text":"billing migration is blocked on my side, asked Priya by email to push it a week.",
+    "ts":f"{int(_ts.timestamp())}.000100"})
 
 # ============================================================
 # WRITE RAW FILES
@@ -396,8 +410,8 @@ answer_key = {
   "required_cases": {
     "R3_identity": {
       "question": "What did Daniel Kim say about the billing migration?",
-      "answer": "He asked Priya to push it a week, sent from his personal email dkim.work@gmail.com (Gmail thread thread_billing_001). Also referenced in Slack #eng.",
-      "supporting_raw": ["gmail:thread_billing_001", "slack:search 'billing migration is blocked'"],
+      "answer": "He asked Priya to push it a week, sent from his personal email dkim.work@gmail.com (Gmail thread thread_billing_001). Also mentioned in Slack #eng the same day.",
+      "supporting_raw": ["gmail:thread_billing_001", "slack:#eng U05DANIEL message at t-4h3 ('billing migration is blocked on my side')"],
       "why_hard": "Daniel appears as daniel.kim@acmerobotics.com, dkim.work@gmail.com, @daniel, dkim. The email From header is his personal address; only the signature reveals it's Daniel."
     },
     "R4_reversal": {
@@ -427,13 +441,13 @@ answer_key = {
     }
   }
 }
-with open("synthetic_data/answer_key.json","w") as f:
+with open("data/answer_key.json","w") as f:
     json.dump(answer_key, f, indent=2)
 
 # ============================================================
 # SOURCES.md
 # ============================================================
-with open("synthetic_data/SOURCES.md","w") as f:
+with open("data/SOURCES.md","w") as f:
     f.write("""# Data Sources & Shape Fidelity
 
 ## Real-world inspiration

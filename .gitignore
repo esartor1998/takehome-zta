@@ -1,2 +1,7 @@
 synthetic_data/
+data
 takehome.pdf
+*.db
+.chroma/
+__pycache__/
+*.egg-info/
