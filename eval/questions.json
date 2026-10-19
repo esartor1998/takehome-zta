@@ -1,0 +1,222 @@
+[
+  {
+    "id": "q01",
+    "category": "identity",
+    "question": "What did Daniel Kim say about the billing migration?",
+    "reference": "Daniel asked Priya to push the billing migration back by a week. He emailed from his personal address (dkim.work@gmail.com) because he was on call, and also said in Slack #eng that the migration was blocked on his side.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:c1abbf680fedaacd",
+        "slack:C01ENG:1773248400.000100"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "q02",
+    "category": "decision_reversal",
+    "question": "What is the current authentication decision for the v2 API?",
+    "reference": "OAuth only. It was decided on Mar 6, reversed to OAuth plus API keys on Mar 8 for Globex, then reverted to OAuth only on Mar 14 after Globex signed the OAuth-only addendum (Rebecca Liu).",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:ceece9b31878fe40",
+        "slack:C01ENG:1773522000.994933",
+        "linear:ACME-142@20260314T2200"
+      ]
+    ],
+    "forbidden_ids": [
+      "gmail:10db167a8a1afba8",
+      "slack:C01ENG:1772996400.232344"
+    ]
+  },
+  {
+    "id": "q03",
+    "category": "reschedule",
+    "question": "What time is the Weekly Product Sync today?",
+    "reference": "16:00 UTC today (Sunday Mar 15). It was moved from Friday Mar 13, and the Friday event is cancelled.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "calendar:2ded3454537257a5518fa9905e",
+        "gmail:ff9c102bbfa27a06",
+        "slack:C03GEN:1773172800.739474"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "q04",
+    "category": "duplicate_conflict",
+    "question": "What is the Q1 ship date?",
+    "reference": "March 22. Sofia corrected it from March 20 in email and Slack. The Linear issue ACME-231 still says March 20 and is out of date.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:69d12ca0960f4a7d",
+        "slack:C02PROD:1772640000.222201"
+      ]
+    ],
+    "forbidden_ids": [
+      "linear:ACME-231@20260304T1800"
+    ]
+  },
+  {
+    "id": "q05",
+    "category": "unanswerable",
+    "question": "What is the exact revenue impact of the v2 API delay?",
+    "reference": "Not available. No revenue or financial figures exist in any source.",
+    "answerable": false,
+    "expected_ids": [],
+    "forbidden_ids": []
+  },
+  {
+    "id": "q06",
+    "category": "cancelled_meeting",
+    "question": "Was the Weekly Product Sync on Friday March 13 cancelled?",
+    "reference": "Yes. The Friday Mar 13 calendar event is cancelled because the meeting moved to Sunday Mar 15 at 16:00 UTC.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "calendar:7d2712a17add94eb1a82e92b23"
+      ],
+      [
+        "calendar:2ded3454537257a5518fa9905e",
+        "gmail:ff9c102bbfa27a06",
+        "slack:C03GEN:1773172800.739474"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "q07",
+    "category": "cancelled_meeting",
+    "question": "Was the Daily Standup on March 13 cancelled?",
+    "reference": "Yes, it was cancelled because of the offsite.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "calendar:4554e5cfc14461dcdd7a91842f"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "q08",
+    "category": "history",
+    "question": "What was the original v2 API auth decision on March 6 and who made it?",
+    "reference": "Priya Nair decided on March 6 to ship the v2 API with OAuth only.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:403df41545d6ec2d",
+        "slack:C01ENG:1772812800.963148"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "q09",
+    "category": "identity",
+    "question": "What did Rebecca Liu say about Globex?",
+    "reference": "Rebecca said Globex signed the OAuth-only addendum, so the v2 API reverts to OAuth only, and asked for ACME-142 to be updated. She said the same in Slack #eng.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:ceece9b31878fe40",
+        "slack:C01ENG:1773522000.994933"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "q10",
+    "category": "tasks",
+    "question": "Which Linear issues owned by me are blocked?",
+    "reference": "ACME-316 (Billing webhook retry), ACME-342 (Add pagination), ACME-349 (Rate limit tuning), ACME-352 (Update dependency) and ACME-365 (Rate limit tuning).",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "linear:ACME-316@20260219T1200"
+      ],
+      [
+        "linear:ACME-342@20260225T0900"
+      ],
+      [
+        "linear:ACME-349@20260307T0900"
+      ],
+      [
+        "linear:ACME-352@20260225T1100"
+      ],
+      [
+        "linear:ACME-365@20260222T0500"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "q11",
+    "category": "shared_inbox",
+    "question": "Who was out of office last week and who has context on billing?",
+    "reference": "Daniel Kim was out of office Mar 10 to 14, and said Priya Nair has context on billing. This came from the eng-team shared inbox.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:469b8c07901db7d8"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "q12",
+    "category": "unanswerable",
+    "question": "Summarize investor-related activity this week.",
+    "reference": "Not available. There are no investor emails, messages, meetings or issues in any source.",
+    "answerable": false,
+    "expected_ids": [],
+    "forbidden_ids": []
+  },
+  {
+    "id": "q13",
+    "category": "decisions",
+    "question": "What decisions were made recently?",
+    "reference": "The v2 API auth decision went back to OAuth only on Mar 14. The Q1 ship date was corrected to Mar 22. The Weekly Product Sync moved to Sunday Mar 15 at 16:00 UTC.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:ceece9b31878fe40",
+        "slack:C01ENG:1773522000.994933",
+        "linear:ACME-142@20260314T2200"
+      ],
+      [
+        "gmail:69d12ca0960f4a7d",
+        "slack:C02PROD:1772640000.222201"
+      ],
+      [
+        "gmail:ff9c102bbfa27a06",
+        "slack:C03GEN:1773172800.739474",
+        "calendar:2ded3454537257a5518fa9905e"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "q14",
+    "category": "meeting_prep",
+    "question": "What should I know before my next meeting?",
+    "reference": "The next meeting is the Weekly Product Sync today at 16:00 UTC with Priya Nair, Marcus Webb and Hannah Park. It was rescheduled from Friday Mar 13.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "calendar:2ded3454537257a5518fa9905e"
+      ],
+      [
+        "gmail:ff9c102bbfa27a06",
+        "slack:C03GEN:1773172800.739474",
+        "calendar:7d2712a17add94eb1a82e92b23"
+      ]
+    ],
+    "forbidden_ids": []
+  }
+]

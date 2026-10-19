@@ -36,18 +36,19 @@ def _save_cache():
     config.LLM_CACHE_PATH.write_text(json.dumps(_cache))
 
 
-def chat(system, user, schema=None, cache=False, max_tokens=700):
+def chat(system, user, schema=None, cache=False, max_tokens=700, model=None):
     """One chat turn. Returns dict(text, prompt_tokens, completion_tokens, seconds).
 
     schema is a json schema passed as ollama's `format`, which constrains
     decoding. cache=True is for ingest-time extraction only: the key is the
     full prompt, so re-ingesting unchanged data costs no model calls.
     """
-    key = hashlib.sha256(json.dumps([config.CHAT_MODEL, system, user, schema]).encode()).hexdigest()
+    model = model or config.CHAT_MODEL
+    key = hashlib.sha256(json.dumps([model, system, user, schema]).encode()).hexdigest()
     if cache and key in _load_cache():
         return dict(_load_cache()[key], cached=True)
     payload = {
-        'model': config.CHAT_MODEL, 'stream': False, 'keep_alive': config.KEEP_ALIVE,
+        'model': model, 'stream': False, 'keep_alive': config.KEEP_ALIVE,
         'messages': [{'role': 'system', 'content': system}, {'role': 'user', 'content': user}],
         'options': {'num_ctx': config.NUM_CTX, 'temperature': 0, 'seed': 7,
                     'num_predict': max_tokens},

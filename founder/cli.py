@@ -1,6 +1,7 @@
 """Command line entry. `founder` alone prints the morning brief."""
 import argparse
 import sys
+from pathlib import Path
 
 from . import brief, config, ingest, llm, store
 
@@ -35,6 +36,11 @@ def cmd_brief(args):
         args.save.write_text(result['text'])
 
 
+def cmd_eval(args):
+    from . import evaluate
+    evaluate.run(judge_model=args.judge_model, only=args.only)
+
+
 def cmd_chat(args):
     from . import answer
     conn = _ready()
@@ -60,8 +66,12 @@ def main(argv=None):
     ask.add_argument('question', nargs='+')
     ask.set_defaults(func=cmd_ask)
     br = sub.add_parser('brief', help='print the morning brief')
-    br.add_argument('--save', type=lambda p: __import__('pathlib').Path(p))
+    br.add_argument('--save', type=Path)
     br.set_defaults(func=cmd_brief)
+    ev = sub.add_parser('eval', help='run eval/questions.json and report accuracy, cites, latency')
+    ev.add_argument('--judge-model', help='ollama model for the judge (default: same as answers)')
+    ev.add_argument('--only', nargs='*', help='question ids to run')
+    ev.set_defaults(func=cmd_eval)
     sub.add_parser('chat', help='interactive questions').set_defaults(func=cmd_chat)
 
     args = parser.parse_args(argv)
