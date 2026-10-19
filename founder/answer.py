@@ -295,7 +295,7 @@ def ask(conn, question, k=10):
     hints = ' '.join(MODE_HINTS[i] for i in intents if i in MODE_HINTS)
     ids = expand_decision_context(conn, found['ids'], found['decision_topics'])
     if re.search(r'\bemails?\b', question, re.I):
-        # a question about emails gets emails (and the events they relate to).
+        # a question about emails gets emails and the events they relate to,
         # slack chatter in the list was presented as email
         ids = [i for i in ids if i.startswith(('gmail:', 'calendar:'))]
     labels, context = build_context(conn, ids, decision_timelines(conn, found['decision_topics']))
