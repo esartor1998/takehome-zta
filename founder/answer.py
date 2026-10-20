@@ -570,7 +570,7 @@ def render_digest(name, facts, plan_label='', total=0):
             lines += ['', 'Already handled:'] + [f"- {f['text']} {cite(f)}" for f in done[:3]]
         return '\n'.join(lines)
     if name == 'catchup':
-        sections = (('What changed', ('change',), 7), ('At risk', ('stale', 'customer', 'blocked'), 5),
+        sections = (('What changed', ('change',), 8), ('At risk', ('stale', 'customer', 'blocked'), 5),
                     ('Waiting on you', ('ask', 'promise'), 5), ('Coming up today', ('meeting',), 2))
         lines = []
         for title, cats, limit in sections:

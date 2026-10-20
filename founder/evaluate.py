@@ -59,9 +59,14 @@ JUDGE_SYSTEM = (
 
 def judge(question, reference, candidate, model):
     prompt = f'Question: {question}\nReference: {reference}\nCandidate: {candidate}'
-    result = llm.chat(JUDGE_SYSTEM, prompt, schema=JUDGE_SCHEMA, model=model, max_tokens=300,
-                      role='judge')
-    parsed = llm.parse_json(result['text'], None)
+    parsed = None
+    # a long answer can make the judge run out of tokens mid-json. one retry with more room
+    # before giving up, and a verdict we never got is counted as a judge failure in the summary
+    for room in (300, 700):
+        result = llm.chat(JUDGE_SYSTEM, prompt, schema=JUDGE_SCHEMA, model=model, max_tokens=room, role='judge')
+        parsed = llm.parse_json(result['text'], None)
+        if parsed and 'correct' in parsed:
+            break
     if not parsed or 'correct' not in parsed:
         return False, 'judge returned invalid json'
     return bool(parsed['correct']), f"ref: {parsed['reference_key_fact']} | cand: {parsed['candidate_says']}"
@@ -143,6 +148,7 @@ def summarize(rows, judge_model):
         'latency_mean': mean(secs), 'schema_failures': llm.COUNTERS['schema_failures'],
         'refusals': sum(not r['found'] for r in rows),
         **flag_quality(rows),
+        'judge_failures': sum(1 for r in rows if r['judge_reason'] == 'judge returned invalid json'),
         'latency_over_budget': sum(s > BUDGET_SECONDS for s in secs),
         'tokens_in_mean': mean(r['prompt_tokens'] for r in rows),
         'tokens_out_mean': mean(r['completion_tokens'] for r in rows),

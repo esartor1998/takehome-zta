@@ -100,8 +100,12 @@ def run(skip_decisions=False):
         by_id[item_id]['gate'] = value
     if not skip_decisions:
         entities = extract.entity_map(items, ident)
-        decisions = extract.extract_decisions(items, topics, ident, vectors, scores, entities, plain)
+        decisions = extract.extract_decisions(items, topics, ident, vectors, scores, entities, plain, resolve_now=False)
         stale_rows = stale.find_stale(items, plain, scores, entities, ident)
+        # a stale record is evidence of a change of plan, so it feeds back into the decision history
+        decisions = extract.merge_stale(decisions, stale_rows, items)
+        extract.resolve(decisions)
+        extract.mark_stale(decisions, stale_rows)
         print(f'{len(stale_rows)} records still state an outdated plan')
         follow_rows = followups.find_followups(items, ident)
         print(f'{len(follow_rows)} follow-ups ({sum(r["status"] == "open" for r in follow_rows)} open)')

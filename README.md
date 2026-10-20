@@ -6,7 +6,7 @@ The model is a setting, not a dependency. Any chat model can be swapped in with 
 
 ## What it supports
 
-- 7 sources, about 950 items, with outsiders (customers, investors, a candidate) as well as the team
+- 7 sources, about 990 items, with outsiders (customers, investors, a candidate) as well as the team
 - identity across work and personal email, display names in any header style, nicknames, initials, slack, linear, github and notion ids, and shared inboxes
 - cross-source duplicates, quoted replies in gmail, outlook and short styles, forwards, html-only and multipart mail, and machine mail that is indexed but kept out of answers
 - decision tracking: reversals, corrections, and records in other tools that still state the old plan
@@ -14,7 +14,7 @@ The model is a setting, not a dependency. Any chat model can be swapped in with 
 - cancelled, tentative, all-day and other-timezone events
 - vague questions ('what's on today', 'what is daniel saying', 'anything urgent') routed before any model runs
 - cited answers where every citation is checked in code
-- an eval set of 41 questions, 23 of them vague, and a benchmark that compares models
+- an eval set of 61 questions (the nine the take-home names, vague ones, typos, multi-step ones and unanswerable ones), 18 semantic probes for the vector store, 21 unit tests that need no model, and a benchmark that compares models
 
 ## How to run
 
@@ -66,6 +66,10 @@ Two layers, both seeded.
 - about 90 machine messages (newsletters, receipts, GitHub and Linear notifications, calendar invitations), forwards, one-word replies, html-only and multipart mail, and bot posts
 - 61 GitHub PR rows, 17 Notion pages and 4 CRM rows, with directory exports (`github_users.json`, `notion_users.json`, `crm_contacts.json`) the way real tenants expose them
 
+A noise pass runs last, over messages people typed and nothing else: about 30% of emails and Slack messages lose a capital or a final full stop, swap a word for shorthand (pls, thx, tmrw, abt), pick up a rare typo, or gain a mobile signature or a legal disclaimer. Dates, amounts, ids, names, addresses and the words that carry a decision (decision, correction, cancelled, moved, approved) are protected, so a human could still answer every question. It adds difficulty only where real inboxes have it. Newsletters, receipts, notifications and bot posts stay machine-clean.
+
+Three more scenarios use that mess on purpose: a renewal whose terms changed in a two-word reply ('ok by me. 2yr 15% fine, go ahead') with a Notion page, a CRM deal and an issue still on the old terms; a security report promised for 'tmrw' with a deadline written '3/18'; and an investor update draft answered inline between quoted lines. Around them are five out-of-office auto-replies, 'ack' and '+1' replies in threads that still have an open ask, and one meeting on two calendars under two titles.
+
 The answer key (`data/answer_key.json`) has a fragment for every scenario. The ingest never reads it or `normalized/`. The fixed clock is Sunday 2026-03-15 14:00 UTC, in `founder/config.py`.
 
 ## How it handles the messy cases
@@ -89,12 +93,33 @@ The answer key (`data/answer_key.json`) has a fragment for every scenario. The i
 `founder/route.py` turns 'tomorrow?' or 'dk?' into a plan before any model runs: what kind of answer is wanted, who is meant, which day, and which words stand for a family of words. It is plain rules, so the same question gets the same plan whichever model answers.
 
 - `schedule`: what is on, in time order, with cancelled, tentative, all-day, already-happened and other-timezone events marked, and prep for meetings with outsiders (their open asks of you, their open issues)
-- `followups`, `blocked`, `customers`, `decisions`, `meeting emails`: lists of facts the database already holds, rendered by code from the same facts as the brief
-- `focus` and `catchup`: the model phrases the top ranked facts, and if it ignores the format the facts themselves become the lines
+- `followups` (and 'anything overdue', 'what did I promise hooli'), `blocked`, `customers`, `decisions`, `catchup`, `meeting emails`: lists of facts the database already holds, rendered by code from the same facts as the brief
+- `prep` ('what do I need to do before the globex call', 'what should I know before my next meeting'): the meeting, its guests' open asks of you, your promises to them, open issues for their company and the pull requests waiting on you that name them, and the emails linked to it, all by code
+- `company` ('globex', 'what's the story with hooli'): the whole account in one answer, meetings, open asks both ways, open issues, repeated problems, recent mail, and the deal with any out-of-date note
+- `focus`: the model phrases the top ranked facts, and if it ignores the format the facts themselves become the lines
 - `person`: what someone has been saying, ranked by how unlike the template mail each item is. A bare first name covers every person with it, labelled, a role word ('investors') covers the people with that role, and a company ('hooli') covers the people we know there
 - `topic`: hybrid retrieval (fts5, vectors, structured sql) with synonym expansion and exact pulls for named issues, PRs and meetings
 
 Code-rendered answers use no tokens and cannot garble a list. Setting `FOUNDER_DIGEST=llm` sends them through the model instead, which is how a benchmark compares models on identical facts.
+
+## Hardening against messy input
+
+The noise and the new scenarios exposed gaps, and each fix below has a unit test or an eval question behind it.
+
+| what real mail does | what handles it |
+| --- | --- |
+| answers typed between the quoted lines of the message they answer | quote splitting keeps the unquoted lines of an inline reply, and cuts only the quoted ones |
+| out-of-office auto-replies | `Auto-Submitted` headers and 'Automatic reply' subjects make a message machine mail, which is indexed but never an ask or a decision |
+| 'Dan F.' for Daniel Foster, '-- Dan' for Daniel Kim | nicknames resolve in display names and signatures, teammates first |
+| deadlines written 'tmrw', '3/18', 'thurs', 'the 20th', 'eow' | one parser against the message's own date, with 'mon' kept from matching 'month' |
+| an 'ack' or '+1' from a teammate in a thread with an open ask | only a substantive reply (eight words or more, not an acknowledgement) closes an ask |
+| a hedge ('maybe we go with $59?') | hedged wording is a proposal and cannot become the current decision |
+| one meeting on two calendars under two titles | same start, two shared guests and a shared title word make one event, listed once |
+| a template email that names the same issue after the real change | only an event that reads like a change can anchor a decision, and template mail (low novelty) never reaches the model |
+| the founder typing 'whats on tdy', 'anyting from investers', 'dnaiel' | shorthand is expanded and typos are corrected against the words the inbox actually contains, not an English dictionary |
+| a question that names a tool ('is the notion page current') | that tool is searched on its own, and a stale record brings the update behind it into the context |
+| a one-line answer ('ok by me') that shares no words with the question | the conversation around the best hits is pulled in |
+| a record that is out of date by a percentage or a term, not a date | values are typed (date, amount, percent, duration), and the new value's sentence must share a subject word with the record |
 
 ## Architecture
 

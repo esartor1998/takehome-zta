@@ -182,6 +182,7 @@ def render(results):
              row('ask tokens in/out (mean)', lambda r: f"{r['ask']['tokens_in_mean']:.0f}/{r['ask']['tokens_out_mean']:.0f}"),
              row('ask cost per question ($)', lambda r: f"{r['ask']['actual_cost_mean']:.5f}"),
              row('ask refusals', lambda r: str(r['ask']['refusals'])),
+             row('judge verdicts that failed (counted wrong)', lambda r: str(r['ask'].get('judge_failures', '-'))),
              row('schema failures (ask+judge)', lambda r: str(r['ask']['schema_failures'])),
              row('http retries (rate limits, 5xx)', lambda r: str(r.get('retries', '-'))),
              row('whole benchmark wall time (s)', lambda r: f"{r['ingest']['seconds'] + r['brief']['seconds'] + r['ask']['wall_seconds']:.0f}"),

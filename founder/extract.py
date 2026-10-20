@@ -261,7 +261,7 @@ def validate(item, parsed):
     return {'kind': kind, 'subject': subject, 'value': value, 'retracts': retracts}, disagreed
 
 
-def extract_decisions(items, topics, ident, vectors, scores, entities, plain):
+def extract_decisions(items, topics, ident, vectors, scores, entities, plain, resolve_now=True):
     cands = candidates(items, scores)
     events, disagreements = [], 0
     for item in cands:
@@ -284,7 +284,8 @@ def extract_decisions(items, topics, ident, vectors, scores, entities, plain):
     events, merged = group_events(events)
     print(f'gate chose {len(cands)} items, merged {merged} groups, kept {len(events)} decision events '
           f'in {len({e["topic"] for e in events})} topics, rules overrode the model on {disagreements}')
-    resolve(events)
+    if resolve_now:
+        resolve(events)
     return events
 
 
@@ -309,6 +310,59 @@ def entity_map(items, ident):
         for e in ents:
             df[e] = df.get(e, 0) + 1
     return {i: {e for e in ents if df[e] <= SPECIFIC_DF} for i, ents in found.items()}
+
+
+def merge_stale(events, stale_rows, items):
+    """Make the stale-record findings part of the decision history.
+
+    A stale record exists because a newer item contradicts it, which makes that
+    item a change of plan whether or not the model labelled it one. A close date
+    moved in a slack line ('Jordan says they cannot close before May 15') or a
+    renewal changed by 'ok by me, 2yr 15% fine' were missed by decision labelling
+    and found by the record check, so the record check feeds back here. Each
+    pair joins one topic, the newer item becomes an anchor, and the record is
+    marked stale once the topic is resolved. Returns the new event list"""
+    by_item = {e['item_id']: e for e in events}
+    by_id = {i['id']: i for i in items}
+    for row in stale_rows:
+        rec, new = by_id[row['item_id']], by_id[row['newer_id']]
+        newer = by_item.get(new['id'])
+        if newer is None:
+            newer = {'item_id': new['id'], 'explicit': False, 'structural': new['topic'], 'topic': new['topic'],
+                     'kind': 'correction', 'subject': rec['title'].lower(), 'value': row['current_fact'] or _decision_sentence(new['body']),
+                     'retracts': '', 'ts': new['ts'], 'summary': new['body'].split('\n')[0][:160], 'source': new['source'],
+                     'status': 'current', 'why': '', 'dup_group': new['dup_group'] or new['id'],
+                     'item_state': new['state'], 'text': f"{new['title']}. {new['body']}"[:400], 'entities': set(),
+                     'anchor': True}
+            events.append(newer)
+            by_item[new['id']] = newer
+        newer['anchor'] = True
+        if newer['kind'] not in ('reversal', 'correction'):
+            newer['kind'] = 'correction'
+        old = by_item.get(rec['id'])
+        if old is None:
+            old = {'item_id': rec['id'], 'explicit': False, 'structural': rec['topic'], 'topic': newer['topic'],
+                   'kind': 'decision', 'subject': rec['title'].lower(), 'value': _decision_sentence(rec['body']),
+                   'retracts': '', 'ts': rec['ts'], 'summary': rec['body'].split('\n')[0][:160], 'source': rec['source'],
+                   'status': 'current', 'why': '', 'dup_group': rec['dup_group'] or rec['id'], 'item_state': rec['state'],
+                   'text': f"{rec['title']}. {rec['body']}"[:400], 'entities': set(), 'anchor': False}
+            events.append(old)
+            by_item[rec['id']] = old
+        # one topic: the record's group takes the update's topic
+        for e in events:
+            if e['topic'] == old['topic'] and e is not newer:
+                e['topic'] = newer['topic']
+        old['topic'] = newer['topic']
+    return events
+
+
+def mark_stale(events, stale_rows):
+    """After resolving: a record the stale check flagged is stale, not merely old"""
+    flagged = {r['item_id']: r for r in stale_rows}
+    for e in events:
+        if e['item_id'] in flagged and e['status'] != 'current':
+            e['status'] = 'stale'
+            e['why'] = f"newer item {flagged[e['item_id']]['newer_id']} changes this"
 
 
 def group_events(events):

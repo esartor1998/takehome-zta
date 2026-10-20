@@ -164,6 +164,9 @@ def recent_decisions(conn):
         if not current:
             continue
         current = [r for r in current if r['anchor']] or current     # the change itself, not what followed it
+        # a lone record in a tool of record is a state, not a decision (an issue titled 'fix the thing')
+        if len(rows) < 2 and rows[0]['source'] in ('linear', 'notion', 'crm'):
+            continue
         norm = lambda text: re.sub(r'\W+', ' ', text.lower()).strip()
         # what it replaced has to differ from what it is now. the same value posted
         # in slack and in email is one decision, not 'Mar 31 replacing Mar 31'
