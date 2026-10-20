@@ -20,7 +20,7 @@ vector store, so including them would dilute the answer.
 The verdict that matters is per question: how many does the vector pull
 help, hurt, or leave alone. `--e2e` repeats that comparison with a model
 answering and a judge grading, because better evidence is not the same as a
-better answer.
+better answer
 """
 import json
 

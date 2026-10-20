@@ -362,7 +362,7 @@ def investigate(issues, blocks, labels, ids_by_label=None):
         flags.append({'claim': issue['claim'], 'kind': issue['kind'], 'verdict': verdict,
                       'reason': parsed.get('reason', '').strip() or 'no source says this',
                       'cited': [ids_by_label[n] for n in issue['model_labels'] if ids_by_label and n in ids_by_label]})
-    # claims past the limit are still flagged, just not examined
+    # claims past the limit are still flagged, only not examined
     for issue in sorted(issues, key=lambda i: ISSUE_ORDER.get(i['kind'], 9))[INVESTIGATE_LIMIT:]:
         flags.append({'claim': issue['claim'], 'kind': issue['kind'], 'verdict': 'not examined',
                       'reason': 'citation did not match the source and was not checked', 'cited': []})

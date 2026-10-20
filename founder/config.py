@@ -59,7 +59,7 @@ FOUNDER_PERSON_ID = 'P1'
 # the week is mon..sun around NOW (mon mar 9 to sun mar 15)
 WEEK_START = datetime(2026, 3, 9, 0, 0, 0, tzinfo=timezone.utc)
 
-# retrieval pulls to switch off, comma separated: fts, vector, window, person, structured.
+# retrieval pulls to switch off, comma separated: fts, vector, window, person, structured
 # used by the ablation tests to measure what each pull contributes
 DISABLED_PULLS = set(filter(None, os.environ.get('FOUNDER_DISABLE', '').split(',')))
 
