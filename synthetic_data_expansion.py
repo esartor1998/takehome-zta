@@ -741,6 +741,65 @@ def expand(ctx):
         if rng.random() < 0.30:
             row['text'] = humanise(row['text'], rng, typo_rate=0.015)
 
+    # ======================================================================
+    # scenario 10: plans that slip without a new date, and people who go by other names. added after the
+    # noise pass, with its own wording, so nothing above changes. the records are the kind of page or issue
+    # a team keeps, and the changes are said the way people say them: no date, a weekday, a month, a quarter
+    # ======================================================================
+    # a change with no value at all, a weekday, a month and a quarter
+    page('Mobile beta plan', 'Beta timeline: ships Apr 3.\nScope: iOS first, Android after.\nOwner: Marcus Webb.\nStatus: on track.',
+         'P3', D(3, 2, 15), D(3, 4, 15))
+    say('P3', 'C02PROD', 'pushed back the beta timeline for now, design is still waiting on the new onboarding flow', D(3, 12, 16))
+    page('Customer webinar plan', 'Webinar: Thursday Mar 19, 11:00 UTC.\nHost: Hannah Park.\nAudience: Globex and Initech admins.\n'
+         'Status: invites sent.', 'P7', D(3, 5, 14), D(3, 6, 14))
+    mail(addr('P7', 'name'), me, 'webinar speaker', "heads up, the speaker has a conflict so i moved the webinar to next friday. "
+         'invites are updated\n\nHannah', D(3, 13, 15), 'thread_webinar_001')
+    issue('ACME-480', 'Audit log export', 'Target: ship by Mar 31. Customers want CSV and JSON.', 'In Progress', 'P4',
+          D(3, 6, 16), D(3, 2, 16), priority=2, labels=('backend',))
+    say('P4', 'C01ENG', 'audit log export slipped to april, legal wants another pass on the retention wording', D(3, 12, 17))
+    issue('ACME-481', 'Partner API v2', 'Target: Q2 launch with two design partners.', 'In Progress', 'P2',
+          D(3, 6, 17), D(3, 2, 17), priority=2, labels=('backend',))
+    say('P2', 'C01ENG', 'partner api v2 is slipping to q3, the design partners cannot test before then', D(3, 12, 18))
+    page('CloudHost renewal', 'Renewal date: Mar 31.\nOwner: Omar Haddad.\nPlan: renew at the current tier.', 'P8', D(3, 3, 16), D(3, 5, 16))
+    mail(addr('P8', 'name'), me, 'cloudhost', "fyi we're holding off on the cloudhost renewal until their new pricing is out. "
+         'will revisit after that\n\n-- Omar', D(3, 12, 18), 'thread_cloudhost_001')
+    # near misses that must stay current: a restatement, a question, another subject, notes, no change
+    page('Onboarding checklist redesign', 'Launch: Apr 10.\nOwner: Sofia Reyes.\nStatus: in design review.', 'P4', D(3, 4, 17), D(3, 5, 17))
+    say('P4', 'C02PROD', 'onboarding checklist redesign is still on track for Apr 10', D(3, 12, 19))
+    page('Docs site migration', 'Target: Mar 27.\nOwner: Rebecca Liu.\nStatus: content freeze next week.', 'P9', D(3, 4, 15), D(3, 5, 18))
+    mail(addr('P9', 'name'), me, 'docs migration', 'should we push the docs migration back a week? not sure yet, thoughts?',
+         D(3, 12, 20), 'thread_docs_001')
+    page('Security audit prep', 'Audit window: Mar 24 to Mar 26.\nOwner: Daniel Kim.\nStatus: evidence collection.', 'P5', D(3, 5, 15), D(3, 6, 17))
+    say('P2', 'C03GEN', 'we pushed the all hands to next friday, ceo has a conflict', D(3, 12, 21))
+    page('SDK release plan', 'SDK release: ships Mar 25.\nOwner: Marcus Webb.\nStatus: in testing.', 'P3', D(3, 4, 16), D(3, 5, 19))
+    page('Platform sync notes Mar 11', 'Attendees: Marcus, Priya, Omar.\nDiscussed whether the SDK release might slip. '
+         'No decision yet, revisit next week.', 'P2', D(3, 11, 17), D(3, 11, 17))
+    page('Data retention review', 'Review due: Mar 30.\nOwner: Daniel Kim.', 'P5', D(3, 4, 18), D(3, 5, 20))
+    say('P5', 'C01ENG', 'data retention review timeline is unchanged, still Mar 30', D(3, 12, 22))
+    key['soft_changes'] = {
+        'stale_records': ['Notion Mobile beta plan (ships Apr 3; Marcus pushed it back, no date)',
+                          'Notion Customer webinar plan (Mar 19; Hannah moved it to next Friday = Mar 20)',
+                          'Linear ACME-480 Audit log export (Mar 31; slipped to April)',
+                          'Linear ACME-481 Partner API v2 (Q2; slipping to Q3)',
+                          'Notion CloudHost renewal (Mar 31; Omar is holding off)'],
+        'still_current': ['Onboarding checklist redesign (restated, on track)', 'Docs site migration (only a question)',
+                          'Security audit prep (another subject was pushed)', 'SDK release plan (notes mention a possible slip)',
+                          'Data retention review (unchanged)']}
+
+    # people go by other names than the directory has: a nickname in a greeting and a sign-off, a short display
+    # name on a personal address, and a first-name sign-off from an address nobody knows
+    t10 = 'thread_redline_001'
+    mail(addr('P1', 'name'), addr('P9', 'name'), 'Initech redline', 'Hi Becky, can you send me the Initech redline once legal is done? thanks',
+         D(3, 13, 14), t10)
+    mail(addr('P9', 'name'), me, 'Re: Initech redline', 'Alex, legal needs your sign-off on the redline by thurs please\n\n-- Becky',
+         D(3, 13, 18), t10)
+    mail('Dan F. <danf.photo@gmail.example>', me, 'Re: SSO login loops for our users', 'Alex, sso is still looping for two of our '
+         'admins. can we get someone on a call thurs?\n\n-- Dan', D(3, 13, 16), 'thread_globex_sso_001')
+    mail('df.globex@proton.example', me, 'Re: SSO login loops for our users', 'also adding that the okta redirect fails on safari only\n\n-- Dan',
+         D(3, 13, 17), 'thread_globex_sso_001', cc=addr('X1', 'name'))
+    key['nicknames'] = {'becky': 'Rebecca Liu (Hi Becky, -- Becky)', 'dan f': 'Daniel Foster writing from a personal address',
+                        'dan sign-off': 'Daniel Foster, because he is on the thread and Daniel Kim is not the sender'}
+
     contacts = {'results': [
         {'id': e['id'], 'properties': {'firstname': e['name'].split()[0], 'lastname': e['name'].split()[1],
                                         'email': e['email'], 'company': e['org'], 'jobtitle': e['title'],

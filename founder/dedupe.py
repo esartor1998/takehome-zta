@@ -11,7 +11,7 @@ Three separate jobs:
 import re
 from datetime import datetime, timedelta
 
-from .normalize import ACME_RE
+from .normalize import issue_refs
 
 # same author, different source, close in time, and similar text. 3h covers the
 # slowest repost in the data (a slack post 2h after the email). the cosine
@@ -129,14 +129,14 @@ class _UnionFind:
 
 def _norm_title(text):
     text = re.sub(r'^(re|fwd?):\s*', '', text.strip(), flags=re.I)
-    text = re.sub(r'\s*#\d+$|\s*\(ACME-\d+\)$', '', text)
+    text = re.sub(r'\s*#\d+$|\s*\([A-Z][A-Z0-9]{1,9}-\d+\)$', '', text)
     return re.sub(r'\W+', ' ', text).strip().lower()
 
 
 def build_topics(items, dupe_pairs):
     """Assign each item a topic id. Returns (topics, links).
 
-    Link reasons: thread, ref (shared ACME id), title (normalised subject equals
+    Link reasons: thread, ref (shared issue id), title (normalised subject equals
     an issue title, or an event title appears in a message), dupe
     """
     uf = _UnionFind()
@@ -159,7 +159,7 @@ def build_topics(items, dupe_pairs):
     # shared issue references
     ref_owner = {}
     for item in items:
-        refs = set(ACME_RE.findall(item['title'] + ' ' + item['body']))
+        refs = set(issue_refs(item['title'] + ' ' + item['body']))
         if item['source'] == 'linear':
             refs.add(item['meta']['identifier'])
         for ref in refs:

@@ -4,9 +4,14 @@ is measured by `founder bench` and `founder ablate` instead"""
 import unittest
 from datetime import datetime
 
-from founder import followups, stale
+import json
+import tempfile
+from pathlib import Path
+
+from founder import answer, dates, followups, stale
 from founder.identity import parse_addresses
-from founder.normalize import html_to_text, split_quote
+from founder.names import NameSense
+from founder.normalize import calendar_items, html_to_text, issue_refs, split_quote
 
 
 class Addresses(unittest.TestCase):
@@ -98,6 +103,143 @@ class Staleness(unittest.TestCase):
 
     def test_issue_ids_are_not_values(self):
         self.assertEqual(stale.concrete_values('see ACME-431 and PR #218'), set())
+
+
+class RelativeChanges(unittest.TestCase):
+    friday = datetime(2026, 3, 13)      # a Friday
+
+    def test_relative_words_become_dates(self):
+        self.assertEqual(stale.concrete_values('moved to next Friday', self.friday), {'mar 20'})
+        self.assertEqual(stale.concrete_values('see you tomorrow', self.friday), {'mar 14'})
+        self.assertEqual(stale.concrete_values('due end of month', self.friday), {'mar 31'})
+        self.assertEqual(stale.concrete_values('in two weeks', self.friday), {'mar 27'})
+
+    def test_without_a_base_they_are_not_values(self):
+        self.assertEqual(stale.concrete_values('moved to next Friday'), set())
+
+    def test_moved_to_next_friday_contradicts_a_date(self):
+        record = 'Webinar: Thursday Mar 19.'
+        self.assertTrue(stale.conflict_strength(record, 'moved the webinar to next Friday', 'Customer webinar',
+                                                 record_base=datetime(2026, 3, 5), newer_base=self.friday) > 0)
+
+    def test_same_date_by_another_name_agrees(self):
+        record = 'Webinar: Friday Mar 20.'
+        self.assertEqual(stale.conflict_strength(record, 'the webinar is next Friday', 'Customer webinar',
+                                                  record_base=datetime(2026, 3, 5), newer_base=self.friday), 0)
+
+    def test_month_and_quarter_changes(self):
+        base = datetime(2026, 3, 13)
+        self.assertTrue(stale.conflict_strength('Beta ships Mar 31.', 'beta slipped to April', 'Beta plan', record_base=base, newer_base=base) > 0)
+        self.assertEqual(stale.conflict_strength('Beta ships Mar 31.', 'beta stays in March', 'Beta plan', record_base=base, newer_base=base), 0)
+        self.assertTrue(stale.conflict_strength('Launch is Q1.', 'launch is now Q3', 'Launch plan', record_base=base, newer_base=base) > 0)
+
+    def test_a_price_with_a_full_stop_is_the_same_price(self):
+        self.assertEqual(stale.concrete_values('it costs $59.'), stale.concrete_values('$59/seat'))
+
+
+class Names(unittest.TestCase):
+    roster = ['daniel', 'rebecca', 'priya', 'marcus', 'sofia', 'hannah', 'michael']
+
+    def test_truncations_need_no_model(self):
+        sense = NameSense(self.roster)
+        self.assertEqual(sense.resolve('dan'), {'daniel'})
+        self.assertEqual(sense.resolve('pri'), {'priya'})
+        self.assertEqual(sense.resolve('sof'), {'sofia'})
+
+    def test_two_letters_and_unknown_words_resolve_to_nothing(self):
+        sense = NameSense(self.roster)
+        self.assertEqual(sense.resolve('da'), set())
+        self.assertEqual(sense.resolve('table'), set())
+
+    def test_embedding_needs_a_clear_winner(self):
+        vectors = {'becky': [1, 0.1, 0], 'rebecca': [1, 0, 0], 'daniel': [0, 1, 0], 'priya': [0, 0, 1], 'marcus': [0, 0.3, 0.2],
+                   'sofia': [0.1, 0.5, 0.5], 'hannah': [0.3, 0.3, 0.3], 'michael': [0, 0.3, 0.2], 'mark': [0, 0.3, 0.2]}
+        sense = NameSense(self.roster, embed=lambda words, kind='query': [vectors[w] for w in words])
+        self.assertEqual(sense.resolve('becky'), {'rebecca'})
+        self.assertEqual(sense.resolve('mark'), set())       # as close to marcus as to michael: unsure
+
+    def test_extending_a_name_is_a_different_name(self):
+        vectors = {'daniella': [1, 0], 'daniel': [1, 0], 'priya': [0, 1], 'sammy': [1, 0], 'sam': [1, 0]}
+        sense = NameSense(['daniel', 'priya'], embed=lambda words, kind='query': [vectors[w] for w in words])
+        self.assertEqual(sense.resolve('daniella'), set())
+        sense = NameSense(['sam', 'priya'], embed=lambda words, kind='query': [vectors[w] for w in words])
+        self.assertEqual(sense.resolve('sammy'), {'sam'})
+
+
+class Citations(unittest.TestCase):
+    def blocks(self):
+        return {1: '[1] email from Priya, Fri 2026-03-13 14:00 UTC, subject: ship date\n    The ship date is now Mar 22 for the roadmap.',
+                2: '[2] email from Sofia, Fri 2026-03-13 15:00 UTC, subject: ship date\n    The ship date was Mar 20 for the roadmap.'}
+
+    def test_a_wrong_date_does_not_keep_its_citation(self):
+        text, _, _, issues = answer.ground_citations('The roadmap ship date is Mar 20 [1].', self.blocks(), [1, 2])
+        self.assertIn('[2]', text)         # the block that says Mar 20 is added
+
+    def test_a_value_no_block_has_is_flagged(self):
+        _, _, _, issues = answer.ground_citations('The roadmap ship date is Mar 28 [1].', self.blocks(), [1, 2])
+        self.assertEqual([i['kind'] for i in issues], ['value_mismatch'])
+
+    def test_a_right_value_passes(self):
+        _, _, _, issues = answer.ground_citations('The roadmap ship date is Mar 22 [1].', self.blocks(), [1, 2])
+        self.assertEqual(issues, [])
+
+
+class IssueRefs(unittest.TestCase):
+    def test_any_team_key(self):
+        self.assertEqual(issue_refs('fixes ENG-12 and ACME-7, see PR #3'), ['ENG-12', 'ACME-7'])
+
+
+class Dates(unittest.TestCase):
+    def tearDown(self):
+        dates.set_slash_order('mdy')
+
+    def test_year_is_the_one_nearest_the_message(self):
+        self.assertEqual(followups.parse_due('by Jan 10', datetime(2025, 12, 20)), '2026-01-10')
+        self.assertEqual(followups.parse_due('by Mar 1', datetime(2026, 3, 5)), '2026-03-01')
+
+    def test_slash_order_comes_from_the_export(self):
+        self.assertEqual(dates.detect_slash_order(['due 3/18', 'by 5/20']), 'mdy')
+        self.assertEqual(dates.detect_slash_order(['due 18/3', 'by 20/5', 'see 25/12', 'ok 5/6']), 'dmy')
+        self.assertEqual(dates.detect_slash_order(['support is 24/7', 'one 18/3 is not a locale']), 'mdy')
+
+    def test_day_first_dates_read_day_first(self):
+        dates.set_slash_order('dmy')
+        self.assertEqual(followups.parse_due('by 18/3', datetime(2026, 3, 13)), '2026-03-18')
+        self.assertEqual(stale.concrete_values('by 5/3'), {'mar 5'})
+
+
+class Calendar(unittest.TestCase):
+    class Ident:
+        def from_email(self, email, automated=False):
+            return ({'alex@x.example': 'P1', 'pat@x.example': 'P2'}.get(email), 'directory')
+
+    def rows(self, rows):
+        folder = Path(tempfile.mkdtemp())
+        (folder / 'calendar_events.jsonl').write_text('\n'.join(json.dumps(r) for r in rows))
+        return calendar_items(folder, self.Ident())
+
+    def test_an_event_with_no_guests_belongs_to_its_organizer(self):
+        item = self.rows([{'id': 'a', 'status': 'confirmed', 'summary': 'focus block', 'organizer': {'email': 'alex@x.example'},
+                           'start': {'dateTime': '2026-03-16T09:00:00Z', 'timeZone': 'UTC'},
+                           'end': {'dateTime': '2026-03-16T11:00:00Z', 'timeZone': 'UTC'}}])[0]
+        self.assertEqual(item['people'], ['P1'])
+
+    def test_unknown_guests_are_counted(self):
+        item = self.rows([{'id': 'a', 'status': 'confirmed', 'summary': 'chat', 'organizer': {'email': 'alex@x.example'},
+                           'attendees': [{'email': 'stranger@y.example', 'responseStatus': 'accepted'}],
+                           'start': {'dateTime': '2026-03-16T09:00:00Z', 'timeZone': 'UTC'},
+                           'end': {'dateTime': '2026-03-16T10:00:00Z', 'timeZone': 'UTC'}}])[0]
+        self.assertEqual(item['meta']['unknown_attendees'], ['stranger@y.example'])
+
+    def test_all_day_starts_at_local_midnight(self):
+        rows = [{'id': 'a', 'status': 'confirmed', 'summary': 'offsite', 'organizer': {'email': 'alex@x.example'},
+                 'start': {'dateTime': '2026-03-14T09:00:00-07:00', 'timeZone': 'America/Los_Angeles'},
+                 'end': {'dateTime': '2026-03-14T10:00:00-07:00', 'timeZone': 'America/Los_Angeles'}},
+                {'id': 'b', 'status': 'confirmed', 'summary': 'offsite', 'organizer': {'email': 'alex@x.example'},
+                 'start': {'date': '2026-03-16'}, 'end': {'date': '2026-03-17'}}]
+        allday = self.rows(rows)[1]
+        self.assertEqual(allday['start'], '2026-03-16T07:00:00Z')
+        self.assertEqual(allday['meta']['start_local'], '2026-03-16')
 
 
 if __name__ == '__main__':

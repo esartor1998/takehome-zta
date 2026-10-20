@@ -16,7 +16,8 @@ date, so 'by Friday' sent on a Friday means that day
 import re
 from datetime import datetime, timedelta, timezone
 
-from . import config, llm
+from . import config, dates, llm
+from .normalize import issue_refs
 
 ASK_RE = re.compile(r"\b(can you|could you|would you|can u|could u|please|pls|plz|need you|need this|any update|"
                     r"any updates|any chance|wondering if|would you mind|lmk (?:when|by|once)|"
@@ -61,11 +62,14 @@ def parse_due(text, base):
     low = text.lower()
     match = DATE_RE.search(low)
     if match:
-        month = MONTHS.index(match.group(1)[:3]) + 1
-        return datetime(base.year, month, int(match.group(2))).strftime('%Y-%m-%d')
+        found = dates.nearest(base, MONTHS.index(match.group(1)[:3]) + 1, int(match.group(2)))
+        if found:
+            return found.strftime('%Y-%m-%d')
     match = SLASH_DATE_RE.search(low)
-    if match and 1 <= int(match.group(1)) <= 12 and 1 <= int(match.group(2)) <= 31:
-        return datetime(base.year, int(match.group(1)), int(match.group(2))).strftime('%Y-%m-%d')
+    if match and dates.month_day(int(match.group(1)), int(match.group(2))):
+        found = dates.nearest(base, *dates.month_day(int(match.group(1)), int(match.group(2))))
+        if found:
+            return found.strftime('%Y-%m-%d')
     match = ORDINAL_RE.search(low)
     if match and 1 <= int(match.group(1)) <= 31:
         day = int(match.group(1))
@@ -116,7 +120,7 @@ def evidence_index(items):
     cancelled = {i['title'].lower(): i for i in items if i['kind'] == 'event' and i['status'] == 'cancelled'}
 
     def handled_by(item):
-        for ref in set(re.findall(r'\bACME-\d+\b', item['body'])):
+        for ref in set(issue_refs(item['body'])):
             if ref in done and done[ref]['ts'] > item['ts']:
                 return done[ref]['id']
         if re.search(r'decline the old invite', item['body'], re.I):

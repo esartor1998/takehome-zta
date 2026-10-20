@@ -12,10 +12,10 @@ import re
 from datetime import datetime, timedelta
 
 from . import answer, config, llm, store
+from .normalize import TRAILING_REF_RE
 
 WINDOW_DAYS = 7           # 'recent' for decisions and customer issues
 ISSUE_WINDOW_DAYS = 14    # how far back repeated customer reports are counted
-CUSTOMERS = ('Globex', 'Initech', 'Hooli', 'Umbrella', 'Stark', 'Wayne')
 FOCUS_COUNT = 3
 SOON_DAYS = 2             # a deadline this close raises an ask's score
 
@@ -64,7 +64,7 @@ def _rank(item):
 
 
 def _clean_title(item):
-    return re.sub(r'\s*\(ACME-\d+\)$', '', item['title'])
+    return TRAILING_REF_RE.sub('', item['title'])
 
 
 # ---- the calendar ------------------------------------------------------------
@@ -115,8 +115,10 @@ def event_line(e):
     item = e['item']
     when = 'all day' if 'all day' in e['flags'] else f"{_hhmm(item['start'])}-{_hhmm(item['end'])} UTC"
     # a list that spans days needs the date, or 'Tuesday's meeting' reads as today's
-    if item['start'][:10] != config.NOW.strftime('%Y-%m-%d'):
-        when = f"{_parse(item['start']).strftime('%a %b %-d')} {when}"
+    # an all-day event is on its local date, which is not always its UTC date
+    day = item['meta'].get('start_local', item['start'])[:10] if 'all day' in e['flags'] else item['start'][:10]
+    if day != config.NOW.strftime('%Y-%m-%d'):
+        when = f"{datetime.fromisoformat(day).strftime('%a %b %-d')} {when}"
     notes = [f for f in e['flags'] if f != 'all day']
     if e['past']:
         notes.append('already happened')
@@ -142,7 +144,7 @@ def meeting_prep(conn, event, names):
             for row in conn.execute(
                     "SELECT id, title, status FROM items WHERE source='linear' AND state='current' "
                     "AND status IN ('Reopened','Blocked','In Progress') AND (title LIKE ? OR body LIKE ?) "
-                    "ORDER BY ts DESC LIMIT 2", (f'%{org}%', f'%{org}%')):
+                    "ORDER BY ts DESC", (f'%{org}%', f'%{org}%')):
                 notes.append(f"{_clean_title({'title': row['title']})} is {row['status']}")
                 ids.append(row['id'])
     return notes, ids
@@ -192,7 +194,7 @@ def stale_records(conn):
         if r['item_id'] in seen:
             continue
         newer = re.search(r'(?:in|by) ([a-z]+:\S+)\s*$', r['why'])
-        out.append({'item_id': r['item_id'], 'title': re.sub(r'\s*\(ACME-\d+\)$', '', r['title']),
+        out.append({'item_id': r['item_id'], 'title': TRAILING_REF_RE.sub('', r['title']),
                     'source': r['source'], 'fact': r['why'], 'newer_id': newer.group(1) if newer else '',
                     'says': r['value'][:80]})
     return out
@@ -244,7 +246,7 @@ def recurring_customer_issues(conn, names):
     times in one tool is not a recurring issue"""
     since = _iso(config.NOW - timedelta(days=ISSUE_WINDOW_DAYS))
     orgs = {r['org']: r['id'] for r in conn.execute("SELECT org, id FROM people WHERE org != '' AND external=1")}
-    candidates = {org: org for org in orgs} | {c: c for c in CUSTOMERS}
+    candidates = {org: org for org in orgs}      # customers are the companies the directory knows
     clusters = {}
     for row in conn.execute("SELECT * FROM items WHERE state='current' AND ts >= ? AND ts <= ? AND kind IN "
                             "('email','message','issue','pr','comment')", (since, _iso(config.NOW))):
@@ -273,7 +275,7 @@ def recurring_customer_issues(conn, names):
         score = 2 * len(days) + 3 * len(sources) + 3 * len(outside) + (10 if reopened else 0)
         out.append({'customer': org, 'label': label, 'items': items, 'days': len(days), 'sources': sorted(sources),
                     'reopened': reopened, 'outside': len(outside), 'score': score})
-    return sorted(out, key=lambda c: -c['score'])[:4]
+    return sorted(out, key=lambda c: -c['score'])
 
 
 # ---- facts -----------------------------------------------------------------------
@@ -406,7 +408,7 @@ def company_facts(conn, plan):
         if row['status'] == 'open' and (row['who'] in people or set(row['whom'].split(',')) & set(people)):
             add(followup_text(row, names), row['item_id'])
     for r in conn.execute("SELECT id, title, status, ts FROM items WHERE source='linear' AND state='current' AND status != 'Done' "
-                          'AND (title LIKE ? OR body LIKE ?) ORDER BY ts DESC LIMIT 4', (f'%{org}%', f'%{org}%')):
+                          'AND (title LIKE ? OR body LIKE ?) ORDER BY ts DESC', (f'%{org}%', f'%{org}%')):
         old = conn.execute('SELECT current_fact FROM stale_records WHERE item_id=?', (r['id'],)).fetchone()
         add(f"Open issue: {_clean_title({'title': r['title']})} is {r['status']} (updated {r['ts'][:10]})"
             + (f", out of date: newer information says {old['current_fact']}" if old else ''), r['id'])
@@ -417,7 +419,7 @@ def company_facts(conn, plan):
             add(f"{c['label']} reported again: {len(c['items'])} reports on {c['days']} days across {', '.join(c['sources'])}{recurred}", *ids)
     marks = ','.join('?' * len(people))
     for r in conn.execute(f"SELECT id, title, ts FROM items WHERE kind='email' AND state='current' AND author IN ({marks}) "
-                          'ORDER BY ts DESC LIMIT 3', people):
+                          'AND ts >= ? ORDER BY ts DESC', [*people, _iso(config.NOW - timedelta(days=MEETING_EMAIL_DAYS))]):
         add(f"Email from them on {r['ts'][:10]}: {r['title']}", r['id'])
     for r in conn.execute("SELECT id, title, status, ts FROM items WHERE kind='deal' AND (title LIKE ? OR body LIKE ?)",
                           (f'%{org}%', f'%{org}%')):
@@ -505,7 +507,7 @@ def meeting_email_facts(conn):
             from_guest = mail['author'] in e['external'] or bool(set(mail['people']) & set(e['external']))
             if mail['id'] in linked or from_guest or any(re.search(rf'\b{w}\b', text) for w in words):
                 found.append(mail)
-        for mail in found[:3]:
+        for mail in found:
             out.append({'score': 0, 'text': f"Email '{mail['title']}' from {names.get(mail['author'], 'someone')} "
                         f"({mail['ts'][:10]}) relates to {item['title']} on {item['start'][:10]}",
                         'ids': [mail['id'], item['id']], 'cat': 'meeting_email', 'handled': False})
@@ -591,7 +593,7 @@ def generate(conn):
     if closed:
         lines += ['', '## Asked, already handled']
         lines += [f"- {followup_text(r, names)} [{r['item_id']}]" + (f" [{r['evidence']}]" if r['evidence'] else '')
-                  for r in closed[:4]]
+                  for r in closed]
 
     blocked = blocked_for_founder(conn)
     lines += ['', '## Blocked on you']

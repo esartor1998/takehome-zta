@@ -382,7 +382,11 @@ write_jsonl(f"{RAW}/linear_issues.jsonl", linear_raw)
 write_jsonl(f"{RAW}/github_pulls.jsonl", EXPANSION["github"])
 write_jsonl(f"{RAW}/notion_pages.jsonl", EXPANSION["notion"])
 write_jsonl(f"{RAW}/crm_deals.jsonl", EXPANSION["crm"])
-for fname, payload in (("github_users.json", EXPANSION["github_users"]),
+# like conversations.list: how a channel id is turned back into a name
+SLACK_CHANNELS = {"channels": [{"id": k, "name": v.lstrip("#")} for k, v in CHANNELS.items()]
+                  + [{"id": "C07FUND", "name": "fundraising"}, {"id": "C08HIRE", "name": "hiring"}]}
+for fname, payload in (("slack_channels.json", SLACK_CHANNELS),
+                       ("github_users.json", EXPANSION["github_users"]),
                        ("notion_users.json", EXPANSION["notion_users"]),
                        ("crm_contacts.json", EXPANSION["crm_contacts"])):
     with open(f"{RAW}/{fname}", "w") as f:

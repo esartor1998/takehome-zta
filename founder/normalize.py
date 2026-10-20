@@ -17,14 +17,13 @@ import base64
 import html
 import json
 import re
+from collections import Counter
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from . import config
 from .identity import parse_addresses
 
-CHANNELS = {'C01ENG': '#eng', 'C02PROD': '#product', 'C03GEN': '#general',
-            'C04INC': '#incidents', 'C05DES': '#design', 'C06RAND': '#random',
-            'C07FUND': '#fundraising', 'C08HIRE': '#hiring'}
 MENTION_RE = re.compile(r'<@(U[A-Z0-9]+)>')
 
 # where the quoted tail of a reply begins, by the client that wrote it:
@@ -42,9 +41,17 @@ QUOTE_STARTS = (
 )
 QUOTED_LINE_RE = re.compile(r'^>', re.M)
 HEADER_LINE_RE = re.compile(r'^(?:On .+?,? )?[A-Z][\w. ]+ wrote:\s*$|^On .{5,160}$|^[A-Za-z][\w. ]{0,40}.* wrote:\s*$')
-ACME_RE = re.compile(r'\bACME-\d+\b')
+# an issue reference is a team key and a number ('ACME-440'). the keys are read off the Linear identifiers in
+# the export, so a tracker with another key needs no change here. before any are known every key is accepted
+ISSUE_RE = re.compile(r'\b([A-Z][A-Z0-9]{1,9})-\d+\b')
+TRAILING_REF_RE = re.compile(r'\s*\([A-Z][A-Z0-9]{1,9}-\d+\)$')
+ISSUE_KEYS = set()
 AUTOMATED_HEADERS = ('Auto-Submitted', 'List-Unsubscribe')
 AUTO_REPLY_SUBJECT_RE = re.compile(r'^\s*(automatic reply|auto-?reply|out of office|undeliverable|delivery status)', re.I)
+
+
+def issue_refs(text):
+    return [m.group(0) for m in ISSUE_RE.finditer(text) if not ISSUE_KEYS or m.group(1) in ISSUE_KEYS]
 
 
 def _iso(dt):
@@ -116,9 +123,26 @@ def _read_jsonl(path):
         return [json.loads(line) for line in handle if line.strip()]
 
 
+def _thread_people(rows, ident):
+    """Who is in each mail thread, by the addresses alone: sender, To and Cc of every message
+    that resolves. A sign-off with a first name that fits two people is settled by who is in
+    the conversation"""
+    out = {}
+    for row in rows:
+        headers = {h['name']: h['value'] for h in row['payload']['headers']}
+        people = set(ident.recipients(headers.get('To', ''), headers.get('Cc', '')))
+        sender = ident.from_email(headers.get('From', ''))[0]
+        if sender:
+            people.add(sender)
+        out.setdefault(row['threadId'], set()).update(people)
+    return out
+
+
 def gmail_items(raw_dir, ident):
     items = []
-    for row in _read_jsonl(raw_dir / 'gmail_messages.jsonl'):
+    rows = _read_jsonl(raw_dir / 'gmail_messages.jsonl')
+    threads = _thread_people(rows, ident)
+    for row in rows:
         headers = {h['name']: h['value'] for h in row['payload']['headers']}
         body, quoted, quote_kind = split_quote(mail_text(row['payload']))
         ts = datetime.fromtimestamp(int(row['internalDate']) / 1000, tz=timezone.utc)
@@ -126,7 +150,7 @@ def gmail_items(raw_dir, ident):
 
         author, how = ident.from_email(headers.get('From', ''), automated=automated)
         # a role address or an unknown sender is identified by the signature
-        sig = ident.from_signature(body)
+        sig = ident.from_signature(body, threads[row['threadId']], internal_only=(how == 'shared_inbox'))
         if author is None and sig and how not in ('automated',):
             author, how = sig, 'signature'
         recipients = ident.recipients(headers.get('To', ''), headers.get('Cc', ''))
@@ -149,19 +173,33 @@ def gmail_items(raw_dir, ident):
     return items
 
 
-def _when(block):
-    """A calendar start or end: a dateTime with any offset, or an all-day date.
+def founder_zone(rows, ident):
+    """The founder's time zone, read off the calendar: the zone most of the events they organise are
+    in, or failing that most events. An all-day event belongs to a local date, so it has to start at
+    local midnight and not at midnight UTC. UTC when the export says nothing"""
+    founder = [r for r in rows if ident.from_email(r['organizer']['email'])[0] == config.FOUNDER_PERSON_ID]
+    zones = Counter(r['start'].get('timeZone') for r in (founder or rows) if r['start'].get('timeZone'))
+    try:
+        return ZoneInfo(zones.most_common(1)[0][0]) if zones else timezone.utc
+    except (KeyError, ValueError, OSError):
+        return timezone.utc
+
+
+def _when(block, zone=timezone.utc):
+    """A calendar start or end: a dateTime with any offset, or an all-day date at local midnight.
     Returns (utc datetime, original string, all_day)"""
     if 'dateTime' in block:
         return _parse_iso(block['dateTime']), block['dateTime'], False
-    return datetime.fromisoformat(block['date']).replace(tzinfo=timezone.utc), block['date'], True
+    return datetime.fromisoformat(block['date']).replace(tzinfo=zone).astimezone(timezone.utc), block['date'], True
 
 
 def calendar_items(raw_dir, ident):
     items = []
-    for row in _read_jsonl(raw_dir / 'calendar_events.jsonl'):
-        start, start_local, all_day = _when(row['start'])
-        end, _, _ = _when(row['end'])
+    rows = _read_jsonl(raw_dir / 'calendar_events.jsonl')
+    zone = founder_zone(rows, ident)
+    for row in rows:
+        start, start_local, all_day = _when(row['start'], zone)
+        end, _, _ = _when(row['end'], zone)
         flags = []
         if all_day:
             flags.append('all_day')
@@ -175,17 +213,21 @@ def calendar_items(raw_dir, ident):
         responses = {ident.from_email(a['email'])[0]: a['responseStatus']
                      for a in row.get('attendees', []) if ident.from_email(a['email'])[0]}
         organizer = ident.from_email(row['organizer']['email'])[0]
+        # the organizer is at their own event whether or not the export lists them as an attendee. a
+        # personal block or a focus slot has no attendee list at all, and would otherwise belong to nobody
+        people = {a for a in attendees if a} | ({organizer} if organizer else set())
+        unknown = [a['email'] for a in row.get('attendees', []) if not ident.from_email(a['email'])[0]]
         note = row.get('description', '')
         items.append({
             'id': f"calendar:{row['id']}", 'source': 'calendar', 'kind': 'event',
             'thread_key': f"calendar:{row.get('recurringEventId') or row['id']}",
             'ts': _iso(start), 'title': row['summary'], 'body': note, 'quoted': '',
             'author': organizer, 'author_how': 'directory',
-            'people': sorted({a for a in attendees if a}),
+            'people': sorted(people),
             'status': row['status'], 'start': _iso(start), 'end': _iso(end), 'flags': flags,
             'meta': {'responses': responses, 'recurring': row.get('recurringEventId', ''),
                      'time_zone': row['start'].get('timeZone', ''), 'start_local': start_local,
-                     'location': row.get('location', '')},
+                     'location': row.get('location', ''), 'unknown_attendees': unknown},
         })
     return items
 
@@ -193,10 +235,14 @@ def calendar_items(raw_dir, ident):
 def slack_items(raw_dir, ident):
     items = []
     rows = _read_jsonl(raw_dir / 'slack_messages.jsonl')
+    try:
+        channels = {c['id']: '#' + c['name'] for c in json.loads((raw_dir / 'slack_channels.json').read_text())['channels']}
+    except (OSError, KeyError, ValueError):
+        channels = {}          # an export without the list shows channel ids
     parents = {(r['channel_id'], r['ts']): r for r in rows}
     for row in rows:
         ts = datetime.fromtimestamp(float(row['ts']), tz=timezone.utc)
-        channel = CHANNELS.get(row['channel_id'], row['channel_id'])
+        channel = channels.get(row['channel_id'], row['channel_id'])
         thread = row.get('thread_ts')
         flags = []
         if thread and (row['channel_id'], thread) in parents and thread > row['ts']:
@@ -227,6 +273,7 @@ def linear_items(raw_dir, ident):
     for row in _read_jsonl(raw_dir / 'linear_issues.jsonl'):
         assignee = ident.from_linear(row['assignee']['id']) if row.get('assignee') else None
         updated = _parse_iso(row['updatedAt'])
+        ISSUE_KEYS.add(row['identifier'].rsplit('-', 1)[0])
         items.append({
             # the snapshot time is in the id because several records share one
             # identifier (an audit export). dedupe marks all but the latest

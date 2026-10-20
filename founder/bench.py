@@ -37,25 +37,40 @@ def decision_checks(conn):
         got = row['status'] if row else 'not labelled'
         ok = got == check['status'] or (check.get('allow_missing') and not row)
         results.append({'name': check['name'], 'ok': bool(ok), 'got': got})
+    # checks name items from the answer key. one whose item is not in this export (an older dataset) is left out
+    present = {r['id'] for r in conn.execute('SELECT id FROM items')}
     stale = json.loads((CHECKS_PATH.parent / 'stale_checks.json').read_text())
     flagged = {r['item_id'] for r in conn.execute('SELECT item_id FROM stale_records')} | \
               {r['item_id'] for r in conn.execute("SELECT item_id FROM decisions WHERE status='stale'")}
-    for item_id in stale['must_be_stale']:
+    for item_id in (i for i in stale['must_be_stale'] if i in present):
         results.append({'name': f'stale record found: {item_id}', 'ok': item_id in flagged, 'got': 'stale' if item_id in flagged else 'missed'})
-    for item_id in stale['must_not_be_stale']:
+    for item_id in (i for i in stale['must_not_be_stale'] if i in present):
         results.append({'name': f'current record not flagged: {item_id}', 'ok': item_id not in flagged,
                         'got': 'flagged' if item_id in flagged else 'ok'})
     follow = json.loads((CHECKS_PATH.parent / 'followup_checks.json').read_text())
     state = {(r['item_id'], r['kind']): r['status'] for r in conn.execute('SELECT item_id, kind, status FROM followups')}
-    for item_id in follow['open_asks']:
+    for item_id in (i for i in follow['open_asks'] if i in present):
         got = state.get((item_id, 'ask'), 'missing')
         results.append({'name': f'open ask found: {item_id}', 'ok': got == 'open', 'got': got})
-    for item_id in follow['open_promises']:
+    for item_id in (i for i in follow['open_promises'] if i in present):
         got = state.get((item_id, 'promise'), 'missing')
         results.append({'name': f'open promise found: {item_id}', 'ok': got == 'open', 'got': got})
-    for item_id in follow['must_not_be_open']:
+    for item_id in (i for i in follow['must_not_be_open'] if i in present):
         got = state.get((item_id, 'ask'), 'missing')
         results.append({'name': f'handled ask not open: {item_id}', 'ok': got != 'open', 'got': got})
+    # people the export names in another way: who wrote this, and which names a person answers to
+    identity_path = CHECKS_PATH.parent / 'identity_checks.json'
+    if identity_path.exists():
+        identity = json.loads(identity_path.read_text())
+        for item_id, person in identity['author'].items():
+            if item_id in present:
+                got = conn.execute('SELECT author FROM items WHERE id=?', (item_id,)).fetchone()['author']
+                results.append({'name': f'written by {person}: {item_id}', 'ok': got == person, 'got': got})
+        for alias, person in identity['nickname']:
+            row = conn.execute('SELECT aliases FROM people WHERE id=?', (person,)).fetchone()
+            if row and any(i in present for i in identity['author']):
+                results.append({'name': f"'{alias}' is an alias of {person}", 'ok': alias in json.loads(row['aliases']),
+                                'got': 'learned' if alias in json.loads(row['aliases']) else 'unknown'})
     return results
 
 

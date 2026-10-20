@@ -27,2506 +27,6 @@
       "q03": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.125,
-        "mrr": 0.5,
-        "size": 8,
-        "present": [
-          "calendar:2ded3454537257a5518fa9905e"
-        ]
-      },
-      "q04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2222222222222222,
-        "mrr": 0.5,
-        "size": 9,
-        "present": [
-          "gmail:69d12ca0960f4a7d",
-          "slack:C02PROD:1772640000.222201"
-        ]
-      },
-      "q06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.25,
-        "mrr": 1.0,
-        "size": 8,
-        "present": [
-          "calendar:2ded3454537257a5518fa9905e",
-          "calendar:7d2712a17add94eb1a82e92b23"
-        ]
-      },
-      "q07": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1111111111111111,
-        "mrr": 1.0,
-        "size": 9,
-        "present": [
-          "calendar:4554e5cfc14461dcdd7a91842f"
-        ]
-      },
-      "q08": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.14285714285714285,
-        "mrr": 0.25,
-        "size": 7,
-        "present": [
-          "gmail:403df41545d6ec2d",
-          "slack:C01ENG:1772812800.963148"
-        ]
-      },
-      "q09": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "slack:C01ENG:1773522000.994933"
-        ]
-      },
-      "q11": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.25,
-        "size": 10,
-        "present": [
-          "gmail:469b8c07901db7d8"
-        ]
-      },
-      "q12": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "gmail:012ce504e5a045e9",
-          "gmail:75d73520ec4c68f3",
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "q15": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 1.0,
-        "mrr": 1.0,
-        "size": 1,
-        "present": [
-          "linear:ACME-231@20260304T1800"
-        ]
-      },
-      "v04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 0.3333333333333333,
-        "size": 9,
-        "present": [
-          "gmail:469b8c07901db7d8",
-          "gmail:bee95ff7ca51c987",
-          "gmail:c1abbf680fedaacd"
-        ]
-      },
-      "v05": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.25,
-        "mrr": 0.5,
-        "size": 8,
-        "present": [
-          "gmail:469b8c07901db7d8",
-          "gmail:c1abbf680fedaacd"
-        ]
-      },
-      "v06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.4444444444444444,
-        "mrr": 1.0,
-        "size": 9,
-        "present": [
-          "gmail:012ce504e5a045e9",
-          "gmail:6dff2b861992469a",
-          "gmail:75d73520ec4c68f3",
-          "gmail:e1c3f7da79a69dcf"
-        ]
-      },
-      "v12": {
-        "recall": 0.6666666666666666,
-        "complete": false,
-        "precision": 0.3,
-        "mrr": 0.5,
-        "size": 10,
-        "present": [
-          "github:acme/billing#230",
-          "gmail:bfda57e5a3e21af0",
-          "slack:C01ENG:1773331200.609253"
-        ]
-      },
-      "v13": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2727272727272727,
-        "mrr": 0.3333333333333333,
-        "size": 11,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-441@20260313T1900",
-          "notion:163647759184b558a347537639422466"
-        ]
-      },
-      "v14": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 1.0,
-        "size": 12,
-        "present": [
-          "gmail:07c7430cafafc2e3",
-          "gmail:681e9cabc5b3cb1f",
-          "gmail:e98c5b9d26b114a1",
-          "slack:C08HIRE:1773156600.279355"
-        ]
-      },
-      "v15": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "v16": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.25,
-        "mrr": 0.25,
-        "size": 12,
-        "present": [
-          "github:acme/api#231",
-          "gmail:bee95ff7ca51c987",
-          "linear:ACME-431@20260312T1800"
-        ]
-      },
-      "v17": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 0.5,
-        "mrr": 0.5,
-        "size": 4,
-        "present": [
-          "gmail:805093022b56ece6",
-          "gmail:93c4a504d87495b9"
-        ]
-      },
-      "v18": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.4,
-        "mrr": 0.5,
-        "size": 5,
-        "present": [
-          "gmail:19d8c431017747e4",
-          "gmail:b3e0be40fd6f1fea"
-        ]
-      },
-      "v19": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 1.0,
-        "mrr": 1.0,
-        "size": 2,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-440@20260306T1500"
-        ]
-      },
-      "v21": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 1.0,
-        "size": 3,
-        "present": [
-          "gmail:75d73520ec4c68f3"
-        ]
-      },
-      "t03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.4,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "gmail:012ce504e5a045e9",
-          "gmail:6dff2b861992469a",
-          "gmail:75d73520ec4c68f3",
-          "gmail:e1c3f7da79a69dcf"
-        ]
-      },
-      "t04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 0.5,
-        "size": 9,
-        "present": [
-          "gmail:469b8c07901db7d8",
-          "gmail:bee95ff7ca51c987",
-          "gmail:c1abbf680fedaacd"
-        ]
-      },
-      "t05": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "gmail:e98c5b9d26b114a1",
-          "slack:C08HIRE:1773156600.279355"
-        ]
-      },
-      "t06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.5,
-        "size": 10,
-        "present": [
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "t07": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2727272727272727,
-        "mrr": 0.3333333333333333,
-        "size": 11,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-441@20260313T1900",
-          "notion:163647759184b558a347537639422466"
-        ]
-      },
-      "n01": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2857142857142857,
-        "mrr": 0.25,
-        "size": 7,
-        "present": [
-          "gmail:7d508a6afb1224fb",
-          "slack:C03GEN:1773414000.655032"
-        ]
-      },
-      "n02": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.5,
-        "mrr": 0.3333333333333333,
-        "size": 6,
-        "present": [
-          "gmail:7d508a6afb1224fb",
-          "notion:fdfd76a06532aec244da50d79fa1676a",
-          "slack:C03GEN:1773414000.655032"
-        ]
-      },
-      "n03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.14285714285714285,
-        "mrr": 0.2,
-        "size": 7,
-        "present": [
-          "gmail:7d508a6afb1224fb"
-        ]
-      },
-      "n05": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.25,
-        "size": 10,
-        "present": [
-          "slack:C03GEN:1773328800.908829"
-        ]
-      },
-      "n06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "gmail:6c967d680a755c1f"
-        ]
-      }
-    },
-    "no_vector": {
-      "q01": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "gmail:c1abbf680fedaacd",
-          "slack:C01ENG:1773248400.000100"
-        ]
-      },
-      "q02": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.42857142857142855,
-        "mrr": 1.0,
-        "size": 7,
-        "present": [
-          "gmail:ceece9b31878fe40",
-          "linear:ACME-142@20260314T2200",
-          "slack:C01ENG:1773522000.994933"
-        ]
-      },
-      "q03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.125,
-        "mrr": 0.5,
-        "size": 8,
-        "present": [
-          "calendar:2ded3454537257a5518fa9905e"
-        ]
-      },
-      "q04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2222222222222222,
-        "mrr": 0.3333333333333333,
-        "size": 9,
-        "present": [
-          "gmail:69d12ca0960f4a7d",
-          "slack:C02PROD:1772640000.222201"
-        ]
-      },
-      "q06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.25,
-        "mrr": 1.0,
-        "size": 8,
-        "present": [
-          "calendar:2ded3454537257a5518fa9905e",
-          "calendar:7d2712a17add94eb1a82e92b23"
-        ]
-      },
-      "q07": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1111111111111111,
-        "mrr": 1.0,
-        "size": 9,
-        "present": [
-          "calendar:4554e5cfc14461dcdd7a91842f"
-        ]
-      },
-      "q08": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.14285714285714285,
-        "mrr": 0.2,
-        "size": 7,
-        "present": [
-          "gmail:403df41545d6ec2d",
-          "slack:C01ENG:1772812800.963148"
-        ]
-      },
-      "q09": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "slack:C01ENG:1773522000.994933"
-        ]
-      },
-      "q11": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.125,
-        "size": 10,
-        "present": [
-          "gmail:469b8c07901db7d8"
-        ]
-      },
-      "q12": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2727272727272727,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "gmail:012ce504e5a045e9",
-          "gmail:75d73520ec4c68f3",
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "q15": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 1.0,
-        "mrr": 1.0,
-        "size": 1,
-        "present": [
-          "linear:ACME-231@20260304T1800"
-        ]
-      },
-      "v04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 0.5,
-        "size": 9,
-        "present": [
-          "gmail:469b8c07901db7d8",
-          "gmail:bee95ff7ca51c987",
-          "gmail:c1abbf680fedaacd"
-        ]
-      },
-      "v05": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 0.5,
-        "size": 6,
-        "present": [
-          "gmail:469b8c07901db7d8",
-          "gmail:c1abbf680fedaacd"
-        ]
-      },
-      "v06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.4444444444444444,
-        "mrr": 1.0,
-        "size": 9,
-        "present": [
-          "gmail:012ce504e5a045e9",
-          "gmail:6dff2b861992469a",
-          "gmail:75d73520ec4c68f3",
-          "gmail:e1c3f7da79a69dcf"
-        ]
-      },
-      "v12": {
-        "recall": 0.6666666666666666,
-        "complete": false,
-        "precision": 0.3,
-        "mrr": 0.3333333333333333,
-        "size": 10,
-        "present": [
-          "github:acme/billing#230",
-          "gmail:bfda57e5a3e21af0",
-          "slack:C01ENG:1773331200.609253"
-        ]
-      },
-      "v13": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2727272727272727,
-        "mrr": 0.3333333333333333,
-        "size": 11,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-441@20260313T1900",
-          "notion:163647759184b558a347537639422466"
-        ]
-      },
-      "v14": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.36363636363636365,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "gmail:07c7430cafafc2e3",
-          "gmail:681e9cabc5b3cb1f",
-          "gmail:e98c5b9d26b114a1",
-          "slack:C08HIRE:1773156600.279355"
-        ]
-      },
-      "v15": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.25,
-        "size": 10,
-        "present": [
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "v16": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.25,
-        "mrr": 0.25,
-        "size": 12,
-        "present": [
-          "github:acme/api#231",
-          "gmail:bee95ff7ca51c987",
-          "linear:ACME-431@20260312T1800"
-        ]
-      },
-      "v17": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 0.5,
-        "mrr": 0.5,
-        "size": 4,
-        "present": [
-          "gmail:805093022b56ece6",
-          "gmail:93c4a504d87495b9"
-        ]
-      },
-      "v18": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.4,
-        "mrr": 0.5,
-        "size": 5,
-        "present": [
-          "gmail:19d8c431017747e4",
-          "gmail:b3e0be40fd6f1fea"
-        ]
-      },
-      "v19": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 1.0,
-        "mrr": 1.0,
-        "size": 2,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-440@20260306T1500"
-        ]
-      },
-      "v21": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 1.0,
-        "size": 3,
-        "present": [
-          "gmail:75d73520ec4c68f3"
-        ]
-      },
-      "t03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.4444444444444444,
-        "mrr": 1.0,
-        "size": 9,
-        "present": [
-          "gmail:012ce504e5a045e9",
-          "gmail:6dff2b861992469a",
-          "gmail:75d73520ec4c68f3",
-          "gmail:e1c3f7da79a69dcf"
-        ]
-      },
-      "t04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 0.5,
-        "size": 9,
-        "present": [
-          "gmail:469b8c07901db7d8",
-          "gmail:bee95ff7ca51c987",
-          "gmail:c1abbf680fedaacd"
-        ]
-      },
-      "t05": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "gmail:e98c5b9d26b114a1",
-          "slack:C08HIRE:1773156600.279355"
-        ]
-      },
-      "t06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.25,
-        "size": 10,
-        "present": [
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "t07": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2727272727272727,
-        "mrr": 0.3333333333333333,
-        "size": 11,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-441@20260313T1900",
-          "notion:163647759184b558a347537639422466"
-        ]
-      },
-      "n01": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2857142857142857,
-        "mrr": 0.25,
-        "size": 7,
-        "present": [
-          "gmail:7d508a6afb1224fb",
-          "slack:C03GEN:1773414000.655032"
-        ]
-      },
-      "n02": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.5,
-        "mrr": 0.3333333333333333,
-        "size": 6,
-        "present": [
-          "gmail:7d508a6afb1224fb",
-          "notion:fdfd76a06532aec244da50d79fa1676a",
-          "slack:C03GEN:1773414000.655032"
-        ]
-      },
-      "n03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.14285714285714285,
-        "mrr": 0.2,
-        "size": 7,
-        "present": [
-          "gmail:7d508a6afb1224fb"
-        ]
-      },
-      "n05": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 10,
-        "present": []
-      },
-      "n06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 0.5,
-        "size": 11,
-        "present": [
-          "gmail:6c967d680a755c1f"
-        ]
-      }
-    },
-    "vector_only": {
-      "q01": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "gmail:c1abbf680fedaacd",
-          "slack:C01ENG:1773248400.000100"
-        ]
-      },
-      "q02": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2,
-        "mrr": 0.2,
-        "size": 10,
-        "present": [
-          "gmail:ceece9b31878fe40",
-          "linear:ACME-142@20260314T2200"
-        ]
-      },
-      "q03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "calendar:2ded3454537257a5518fa9905e",
-          "gmail:ff9c102bbfa27a06"
-        ]
-      },
-      "q04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "gmail:69d12ca0960f4a7d"
-        ]
-      },
-      "q06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "calendar:2ded3454537257a5518fa9905e",
-          "calendar:7d2712a17add94eb1a82e92b23",
-          "gmail:ff9c102bbfa27a06"
-        ]
-      },
-      "q07": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "calendar:4554e5cfc14461dcdd7a91842f"
-        ]
-      },
-      "q08": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "gmail:403df41545d6ec2d"
-        ]
-      },
-      "q09": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 0.3333333333333333,
-        "size": 11,
-        "present": [
-          "slack:C01ENG:1773522000.994933"
-        ]
-      },
-      "q11": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 0.14285714285714285,
-        "size": 11,
-        "present": [
-          "gmail:469b8c07901db7d8"
-        ]
-      },
-      "q12": {
-        "recall": 0.3333333333333333,
-        "complete": false,
-        "precision": 0.09090909090909091,
-        "mrr": 0.09090909090909091,
-        "size": 11,
-        "present": [
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "q15": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 0.1,
-        "mrr": 0.3333333333333333,
-        "size": 10,
-        "present": [
-          "linear:ACME-231@20260304T1800"
-        ]
-      },
-      "v04": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 10,
-        "present": []
-      },
-      "v05": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 10,
-        "present": []
-      },
-      "v06": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 0.18181818181818182,
-        "mrr": 0.14285714285714285,
-        "size": 11,
-        "present": [
-          "gmail:6dff2b861992469a",
-          "gmail:75d73520ec4c68f3"
-        ]
-      },
-      "v12": {
-        "recall": 0.3333333333333333,
-        "complete": false,
-        "precision": 0.2,
-        "mrr": 0.5,
-        "size": 10,
-        "present": [
-          "gmail:bfda57e5a3e21af0",
-          "slack:C01ENG:1773331200.609253"
-        ]
-      },
-      "v13": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3,
-        "mrr": 0.3333333333333333,
-        "size": 10,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-441@20260313T1900",
-          "notion:163647759184b558a347537639422466"
-        ]
-      },
-      "v14": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 1.0,
-        "size": 12,
-        "present": [
-          "gmail:07c7430cafafc2e3",
-          "gmail:681e9cabc5b3cb1f",
-          "gmail:e98c5b9d26b114a1",
-          "slack:C08HIRE:1773156600.279355"
-        ]
-      },
-      "v15": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "v16": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "github:acme/api#231",
-          "gmail:bee95ff7ca51c987",
-          "linear:ACME-431@20260312T1800"
-        ]
-      },
-      "v17": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 10,
-        "present": []
-      },
-      "v18": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 12,
-        "present": []
-      },
-      "v19": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 11,
-        "present": []
-      },
-      "v21": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.16666666666666666,
-        "mrr": 0.3333333333333333,
-        "size": 12,
-        "present": [
-          "gmail:6dff2b861992469a",
-          "gmail:75d73520ec4c68f3"
-        ]
-      },
-      "t03": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 0.18181818181818182,
-        "mrr": 0.16666666666666666,
-        "size": 11,
-        "present": [
-          "gmail:6dff2b861992469a",
-          "gmail:75d73520ec4c68f3"
-        ]
-      },
-      "t04": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 10,
-        "present": []
-      },
-      "t05": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 0.3333333333333333,
-        "size": 11,
-        "present": [
-          "gmail:e98c5b9d26b114a1",
-          "slack:C08HIRE:1773156600.279355"
-        ]
-      },
-      "t06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "t07": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.25,
-        "mrr": 0.3333333333333333,
-        "size": 12,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-441@20260313T1900",
-          "notion:163647759184b558a347537639422466"
-        ]
-      },
-      "n01": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.14285714285714285,
-        "size": 10,
-        "present": [
-          "slack:C03GEN:1773414000.655032"
-        ]
-      },
-      "n02": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "notion:fdfd76a06532aec244da50d79fa1676a",
-          "slack:C03GEN:1773414000.655032"
-        ]
-      },
-      "n03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.07692307692307693,
-        "mrr": 0.08333333333333333,
-        "size": 13,
-        "present": [
-          "gmail:7d508a6afb1224fb"
-        ]
-      },
-      "n05": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 12,
-        "present": []
-      },
-      "n06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "gmail:6c967d680a755c1f"
-        ]
-      }
-    },
-    "no_fts": {
-      "q01": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "gmail:c1abbf680fedaacd",
-          "slack:C01ENG:1773248400.000100"
-        ]
-      },
-      "q02": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.42857142857142855,
-        "mrr": 1.0,
-        "size": 7,
-        "present": [
-          "gmail:ceece9b31878fe40",
-          "linear:ACME-142@20260314T2200",
-          "slack:C01ENG:1773522000.994933"
-        ]
-      },
-      "q03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.125,
-        "mrr": 0.5,
-        "size": 8,
-        "present": [
-          "calendar:2ded3454537257a5518fa9905e"
-        ]
-      },
-      "q04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.25,
-        "mrr": 0.5,
-        "size": 8,
-        "present": [
-          "gmail:69d12ca0960f4a7d",
-          "slack:C02PROD:1772640000.222201"
-        ]
-      },
-      "q06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.25,
-        "mrr": 1.0,
-        "size": 8,
-        "present": [
-          "calendar:2ded3454537257a5518fa9905e",
-          "calendar:7d2712a17add94eb1a82e92b23"
-        ]
-      },
-      "q07": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1111111111111111,
-        "mrr": 1.0,
-        "size": 9,
-        "present": [
-          "calendar:4554e5cfc14461dcdd7a91842f"
-        ]
-      },
-      "q08": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.14285714285714285,
-        "mrr": 0.3333333333333333,
-        "size": 7,
-        "present": [
-          "gmail:403df41545d6ec2d",
-          "slack:C01ENG:1772812800.963148"
-        ]
-      },
-      "q09": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "slack:C01ENG:1773522000.994933"
-        ]
-      },
-      "q11": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 0.14285714285714285,
-        "size": 11,
-        "present": [
-          "gmail:469b8c07901db7d8"
-        ]
-      },
-      "q12": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "gmail:012ce504e5a045e9",
-          "gmail:75d73520ec4c68f3",
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "q15": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 1.0,
-        "mrr": 1.0,
-        "size": 1,
-        "present": [
-          "linear:ACME-231@20260304T1800"
-        ]
-      },
-      "v04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 0.3333333333333333,
-        "size": 9,
-        "present": [
-          "gmail:469b8c07901db7d8",
-          "gmail:bee95ff7ca51c987",
-          "gmail:c1abbf680fedaacd"
-        ]
-      },
-      "v05": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.25,
-        "mrr": 0.5,
-        "size": 8,
-        "present": [
-          "gmail:469b8c07901db7d8",
-          "gmail:c1abbf680fedaacd"
-        ]
-      },
-      "v06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.4444444444444444,
-        "mrr": 1.0,
-        "size": 9,
-        "present": [
-          "gmail:012ce504e5a045e9",
-          "gmail:6dff2b861992469a",
-          "gmail:75d73520ec4c68f3",
-          "gmail:e1c3f7da79a69dcf"
-        ]
-      },
-      "v12": {
-        "recall": 0.3333333333333333,
-        "complete": false,
-        "precision": 0.2,
-        "mrr": 0.5,
-        "size": 10,
-        "present": [
-          "gmail:bfda57e5a3e21af0",
-          "slack:C01ENG:1773331200.609253"
-        ]
-      },
-      "v13": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3,
-        "mrr": 0.3333333333333333,
-        "size": 10,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-441@20260313T1900",
-          "notion:163647759184b558a347537639422466"
-        ]
-      },
-      "v14": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 1.0,
-        "size": 12,
-        "present": [
-          "gmail:07c7430cafafc2e3",
-          "gmail:681e9cabc5b3cb1f",
-          "gmail:e98c5b9d26b114a1",
-          "slack:C08HIRE:1773156600.279355"
-        ]
-      },
-      "v15": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "v16": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "github:acme/api#231",
-          "gmail:bee95ff7ca51c987",
-          "linear:ACME-431@20260312T1800"
-        ]
-      },
-      "v17": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 0.5,
-        "mrr": 0.5,
-        "size": 4,
-        "present": [
-          "gmail:805093022b56ece6",
-          "gmail:93c4a504d87495b9"
-        ]
-      },
-      "v18": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.4,
-        "mrr": 0.5,
-        "size": 5,
-        "present": [
-          "gmail:19d8c431017747e4",
-          "gmail:b3e0be40fd6f1fea"
-        ]
-      },
-      "v19": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 1.0,
-        "mrr": 1.0,
-        "size": 2,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-440@20260306T1500"
-        ]
-      },
-      "v21": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 1.0,
-        "size": 3,
-        "present": [
-          "gmail:75d73520ec4c68f3"
-        ]
-      },
-      "t03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.4,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "gmail:012ce504e5a045e9",
-          "gmail:6dff2b861992469a",
-          "gmail:75d73520ec4c68f3",
-          "gmail:e1c3f7da79a69dcf"
-        ]
-      },
-      "t04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 0.5,
-        "size": 9,
-        "present": [
-          "gmail:469b8c07901db7d8",
-          "gmail:bee95ff7ca51c987",
-          "gmail:c1abbf680fedaacd"
-        ]
-      },
-      "t05": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 0.3333333333333333,
-        "size": 11,
-        "present": [
-          "gmail:e98c5b9d26b114a1",
-          "slack:C08HIRE:1773156600.279355"
-        ]
-      },
-      "t06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "t07": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.25,
-        "mrr": 0.3333333333333333,
-        "size": 12,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-441@20260313T1900",
-          "notion:163647759184b558a347537639422466"
-        ]
-      },
-      "n01": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2857142857142857,
-        "mrr": 0.25,
-        "size": 7,
-        "present": [
-          "gmail:7d508a6afb1224fb",
-          "slack:C03GEN:1773414000.655032"
-        ]
-      },
-      "n02": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 0.2857142857142857,
-        "mrr": 0.25,
-        "size": 7,
-        "present": [
-          "gmail:7d508a6afb1224fb",
-          "slack:C03GEN:1773414000.655032"
-        ]
-      },
-      "n03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.14285714285714285,
-        "mrr": 0.2,
-        "size": 7,
-        "present": [
-          "gmail:7d508a6afb1224fb"
-        ]
-      },
-      "n05": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 12,
-        "present": []
-      },
-      "n06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "gmail:6c967d680a755c1f"
-        ]
-      }
-    },
-    "fts_only": {
-      "q01": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2,
-        "mrr": 0.5,
-        "size": 10,
-        "present": [
-          "gmail:c1abbf680fedaacd",
-          "slack:C01ENG:1773248400.000100"
-        ]
-      },
-      "q02": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2,
-        "mrr": 0.2,
-        "size": 10,
-        "present": [
-          "gmail:ceece9b31878fe40",
-          "linear:ACME-142@20260314T2200"
-        ]
-      },
-      "q03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.3333333333333333,
-        "size": 10,
-        "present": [
-          "gmail:ff9c102bbfa27a06"
-        ]
-      },
-      "q04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.15384615384615385,
-        "mrr": 0.5,
-        "size": 13,
-        "present": [
-          "gmail:69d12ca0960f4a7d",
-          "slack:C02PROD:1772640000.222201"
-        ]
-      },
-      "q06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "calendar:7d2712a17add94eb1a82e92b23",
-          "gmail:ff9c102bbfa27a06"
-        ]
-      },
-      "q07": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "calendar:4554e5cfc14461dcdd7a91842f"
-        ]
-      },
-      "q08": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.3333333333333333,
-        "size": 10,
-        "present": [
-          "gmail:403df41545d6ec2d"
-        ]
-      },
-      "q09": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "slack:C01ENG:1773522000.994933"
-        ]
-      },
-      "q11": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.125,
-        "size": 10,
-        "present": [
-          "gmail:469b8c07901db7d8"
-        ]
-      },
-      "q12": {
-        "recall": 0.6666666666666666,
-        "complete": false,
-        "precision": 0.2,
-        "mrr": 0.2,
-        "size": 10,
-        "present": [
-          "gmail:75d73520ec4c68f3",
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "q15": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 0.1,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "linear:ACME-231@20260304T1800"
-        ]
-      },
-      "v04": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 10,
-        "present": []
-      },
-      "v05": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 1,
-        "present": []
-      },
-      "v06": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 0.09090909090909091,
-        "mrr": 0.1,
-        "size": 11,
-        "present": [
-          "gmail:75d73520ec4c68f3"
-        ]
-      },
-      "v12": {
-        "recall": 0.6666666666666666,
-        "complete": false,
-        "precision": 0.3,
-        "mrr": 0.3333333333333333,
-        "size": 10,
-        "present": [
-          "github:acme/billing#230",
-          "gmail:bfda57e5a3e21af0",
-          "slack:C01ENG:1773331200.609253"
-        ]
-      },
-      "v13": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2727272727272727,
-        "mrr": 0.3333333333333333,
-        "size": 11,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-441@20260313T1900",
-          "notion:163647759184b558a347537639422466"
-        ]
-      },
-      "v14": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.36363636363636365,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "gmail:07c7430cafafc2e3",
-          "gmail:681e9cabc5b3cb1f",
-          "gmail:e98c5b9d26b114a1",
-          "slack:C08HIRE:1773156600.279355"
-        ]
-      },
-      "v15": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.25,
-        "size": 10,
-        "present": [
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "v16": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.25,
-        "mrr": 0.25,
-        "size": 12,
-        "present": [
-          "github:acme/api#231",
-          "gmail:bee95ff7ca51c987",
-          "linear:ACME-431@20260312T1800"
-        ]
-      },
-      "v17": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 0.1,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "linear:ACME-433@20260311T1500"
-        ]
-      },
-      "v18": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2857142857142857,
-        "mrr": 0.5,
-        "size": 7,
-        "present": [
-          "gmail:19d8c431017747e4",
-          "gmail:b3e0be40fd6f1fea"
-        ]
-      },
-      "v19": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.15384615384615385,
-        "mrr": 0.2,
-        "size": 13,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-440@20260306T1500"
-        ]
-      },
-      "v21": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 0.3333333333333333,
-        "size": 9,
-        "present": [
-          "crm:deal:23a551d6fe",
-          "gmail:6dff2b861992469a",
-          "gmail:75d73520ec4c68f3"
-        ]
-      },
-      "t03": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 0.09090909090909091,
-        "mrr": 0.125,
-        "size": 11,
-        "present": [
-          "gmail:75d73520ec4c68f3"
-        ]
-      },
-      "t04": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 0,
-        "present": []
-      },
-      "t05": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "gmail:e98c5b9d26b114a1",
-          "slack:C08HIRE:1773156600.279355"
-        ]
-      },
-      "t06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.25,
-        "size": 10,
-        "present": [
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "t07": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2727272727272727,
-        "mrr": 0.3333333333333333,
-        "size": 11,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-441@20260313T1900",
-          "notion:163647759184b558a347537639422466"
-        ]
-      },
-      "n01": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 0.09090909090909091,
-        "size": 11,
-        "present": [
-          "slack:C03GEN:1773414000.655032"
-        ]
-      },
-      "n02": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "notion:fdfd76a06532aec244da50d79fa1676a",
-          "slack:C03GEN:1773414000.655032"
-        ]
-      },
-      "n03": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 12,
-        "present": []
-      },
-      "n05": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 10,
-        "present": []
-      },
-      "n06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.3333333333333333,
-        "size": 10,
-        "present": [
-          "gmail:6c967d680a755c1f"
-        ]
-      }
-    },
-    "no_structured": {
-      "q01": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "gmail:c1abbf680fedaacd",
-          "slack:C01ENG:1773248400.000100"
-        ]
-      },
-      "q02": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 0.2,
-        "size": 11,
-        "present": [
-          "gmail:ceece9b31878fe40",
-          "linear:ACME-142@20260314T2200"
-        ]
-      },
-      "q03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.5,
-        "size": 10,
-        "present": [
-          "gmail:ff9c102bbfa27a06"
-        ]
-      },
-      "q04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.16666666666666666,
-        "mrr": 0.5,
-        "size": 12,
-        "present": [
-          "gmail:69d12ca0960f4a7d",
-          "slack:C02PROD:1772640000.222201"
-        ]
-      },
-      "q06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "calendar:2ded3454537257a5518fa9905e",
-          "calendar:7d2712a17add94eb1a82e92b23",
-          "gmail:ff9c102bbfa27a06"
-        ]
-      },
-      "q07": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "calendar:4554e5cfc14461dcdd7a91842f"
-        ]
-      },
-      "q08": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.5,
-        "size": 10,
-        "present": [
-          "gmail:403df41545d6ec2d"
-        ]
-      },
-      "q09": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "slack:C01ENG:1773522000.994933"
-        ]
-      },
-      "q11": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.25,
-        "size": 10,
-        "present": [
-          "gmail:469b8c07901db7d8"
-        ]
-      },
-      "q12": {
-        "recall": 0.6666666666666666,
-        "complete": false,
-        "precision": 0.16666666666666666,
-        "mrr": 1.0,
-        "size": 12,
-        "present": [
-          "gmail:75d73520ec4c68f3",
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "q15": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 0.1,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "linear:ACME-231@20260304T1800"
-        ]
-      },
-      "v04": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 10,
-        "present": []
-      },
-      "v05": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 10,
-        "present": []
-      },
-      "v06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.26666666666666666,
-        "mrr": 1.0,
-        "size": 15,
-        "present": [
-          "gmail:012ce504e5a045e9",
-          "gmail:6dff2b861992469a",
-          "gmail:75d73520ec4c68f3",
-          "gmail:e1c3f7da79a69dcf"
-        ]
-      },
-      "v12": {
-        "recall": 0.6666666666666666,
-        "complete": false,
-        "precision": 0.3,
-        "mrr": 0.5,
-        "size": 10,
-        "present": [
-          "github:acme/billing#230",
-          "gmail:bfda57e5a3e21af0",
-          "slack:C01ENG:1773331200.609253"
-        ]
-      },
-      "v13": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2727272727272727,
-        "mrr": 0.3333333333333333,
-        "size": 11,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-441@20260313T1900",
-          "notion:163647759184b558a347537639422466"
-        ]
-      },
-      "v14": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 1.0,
-        "size": 12,
-        "present": [
-          "gmail:07c7430cafafc2e3",
-          "gmail:681e9cabc5b3cb1f",
-          "gmail:e98c5b9d26b114a1",
-          "slack:C08HIRE:1773156600.279355"
-        ]
-      },
-      "v15": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.5,
-        "size": 10,
-        "present": [
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "v16": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.25,
-        "mrr": 0.25,
-        "size": 12,
-        "present": [
-          "github:acme/api#231",
-          "gmail:bee95ff7ca51c987",
-          "linear:ACME-431@20260312T1800"
-        ]
-      },
-      "v17": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 10,
-        "present": []
-      },
-      "v18": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.15384615384615385,
-        "mrr": 0.5,
-        "size": 13,
-        "present": [
-          "gmail:19d8c431017747e4",
-          "gmail:b3e0be40fd6f1fea"
-        ]
-      },
-      "v19": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 10,
-        "present": []
-      },
-      "v21": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2727272727272727,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "crm:deal:23a551d6fe",
-          "gmail:6dff2b861992469a",
-          "gmail:75d73520ec4c68f3"
-        ]
-      },
-      "t03": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 0.15384615384615385,
-        "mrr": 1.0,
-        "size": 13,
-        "present": [
-          "gmail:6dff2b861992469a",
-          "gmail:75d73520ec4c68f3"
-        ]
-      },
-      "t04": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 10,
-        "present": []
-      },
-      "t05": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "gmail:e98c5b9d26b114a1",
-          "slack:C08HIRE:1773156600.279355"
-        ]
-      },
-      "t06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.5,
-        "size": 10,
-        "present": [
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "t07": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2727272727272727,
-        "mrr": 0.3333333333333333,
-        "size": 11,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-441@20260313T1900",
-          "notion:163647759184b558a347537639422466"
-        ]
-      },
-      "n01": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 0.09090909090909091,
-        "size": 11,
-        "present": [
-          "slack:C03GEN:1773414000.655032"
-        ]
-      },
-      "n02": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "notion:fdfd76a06532aec244da50d79fa1676a",
-          "slack:C03GEN:1773414000.655032"
-        ]
-      },
-      "n03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.07692307692307693,
-        "mrr": 0.08333333333333333,
-        "size": 13,
-        "present": [
-          "gmail:7d508a6afb1224fb"
-        ]
-      },
-      "n05": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.25,
-        "size": 10,
-        "present": [
-          "slack:C03GEN:1773328800.908829"
-        ]
-      },
-      "n06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "gmail:6c967d680a755c1f"
-        ]
-      }
-    },
-    "vector_x0.5": {
-      "q01": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "gmail:c1abbf680fedaacd",
-          "slack:C01ENG:1773248400.000100"
-        ]
-      },
-      "q02": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.42857142857142855,
-        "mrr": 1.0,
-        "size": 7,
-        "present": [
-          "gmail:ceece9b31878fe40",
-          "linear:ACME-142@20260314T2200",
-          "slack:C01ENG:1773522000.994933"
-        ]
-      },
-      "q03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.125,
-        "mrr": 0.5,
-        "size": 8,
-        "present": [
-          "calendar:2ded3454537257a5518fa9905e"
-        ]
-      },
-      "q04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2222222222222222,
-        "mrr": 0.5,
-        "size": 9,
-        "present": [
-          "gmail:69d12ca0960f4a7d",
-          "slack:C02PROD:1772640000.222201"
-        ]
-      },
-      "q06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.25,
-        "mrr": 1.0,
-        "size": 8,
-        "present": [
-          "calendar:2ded3454537257a5518fa9905e",
-          "calendar:7d2712a17add94eb1a82e92b23"
-        ]
-      },
-      "q07": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1111111111111111,
-        "mrr": 1.0,
-        "size": 9,
-        "present": [
-          "calendar:4554e5cfc14461dcdd7a91842f"
-        ]
-      },
-      "q08": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.14285714285714285,
-        "mrr": 0.25,
-        "size": 7,
-        "present": [
-          "gmail:403df41545d6ec2d",
-          "slack:C01ENG:1772812800.963148"
-        ]
-      },
-      "q09": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "slack:C01ENG:1773522000.994933"
-        ]
-      },
-      "q11": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.25,
-        "size": 10,
-        "present": [
-          "gmail:469b8c07901db7d8"
-        ]
-      },
-      "q12": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "gmail:012ce504e5a045e9",
-          "gmail:75d73520ec4c68f3",
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "q15": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 1.0,
-        "mrr": 1.0,
-        "size": 1,
-        "present": [
-          "linear:ACME-231@20260304T1800"
-        ]
-      },
-      "v04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 0.3333333333333333,
-        "size": 9,
-        "present": [
-          "gmail:469b8c07901db7d8",
-          "gmail:bee95ff7ca51c987",
-          "gmail:c1abbf680fedaacd"
-        ]
-      },
-      "v05": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.25,
-        "mrr": 0.5,
-        "size": 8,
-        "present": [
-          "gmail:469b8c07901db7d8",
-          "gmail:c1abbf680fedaacd"
-        ]
-      },
-      "v06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.4444444444444444,
-        "mrr": 1.0,
-        "size": 9,
-        "present": [
-          "gmail:012ce504e5a045e9",
-          "gmail:6dff2b861992469a",
-          "gmail:75d73520ec4c68f3",
-          "gmail:e1c3f7da79a69dcf"
-        ]
-      },
-      "v12": {
-        "recall": 0.6666666666666666,
-        "complete": false,
-        "precision": 0.3,
-        "mrr": 0.5,
-        "size": 10,
-        "present": [
-          "github:acme/billing#230",
-          "gmail:bfda57e5a3e21af0",
-          "slack:C01ENG:1773331200.609253"
-        ]
-      },
-      "v13": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2727272727272727,
-        "mrr": 0.3333333333333333,
-        "size": 11,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-441@20260313T1900",
-          "notion:163647759184b558a347537639422466"
-        ]
-      },
-      "v14": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.36363636363636365,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "gmail:07c7430cafafc2e3",
-          "gmail:681e9cabc5b3cb1f",
-          "gmail:e98c5b9d26b114a1",
-          "slack:C08HIRE:1773156600.279355"
-        ]
-      },
-      "v15": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "v16": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.25,
-        "mrr": 0.25,
-        "size": 12,
-        "present": [
-          "github:acme/api#231",
-          "gmail:bee95ff7ca51c987",
-          "linear:ACME-431@20260312T1800"
-        ]
-      },
-      "v17": {
-        "recall": 0.5,
-        "complete": false,
-        "precision": 0.5,
-        "mrr": 0.5,
-        "size": 4,
-        "present": [
-          "gmail:805093022b56ece6",
-          "gmail:93c4a504d87495b9"
-        ]
-      },
-      "v18": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.4,
-        "mrr": 0.5,
-        "size": 5,
-        "present": [
-          "gmail:19d8c431017747e4",
-          "gmail:b3e0be40fd6f1fea"
-        ]
-      },
-      "v19": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 1.0,
-        "mrr": 1.0,
-        "size": 2,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-440@20260306T1500"
-        ]
-      },
-      "v21": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 1.0,
-        "size": 3,
-        "present": [
-          "gmail:75d73520ec4c68f3"
-        ]
-      },
-      "t03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.4444444444444444,
-        "mrr": 1.0,
-        "size": 9,
-        "present": [
-          "gmail:012ce504e5a045e9",
-          "gmail:6dff2b861992469a",
-          "gmail:75d73520ec4c68f3",
-          "gmail:e1c3f7da79a69dcf"
-        ]
-      },
-      "t04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 0.5,
-        "size": 9,
-        "present": [
-          "gmail:469b8c07901db7d8",
-          "gmail:bee95ff7ca51c987",
-          "gmail:c1abbf680fedaacd"
-        ]
-      },
-      "t05": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "gmail:e98c5b9d26b114a1",
-          "slack:C08HIRE:1773156600.279355"
-        ]
-      },
-      "t06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 0.5,
-        "size": 11,
-        "present": [
-          "slack:C07FUND:1773421200.357681"
-        ]
-      },
-      "t07": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2727272727272727,
-        "mrr": 0.3333333333333333,
-        "size": 11,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-441@20260313T1900",
-          "notion:163647759184b558a347537639422466"
-        ]
-      },
-      "n01": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2857142857142857,
-        "mrr": 0.25,
-        "size": 7,
-        "present": [
-          "gmail:7d508a6afb1224fb",
-          "slack:C03GEN:1773414000.655032"
-        ]
-      },
-      "n02": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.5,
-        "mrr": 0.3333333333333333,
-        "size": 6,
-        "present": [
-          "gmail:7d508a6afb1224fb",
-          "notion:fdfd76a06532aec244da50d79fa1676a",
-          "slack:C03GEN:1773414000.655032"
-        ]
-      },
-      "n03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.14285714285714285,
-        "mrr": 0.2,
-        "size": 7,
-        "present": [
-          "gmail:7d508a6afb1224fb"
-        ]
-      },
-      "n05": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.25,
-        "size": 10,
-        "present": [
-          "slack:C03GEN:1773328800.908829"
-        ]
-      },
-      "n06": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 1.0,
-        "size": 11,
-        "present": [
-          "gmail:6c967d680a755c1f"
-        ]
-      }
-    },
-    "vector_x2": {
-      "q01": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.2,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "gmail:c1abbf680fedaacd",
-          "slack:C01ENG:1773248400.000100"
-        ]
-      },
-      "q02": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.42857142857142855,
-        "mrr": 1.0,
-        "size": 7,
-        "present": [
-          "gmail:ceece9b31878fe40",
-          "linear:ACME-142@20260314T2200",
-          "slack:C01ENG:1773522000.994933"
-        ]
-      },
-      "q03": {
-        "recall": 1.0,
-        "complete": true,
         "precision": 0.25,
         "mrr": 0.5,
         "size": 8,
@@ -2572,7 +72,7 @@
         "recall": 1.0,
         "complete": true,
         "precision": 0.14285714285714285,
-        "mrr": 0.3333333333333333,
+        "mrr": 0.16666666666666666,
         "size": 7,
         "present": [
           "gmail:403df41545d6ec2d",
@@ -2582,33 +82,32 @@
       "q09": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.09090909090909091,
+        "precision": 0.07692307692307693,
         "mrr": 1.0,
-        "size": 11,
+        "size": 13,
         "present": [
-          "slack:C01ENG:1773522000.994933"
+          "gmail:ceece9b31878fe40"
         ]
       },
       "q11": {
         "recall": 1.0,
         "complete": true,
         "precision": 0.1,
-        "mrr": 0.25,
+        "mrr": 0.2,
         "size": 10,
         "present": [
           "gmail:469b8c07901db7d8"
         ]
       },
       "q12": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3,
+        "recall": 0.6666666666666666,
+        "complete": false,
+        "precision": 0.2222222222222222,
         "mrr": 1.0,
-        "size": 10,
+        "size": 9,
         "present": [
           "gmail:012ce504e5a045e9",
-          "gmail:75d73520ec4c68f3",
-          "slack:C07FUND:1773421200.357681"
+          "gmail:75d73520ec4c68f3"
         ]
       },
       "q15": {
@@ -2622,58 +121,55 @@
         ]
       },
       "v04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 0.5,
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.1111111111111111,
+        "mrr": 0.25,
         "size": 9,
         "present": [
-          "gmail:469b8c07901db7d8",
-          "gmail:bee95ff7ca51c987",
-          "gmail:c1abbf680fedaacd"
+          "gmail:469b8c07901db7d8"
         ]
       },
       "v05": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.25,
-        "mrr": 1.0,
+        "precision": 0.125,
+        "mrr": 0.5,
         "size": 8,
         "present": [
-          "gmail:469b8c07901db7d8",
-          "gmail:c1abbf680fedaacd"
+          "gmail:469b8c07901db7d8"
         ]
       },
       "v06": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.4444444444444444,
+        "precision": 0.3,
         "mrr": 1.0,
-        "size": 9,
+        "size": 10,
         "present": [
           "gmail:012ce504e5a045e9",
-          "gmail:6dff2b861992469a",
           "gmail:75d73520ec4c68f3",
           "gmail:e1c3f7da79a69dcf"
         ]
       },
       "v12": {
-        "recall": 0.3333333333333333,
-        "complete": false,
-        "precision": 0.2,
-        "mrr": 0.5,
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3,
+        "mrr": 0.16666666666666666,
         "size": 10,
         "present": [
+          "github:acme/billing#230",
           "gmail:bfda57e5a3e21af0",
-          "slack:C01ENG:1773331200.609253"
+          "gmail:c1abbf680fedaacd"
         ]
       },
       "v13": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.2727272727272727,
-        "mrr": 0.3333333333333333,
-        "size": 11,
+        "precision": 0.23076923076923078,
+        "mrr": 0.5,
+        "size": 13,
         "present": [
           "gmail:7d0d75121cdeaac6",
           "linear:ACME-441@20260313T1900",
@@ -2697,7 +193,1345 @@
         "recall": 1.0,
         "complete": true,
         "precision": 0.1,
+        "mrr": 0.3333333333333333,
+        "size": 10,
+        "present": [
+          "slack:C07FUND:1773421200.357681"
+        ]
+      },
+      "v16": {
+        "recall": 0.3333333333333333,
+        "complete": false,
+        "precision": 0.07692307692307693,
+        "mrr": 0.1111111111111111,
+        "size": 13,
+        "present": [
+          "gmail:bee95ff7ca51c987"
+        ]
+      },
+      "v17": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.5,
+        "mrr": 0.5,
+        "size": 4,
+        "present": [
+          "gmail:805093022b56ece6",
+          "gmail:93c4a504d87495b9"
+        ]
+      },
+      "v18": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 0.5,
+        "size": 5,
+        "present": [
+          "gmail:19d8c431017747e4",
+          "gmail:b3e0be40fd6f1fea"
+        ]
+      },
+      "v19": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 1.0,
         "mrr": 1.0,
+        "size": 2,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-440@20260306T1500"
+        ]
+      },
+      "v21": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 3,
+        "present": [
+          "gmail:75d73520ec4c68f3"
+        ]
+      },
+      "t03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 9,
+        "present": [
+          "gmail:012ce504e5a045e9",
+          "gmail:75d73520ec4c68f3",
+          "gmail:e1c3f7da79a69dcf"
+        ]
+      },
+      "t04": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.1111111111111111,
+        "mrr": 0.2,
+        "size": 9,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "t05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.36363636363636365,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:07c7430cafafc2e3",
+          "gmail:681e9cabc5b3cb1f",
+          "gmail:e98c5b9d26b114a1",
+          "slack:C08HIRE:1773156600.279355"
+        ]
+      },
+      "t06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 0.3333333333333333,
+        "size": 12,
+        "present": [
+          "slack:C07FUND:1773421200.357681"
+        ]
+      },
+      "t07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.23076923076923078,
+        "mrr": 0.25,
+        "size": 13,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-441@20260313T1900",
+          "notion:163647759184b558a347537639422466"
+        ]
+      },
+      "n01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2857142857142857,
+        "mrr": 0.25,
+        "size": 7,
+        "present": [
+          "gmail:7d508a6afb1224fb",
+          "slack:C03GEN:1773414000.655032"
+        ]
+      },
+      "n02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.5,
+        "mrr": 0.3333333333333333,
+        "size": 6,
+        "present": [
+          "gmail:7d508a6afb1224fb",
+          "notion:fdfd76a06532aec244da50d79fa1676a",
+          "slack:C03GEN:1773414000.655032"
+        ]
+      },
+      "n03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.14285714285714285,
+        "mrr": 0.2,
+        "size": 7,
+        "present": [
+          "gmail:7d508a6afb1224fb"
+        ]
+      },
+      "n05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.16666666666666666,
+        "mrr": 0.25,
+        "size": 6,
+        "present": [
+          "slack:C03GEN:1773328800.908829"
+        ]
+      },
+      "n06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.09090909090909091,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:6c967d680a755c1f"
+        ]
+      },
+      "w01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 1.0,
+        "size": 5,
+        "present": [
+          "notion:a005e60800e96d471e9ea49de3f49c3e",
+          "slack:C02PROD:1773331200.887947"
+        ]
+      },
+      "w02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 1.0,
+        "size": 5,
+        "present": [
+          "gmail:32a980202cbd8f93",
+          "notion:1d661025d9081de511d174c8a6871148"
+        ]
+      },
+      "w03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 1.0,
+        "size": 5,
+        "present": [
+          "linear:ACME-480@20260306T1600",
+          "slack:C01ENG:1773334800.910984"
+        ]
+      },
+      "w04": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.16666666666666666,
+        "mrr": 0.5,
+        "size": 12,
+        "present": [
+          "linear:ACME-481@20260306T1700",
+          "slack:C01ENG:1773338400.739782"
+        ]
+      },
+      "w05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 0.5,
+        "size": 10,
+        "present": [
+          "gmail:2dbbf43ced346885",
+          "notion:32c79bea43b658e1eea8a977aa70b0e4"
+        ]
+      },
+      "w06": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.06666666666666667,
+        "mrr": 0.14285714285714285,
+        "size": 15,
+        "present": [
+          "notion:61f6d272497704be67c1d43e21410d9e"
+        ]
+      },
+      "w07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:a8bee2a3cdcd15eb",
+          "notion:1c306b2522a0dee4bb268dcd8583284a"
+        ]
+      },
+      "k01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.07142857142857142,
+        "mrr": 1.0,
+        "size": 14,
+        "present": [
+          "gmail:2160a6b4c5ac5bdf"
+        ]
+      },
+      "k02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.25,
+        "mrr": 1.0,
+        "size": 8,
+        "present": [
+          "gmail:49670ab720e678cb",
+          "gmail:4dd6e4165f18c195"
+        ]
+      }
+    },
+    "no_vector": {
+      "q01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 0.5,
+        "size": 11,
+        "present": [
+          "gmail:c1abbf680fedaacd",
+          "slack:C01ENG:1773248400.000100"
+        ]
+      },
+      "q02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.42857142857142855,
+        "mrr": 1.0,
+        "size": 7,
+        "present": [
+          "gmail:ceece9b31878fe40",
+          "linear:ACME-142@20260314T2200",
+          "slack:C01ENG:1773522000.994933"
+        ]
+      },
+      "q03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.125,
+        "mrr": 0.5,
+        "size": 8,
+        "present": [
+          "calendar:2ded3454537257a5518fa9905e"
+        ]
+      },
+      "q04": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.25,
+        "mrr": 0.5,
+        "size": 8,
+        "present": [
+          "gmail:69d12ca0960f4a7d",
+          "slack:C02PROD:1772640000.222201"
+        ]
+      },
+      "q06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.25,
+        "mrr": 1.0,
+        "size": 8,
+        "present": [
+          "calendar:2ded3454537257a5518fa9905e",
+          "calendar:7d2712a17add94eb1a82e92b23"
+        ]
+      },
+      "q07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1111111111111111,
+        "mrr": 1.0,
+        "size": 9,
+        "present": [
+          "calendar:4554e5cfc14461dcdd7a91842f"
+        ]
+      },
+      "q08": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 7,
+        "present": [
+          "slack:C01ENG:1772812800.963148"
+        ]
+      },
+      "q09": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 1.0,
+        "size": 12,
+        "present": [
+          "gmail:ceece9b31878fe40"
+        ]
+      },
+      "q11": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "q12": {
+        "recall": 0.6666666666666666,
+        "complete": false,
+        "precision": 0.2857142857142857,
+        "mrr": 1.0,
+        "size": 7,
+        "present": [
+          "gmail:012ce504e5a045e9",
+          "gmail:75d73520ec4c68f3"
+        ]
+      },
+      "q15": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 1.0,
+        "mrr": 1.0,
+        "size": 1,
+        "present": [
+          "linear:ACME-231@20260304T1800"
+        ]
+      },
+      "v04": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.1111111111111111,
+        "mrr": 0.2,
+        "size": 9,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "v05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.16666666666666666,
+        "mrr": 0.5,
+        "size": 6,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "v06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 9,
+        "present": [
+          "gmail:012ce504e5a045e9",
+          "gmail:75d73520ec4c68f3",
+          "gmail:e1c3f7da79a69dcf"
+        ]
+      },
+      "v12": {
+        "recall": 0.3333333333333333,
+        "complete": false,
+        "precision": 0.09090909090909091,
+        "mrr": 0.16666666666666666,
+        "size": 11,
+        "present": [
+          "github:acme/billing#230"
+        ]
+      },
+      "v13": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.23076923076923078,
+        "mrr": 0.14285714285714285,
+        "size": 13,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-441@20260313T1900",
+          "notion:163647759184b558a347537639422466"
+        ]
+      },
+      "v14": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.36363636363636365,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:07c7430cafafc2e3",
+          "gmail:681e9cabc5b3cb1f",
+          "gmail:e98c5b9d26b114a1",
+          "slack:C08HIRE:1773156600.279355"
+        ]
+      },
+      "v15": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.2,
+        "size": 10,
+        "present": [
+          "slack:C07FUND:1773421200.357681"
+        ]
+      },
+      "v16": {
+        "recall": 0.6666666666666666,
+        "complete": false,
+        "precision": 0.15384615384615385,
+        "mrr": 0.125,
+        "size": 13,
+        "present": [
+          "gmail:bee95ff7ca51c987",
+          "linear:ACME-431@20260312T1800"
+        ]
+      },
+      "v17": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.5,
+        "mrr": 0.5,
+        "size": 4,
+        "present": [
+          "gmail:805093022b56ece6",
+          "gmail:93c4a504d87495b9"
+        ]
+      },
+      "v18": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 0.5,
+        "size": 5,
+        "present": [
+          "gmail:19d8c431017747e4",
+          "gmail:b3e0be40fd6f1fea"
+        ]
+      },
+      "v19": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 1.0,
+        "mrr": 1.0,
+        "size": 2,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-440@20260306T1500"
+        ]
+      },
+      "v21": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 3,
+        "present": [
+          "gmail:75d73520ec4c68f3"
+        ]
+      },
+      "t03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 9,
+        "present": [
+          "gmail:012ce504e5a045e9",
+          "gmail:75d73520ec4c68f3",
+          "gmail:e1c3f7da79a69dcf"
+        ]
+      },
+      "t04": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.1111111111111111,
+        "mrr": 0.2,
+        "size": 9,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "t05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.36363636363636365,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:07c7430cafafc2e3",
+          "gmail:681e9cabc5b3cb1f",
+          "gmail:e98c5b9d26b114a1",
+          "slack:C08HIRE:1773156600.279355"
+        ]
+      },
+      "t06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 0.14285714285714285,
+        "size": 12,
+        "present": [
+          "slack:C07FUND:1773421200.357681"
+        ]
+      },
+      "t07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.23076923076923078,
+        "mrr": 0.14285714285714285,
+        "size": 13,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-441@20260313T1900",
+          "notion:163647759184b558a347537639422466"
+        ]
+      },
+      "n01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2857142857142857,
+        "mrr": 0.25,
+        "size": 7,
+        "present": [
+          "gmail:7d508a6afb1224fb",
+          "slack:C03GEN:1773414000.655032"
+        ]
+      },
+      "n02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.5,
+        "mrr": 0.3333333333333333,
+        "size": 6,
+        "present": [
+          "gmail:7d508a6afb1224fb",
+          "notion:fdfd76a06532aec244da50d79fa1676a",
+          "slack:C03GEN:1773414000.655032"
+        ]
+      },
+      "n03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.14285714285714285,
+        "mrr": 0.2,
+        "size": 7,
+        "present": [
+          "gmail:7d508a6afb1224fb"
+        ]
+      },
+      "n05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.16666666666666666,
+        "mrr": 0.25,
+        "size": 6,
+        "present": [
+          "slack:C03GEN:1773328800.908829"
+        ]
+      },
+      "n06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 1.0,
+        "size": 12,
+        "present": [
+          "gmail:6c967d680a755c1f"
+        ]
+      },
+      "w01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 1.0,
+        "size": 5,
+        "present": [
+          "notion:a005e60800e96d471e9ea49de3f49c3e",
+          "slack:C02PROD:1773331200.887947"
+        ]
+      },
+      "w02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 1.0,
+        "size": 5,
+        "present": [
+          "gmail:32a980202cbd8f93",
+          "notion:1d661025d9081de511d174c8a6871148"
+        ]
+      },
+      "w03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 1.0,
+        "size": 5,
+        "present": [
+          "linear:ACME-480@20260306T1600",
+          "slack:C01ENG:1773334800.910984"
+        ]
+      },
+      "w04": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.16666666666666666,
+        "mrr": 0.25,
+        "size": 12,
+        "present": [
+          "linear:ACME-481@20260306T1700",
+          "slack:C01ENG:1773338400.739782"
+        ]
+      },
+      "w05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 0.1111111111111111,
+        "size": 11,
+        "present": [
+          "gmail:2dbbf43ced346885",
+          "notion:32c79bea43b658e1eea8a977aa70b0e4"
+        ]
+      },
+      "w06": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 14,
+        "present": []
+      },
+      "w07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:a8bee2a3cdcd15eb",
+          "notion:1c306b2522a0dee4bb268dcd8583284a"
+        ]
+      },
+      "k01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.07142857142857142,
+        "mrr": 1.0,
+        "size": 14,
+        "present": [
+          "gmail:2160a6b4c5ac5bdf"
+        ]
+      },
+      "k02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.25,
+        "mrr": 1.0,
+        "size": 8,
+        "present": [
+          "gmail:49670ab720e678cb",
+          "gmail:4dd6e4165f18c195"
+        ]
+      }
+    },
+    "vector_only": {
+      "q01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.1111111111111111,
+        "size": 10,
+        "present": [
+          "gmail:c1abbf680fedaacd"
+        ]
+      },
+      "q02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 0.3333333333333333,
+        "size": 10,
+        "present": [
+          "gmail:ceece9b31878fe40",
+          "linear:ACME-142@20260314T2200"
+        ]
+      },
+      "q03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.5,
+        "size": 10,
+        "present": [
+          "gmail:ff9c102bbfa27a06"
+        ]
+      },
+      "q04": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "gmail:69d12ca0960f4a7d"
+        ]
+      },
+      "q06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 0.5,
+        "size": 10,
+        "present": [
+          "calendar:7d2712a17add94eb1a82e92b23",
+          "gmail:ff9c102bbfa27a06"
+        ]
+      },
+      "q07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "calendar:4554e5cfc14461dcdd7a91842f"
+        ]
+      },
+      "q08": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.2,
+        "size": 10,
+        "present": [
+          "gmail:403df41545d6ec2d"
+        ]
+      },
+      "q09": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 1.0,
+        "size": 12,
+        "present": [
+          "gmail:ceece9b31878fe40"
+        ]
+      },
+      "q11": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.16666666666666666,
+        "size": 10,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "q12": {
+        "recall": 0.3333333333333333,
+        "complete": false,
+        "precision": 0.09090909090909091,
+        "mrr": 0.09090909090909091,
+        "size": 11,
+        "present": [
+          "slack:C07FUND:1773421200.357681"
+        ]
+      },
+      "q15": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.09090909090909091,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "linear:ACME-231@20260304T1800"
+        ]
+      },
+      "v04": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "v05": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "v06": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "v12": {
+        "recall": 0.3333333333333333,
+        "complete": false,
+        "precision": 0.09090909090909091,
+        "mrr": 0.16666666666666666,
+        "size": 11,
+        "present": [
+          "gmail:bfda57e5a3e21af0"
+        ]
+      },
+      "v13": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.23076923076923078,
+        "mrr": 1.0,
+        "size": 13,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-441@20260313T1900",
+          "notion:163647759184b558a347537639422466"
+        ]
+      },
+      "v14": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 12,
+        "present": [
+          "gmail:07c7430cafafc2e3",
+          "gmail:681e9cabc5b3cb1f",
+          "gmail:e98c5b9d26b114a1",
+          "slack:C08HIRE:1773156600.279355"
+        ]
+      },
+      "v15": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.09090909090909091,
+        "mrr": 0.5,
+        "size": 11,
+        "present": [
+          "slack:C07FUND:1773421200.357681"
+        ]
+      },
+      "v16": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3,
+        "mrr": 0.2,
+        "size": 10,
+        "present": [
+          "github:acme/api#231",
+          "gmail:bee95ff7ca51c987",
+          "linear:ACME-431@20260312T1800"
+        ]
+      },
+      "v17": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "v18": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 12,
+        "present": []
+      },
+      "v19": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "v21": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 0.3333333333333333,
+        "size": 11,
+        "present": [
+          "gmail:6dff2b861992469a",
+          "gmail:75d73520ec4c68f3"
+        ]
+      },
+      "t03": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.1,
+        "mrr": 0.125,
+        "size": 10,
+        "present": [
+          "gmail:75d73520ec4c68f3"
+        ]
+      },
+      "t04": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "t05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 12,
+        "present": [
+          "gmail:07c7430cafafc2e3",
+          "gmail:681e9cabc5b3cb1f",
+          "gmail:e98c5b9d26b114a1",
+          "slack:C08HIRE:1773156600.279355"
+        ]
+      },
+      "t06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.09090909090909091,
+        "mrr": 0.3333333333333333,
+        "size": 11,
+        "present": [
+          "slack:C07FUND:1773421200.357681"
+        ]
+      },
+      "t07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.23076923076923078,
+        "mrr": 0.2,
+        "size": 13,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-441@20260313T1900",
+          "notion:163647759184b558a347537639422466"
+        ]
+      },
+      "n01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.09090909090909091,
+        "mrr": 0.09090909090909091,
+        "size": 11,
+        "present": [
+          "slack:C03GEN:1773414000.655032"
+        ]
+      },
+      "n02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 0.5,
+        "size": 10,
+        "present": [
+          "notion:fdfd76a06532aec244da50d79fa1676a",
+          "slack:C03GEN:1773414000.655032"
+        ]
+      },
+      "n03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 0.09090909090909091,
+        "size": 12,
+        "present": [
+          "gmail:7d508a6afb1224fb"
+        ]
+      },
+      "n05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.5,
+        "size": 10,
+        "present": [
+          "slack:C03GEN:1773328800.908829"
+        ]
+      },
+      "n06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.07692307692307693,
+        "mrr": 1.0,
+        "size": 13,
+        "present": [
+          "gmail:6c967d680a755c1f"
+        ]
+      },
+      "w01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "notion:a005e60800e96d471e9ea49de3f49c3e",
+          "slack:C02PROD:1773331200.887947"
+        ]
+      },
+      "w02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 0.25,
+        "size": 10,
+        "present": [
+          "gmail:32a980202cbd8f93",
+          "notion:1d661025d9081de511d174c8a6871148"
+        ]
+      },
+      "w03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "linear:ACME-480@20260306T1600",
+          "slack:C01ENG:1773334800.910984"
+        ]
+      },
+      "w04": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.16666666666666666,
+        "mrr": 0.5,
+        "size": 12,
+        "present": [
+          "linear:ACME-481@20260306T1700",
+          "slack:C01ENG:1773338400.739782"
+        ]
+      },
+      "w05": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.1,
+        "mrr": 0.1111111111111111,
+        "size": 10,
+        "present": [
+          "gmail:2dbbf43ced346885"
+        ]
+      },
+      "w06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "notion:61f6d272497704be67c1d43e21410d9e",
+          "slack:C02PROD:1773342000.878146"
+        ]
+      },
+      "w07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:a8bee2a3cdcd15eb",
+          "notion:1c306b2522a0dee4bb268dcd8583284a"
+        ]
+      },
+      "k01": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 11,
+        "present": []
+      },
+      "k02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "gmail:49670ab720e678cb",
+          "gmail:4dd6e4165f18c195"
+        ]
+      }
+    },
+    "no_fts": {
+      "q01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "gmail:c1abbf680fedaacd",
+          "slack:C01ENG:1773248400.000100"
+        ]
+      },
+      "q02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.42857142857142855,
+        "mrr": 1.0,
+        "size": 7,
+        "present": [
+          "gmail:ceece9b31878fe40",
+          "linear:ACME-142@20260314T2200",
+          "slack:C01ENG:1773522000.994933"
+        ]
+      },
+      "q03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.125,
+        "mrr": 0.5,
+        "size": 8,
+        "present": [
+          "calendar:2ded3454537257a5518fa9905e"
+        ]
+      },
+      "q04": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.25,
+        "mrr": 0.5,
+        "size": 8,
+        "present": [
+          "gmail:69d12ca0960f4a7d",
+          "slack:C02PROD:1772640000.222201"
+        ]
+      },
+      "q06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.25,
+        "mrr": 1.0,
+        "size": 8,
+        "present": [
+          "calendar:2ded3454537257a5518fa9905e",
+          "calendar:7d2712a17add94eb1a82e92b23"
+        ]
+      },
+      "q07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1111111111111111,
+        "mrr": 1.0,
+        "size": 9,
+        "present": [
+          "calendar:4554e5cfc14461dcdd7a91842f"
+        ]
+      },
+      "q08": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.125,
+        "mrr": 0.16666666666666666,
+        "size": 8,
+        "present": [
+          "gmail:403df41545d6ec2d",
+          "slack:C01ENG:1772812800.963148"
+        ]
+      },
+      "q09": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.07692307692307693,
+        "mrr": 1.0,
+        "size": 13,
+        "present": [
+          "gmail:ceece9b31878fe40"
+        ]
+      },
+      "q11": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.16666666666666666,
+        "size": 10,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "q12": {
+        "recall": 0.6666666666666666,
+        "complete": false,
+        "precision": 0.2222222222222222,
+        "mrr": 1.0,
+        "size": 9,
+        "present": [
+          "gmail:012ce504e5a045e9",
+          "gmail:75d73520ec4c68f3"
+        ]
+      },
+      "q15": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 1.0,
+        "mrr": 1.0,
+        "size": 1,
+        "present": [
+          "linear:ACME-231@20260304T1800"
+        ]
+      },
+      "v04": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.1111111111111111,
+        "mrr": 0.25,
+        "size": 9,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "v05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.125,
+        "mrr": 0.5,
+        "size": 8,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "v06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4444444444444444,
+        "mrr": 1.0,
+        "size": 9,
+        "present": [
+          "gmail:012ce504e5a045e9",
+          "gmail:6dff2b861992469a",
+          "gmail:75d73520ec4c68f3",
+          "gmail:e1c3f7da79a69dcf"
+        ]
+      },
+      "v12": {
+        "recall": 0.3333333333333333,
+        "complete": false,
+        "precision": 0.09090909090909091,
+        "mrr": 0.16666666666666666,
+        "size": 11,
+        "present": [
+          "gmail:bfda57e5a3e21af0"
+        ]
+      },
+      "v13": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.23076923076923078,
+        "mrr": 1.0,
+        "size": 13,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-441@20260313T1900",
+          "notion:163647759184b558a347537639422466"
+        ]
+      },
+      "v14": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 12,
+        "present": [
+          "gmail:07c7430cafafc2e3",
+          "gmail:681e9cabc5b3cb1f",
+          "gmail:e98c5b9d26b114a1",
+          "slack:C08HIRE:1773156600.279355"
+        ]
+      },
+      "v15": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.3333333333333333,
         "size": 10,
         "present": [
           "slack:C07FUND:1773421200.357681"
@@ -2706,9 +1540,9 @@
       "v16": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.25,
-        "mrr": 1.0,
-        "size": 12,
+        "precision": 0.3,
+        "mrr": 0.2,
+        "size": 10,
         "present": [
           "github:acme/api#231",
           "gmail:bee95ff7ca51c987",
@@ -2761,9 +1595,9 @@
       "t03": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.4,
+        "precision": 0.5,
         "mrr": 1.0,
-        "size": 10,
+        "size": 8,
         "present": [
           "gmail:012ce504e5a045e9",
           "gmail:6dff2b861992469a",
@@ -2772,24 +1606,24 @@
         ]
       },
       "t04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 0.5,
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.1111111111111111,
+        "mrr": 0.3333333333333333,
         "size": 9,
         "present": [
-          "gmail:469b8c07901db7d8",
-          "gmail:bee95ff7ca51c987",
-          "gmail:c1abbf680fedaacd"
+          "gmail:469b8c07901db7d8"
         ]
       },
       "t05": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 0.5,
-        "size": 11,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 12,
         "present": [
+          "gmail:07c7430cafafc2e3",
+          "gmail:681e9cabc5b3cb1f",
           "gmail:e98c5b9d26b114a1",
           "slack:C08HIRE:1773156600.279355"
         ]
@@ -2797,9 +1631,9 @@
       "t06": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.1,
-        "mrr": 0.5,
-        "size": 10,
+        "precision": 0.09090909090909091,
+        "mrr": 0.3333333333333333,
+        "size": 11,
         "present": [
           "slack:C07FUND:1773421200.357681"
         ]
@@ -2807,9 +1641,1789 @@
       "t07": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.2727272727272727,
+        "precision": 0.23076923076923078,
+        "mrr": 0.2,
+        "size": 13,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-441@20260313T1900",
+          "notion:163647759184b558a347537639422466"
+        ]
+      },
+      "n01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2857142857142857,
+        "mrr": 0.25,
+        "size": 7,
+        "present": [
+          "gmail:7d508a6afb1224fb",
+          "slack:C03GEN:1773414000.655032"
+        ]
+      },
+      "n02": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.2857142857142857,
+        "mrr": 0.25,
+        "size": 7,
+        "present": [
+          "gmail:7d508a6afb1224fb",
+          "slack:C03GEN:1773414000.655032"
+        ]
+      },
+      "n03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.14285714285714285,
+        "mrr": 0.2,
+        "size": 7,
+        "present": [
+          "gmail:7d508a6afb1224fb"
+        ]
+      },
+      "n05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.16666666666666666,
+        "mrr": 0.25,
+        "size": 6,
+        "present": [
+          "slack:C03GEN:1773328800.908829"
+        ]
+      },
+      "n06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.09090909090909091,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:6c967d680a755c1f"
+        ]
+      },
+      "w01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 1.0,
+        "size": 5,
+        "present": [
+          "notion:a005e60800e96d471e9ea49de3f49c3e",
+          "slack:C02PROD:1773331200.887947"
+        ]
+      },
+      "w02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 1.0,
+        "size": 5,
+        "present": [
+          "gmail:32a980202cbd8f93",
+          "notion:1d661025d9081de511d174c8a6871148"
+        ]
+      },
+      "w03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 1.0,
+        "size": 5,
+        "present": [
+          "linear:ACME-480@20260306T1600",
+          "slack:C01ENG:1773334800.910984"
+        ]
+      },
+      "w04": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.16666666666666666,
+        "mrr": 0.5,
+        "size": 12,
+        "present": [
+          "linear:ACME-481@20260306T1700",
+          "slack:C01ENG:1773338400.739782"
+        ]
+      },
+      "w05": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.1,
+        "mrr": 0.1111111111111111,
+        "size": 10,
+        "present": [
+          "gmail:2dbbf43ced346885"
+        ]
+      },
+      "w06": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 14,
+        "present": []
+      },
+      "w07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:a8bee2a3cdcd15eb",
+          "notion:1c306b2522a0dee4bb268dcd8583284a"
+        ]
+      },
+      "k01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.07142857142857142,
+        "mrr": 0.5,
+        "size": 14,
+        "present": [
+          "gmail:2160a6b4c5ac5bdf"
+        ]
+      },
+      "k02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.25,
+        "mrr": 1.0,
+        "size": 8,
+        "present": [
+          "gmail:49670ab720e678cb",
+          "gmail:4dd6e4165f18c195"
+        ]
+      }
+    },
+    "fts_only": {
+      "q01": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 11,
+        "present": []
+      },
+      "q02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 0.3333333333333333,
+        "size": 10,
+        "present": [
+          "gmail:ceece9b31878fe40",
+          "linear:ACME-142@20260314T2200"
+        ]
+      },
+      "q03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.2,
+        "size": 10,
+        "present": [
+          "gmail:ff9c102bbfa27a06"
+        ]
+      },
+      "q04": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 0.5,
+        "size": 11,
+        "present": [
+          "gmail:69d12ca0960f4a7d",
+          "slack:C02PROD:1772640000.222201"
+        ]
+      },
+      "q06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 0.5,
+        "size": 10,
+        "present": [
+          "calendar:7d2712a17add94eb1a82e92b23",
+          "gmail:ff9c102bbfa27a06"
+        ]
+      },
+      "q07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "calendar:4554e5cfc14461dcdd7a91842f"
+        ]
+      },
+      "q08": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.14285714285714285,
+        "size": 10,
+        "present": [
+          "gmail:403df41545d6ec2d"
+        ]
+      },
+      "q09": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.07692307692307693,
+        "mrr": 0.5,
+        "size": 13,
+        "present": [
+          "gmail:ceece9b31878fe40"
+        ]
+      },
+      "q11": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "q12": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 0,
+        "present": []
+      },
+      "q15": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.1,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "linear:ACME-231@20260304T1800"
+        ]
+      },
+      "v04": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "v05": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 1,
+        "present": []
+      },
+      "v06": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 11,
+        "present": []
+      },
+      "v12": {
+        "recall": 0.3333333333333333,
+        "complete": false,
+        "precision": 0.09090909090909091,
+        "mrr": 0.16666666666666666,
+        "size": 11,
+        "present": [
+          "github:acme/billing#230"
+        ]
+      },
+      "v13": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.23076923076923078,
+        "mrr": 0.14285714285714285,
+        "size": 13,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-441@20260313T1900",
+          "notion:163647759184b558a347537639422466"
+        ]
+      },
+      "v14": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.36363636363636365,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:07c7430cafafc2e3",
+          "gmail:681e9cabc5b3cb1f",
+          "gmail:e98c5b9d26b114a1",
+          "slack:C08HIRE:1773156600.279355"
+        ]
+      },
+      "v15": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 0.14285714285714285,
+        "size": 12,
+        "present": [
+          "slack:C07FUND:1773421200.357681"
+        ]
+      },
+      "v16": {
+        "recall": 0.6666666666666666,
+        "complete": false,
+        "precision": 0.15384615384615385,
+        "mrr": 0.125,
+        "size": 13,
+        "present": [
+          "gmail:bee95ff7ca51c987",
+          "linear:ACME-431@20260312T1800"
+        ]
+      },
+      "v17": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "v18": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2857142857142857,
+        "mrr": 0.5,
+        "size": 7,
+        "present": [
+          "gmail:19d8c431017747e4",
+          "gmail:b3e0be40fd6f1fea"
+        ]
+      },
+      "v19": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 13,
+        "present": []
+      },
+      "v21": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 0.3333333333333333,
+        "size": 9,
+        "present": [
+          "crm:deal:23a551d6fe",
+          "gmail:6dff2b861992469a",
+          "gmail:75d73520ec4c68f3"
+        ]
+      },
+      "t03": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 11,
+        "present": []
+      },
+      "t04": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "t05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.36363636363636365,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:07c7430cafafc2e3",
+          "gmail:681e9cabc5b3cb1f",
+          "gmail:e98c5b9d26b114a1",
+          "slack:C08HIRE:1773156600.279355"
+        ]
+      },
+      "t06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 0.14285714285714285,
+        "size": 12,
+        "present": [
+          "slack:C07FUND:1773421200.357681"
+        ]
+      },
+      "t07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.23076923076923078,
+        "mrr": 0.14285714285714285,
+        "size": 13,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-441@20260313T1900",
+          "notion:163647759184b558a347537639422466"
+        ]
+      },
+      "n01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.09090909090909091,
+        "mrr": 0.09090909090909091,
+        "size": 11,
+        "present": [
+          "slack:C03GEN:1773414000.655032"
+        ]
+      },
+      "n02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.15384615384615385,
+        "mrr": 1.0,
+        "size": 13,
+        "present": [
+          "notion:fdfd76a06532aec244da50d79fa1676a",
+          "slack:C03GEN:1773414000.655032"
+        ]
+      },
+      "n03": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 11,
+        "present": []
+      },
+      "n05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.5,
+        "size": 10,
+        "present": [
+          "slack:C03GEN:1773328800.908829"
+        ]
+      },
+      "n06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 0.16666666666666666,
+        "size": 12,
+        "present": [
+          "gmail:6c967d680a755c1f"
+        ]
+      },
+      "w01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
         "mrr": 0.3333333333333333,
         "size": 11,
+        "present": [
+          "notion:a005e60800e96d471e9ea49de3f49c3e",
+          "slack:C02PROD:1773331200.887947"
+        ]
+      },
+      "w02": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "w03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "linear:ACME-480@20260306T1600",
+          "slack:C01ENG:1773334800.910984"
+        ]
+      },
+      "w04": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.16666666666666666,
+        "mrr": 0.25,
+        "size": 12,
+        "present": [
+          "linear:ACME-481@20260306T1700",
+          "slack:C01ENG:1773338400.739782"
+        ]
+      },
+      "w05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 0.1111111111111111,
+        "size": 11,
+        "present": [
+          "gmail:2dbbf43ced346885",
+          "notion:32c79bea43b658e1eea8a977aa70b0e4"
+        ]
+      },
+      "w06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 0.5,
+        "size": 10,
+        "present": [
+          "notion:61f6d272497704be67c1d43e21410d9e",
+          "slack:C02PROD:1773342000.878146"
+        ]
+      },
+      "w07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:a8bee2a3cdcd15eb",
+          "notion:1c306b2522a0dee4bb268dcd8583284a"
+        ]
+      },
+      "k01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 0.5,
+        "size": 12,
+        "present": [
+          "gmail:2160a6b4c5ac5bdf"
+        ]
+      },
+      "k02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "gmail:49670ab720e678cb",
+          "gmail:4dd6e4165f18c195"
+        ]
+      }
+    },
+    "no_structured": {
+      "q01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "gmail:c1abbf680fedaacd",
+          "slack:C01ENG:1773248400.000100"
+        ]
+      },
+      "q02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 0.25,
+        "size": 10,
+        "present": [
+          "gmail:ceece9b31878fe40",
+          "linear:ACME-142@20260314T2200"
+        ]
+      },
+      "q03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.5,
+        "size": 10,
+        "present": [
+          "gmail:ff9c102bbfa27a06"
+        ]
+      },
+      "q04": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 0.5,
+        "size": 11,
+        "present": [
+          "gmail:69d12ca0960f4a7d",
+          "slack:C02PROD:1772640000.222201"
+        ]
+      },
+      "q06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "calendar:7d2712a17add94eb1a82e92b23",
+          "gmail:ff9c102bbfa27a06"
+        ]
+      },
+      "q07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "calendar:4554e5cfc14461dcdd7a91842f"
+        ]
+      },
+      "q08": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.2,
+        "size": 10,
+        "present": [
+          "gmail:403df41545d6ec2d"
+        ]
+      },
+      "q09": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.07692307692307693,
+        "mrr": 1.0,
+        "size": 13,
+        "present": [
+          "gmail:ceece9b31878fe40"
+        ]
+      },
+      "q11": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.2,
+        "size": 10,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "q12": {
+        "recall": 0.6666666666666666,
+        "complete": false,
+        "precision": 0.15384615384615385,
+        "mrr": 0.5,
+        "size": 13,
+        "present": [
+          "gmail:012ce504e5a045e9",
+          "gmail:75d73520ec4c68f3"
+        ]
+      },
+      "q15": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.1,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "linear:ACME-231@20260304T1800"
+        ]
+      },
+      "v04": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "v05": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "v06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2727272727272727,
+        "mrr": 0.2,
+        "size": 11,
+        "present": [
+          "gmail:6dff2b861992469a",
+          "gmail:75d73520ec4c68f3",
+          "gmail:e1c3f7da79a69dcf"
+        ]
+      },
+      "v12": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3,
+        "mrr": 0.16666666666666666,
+        "size": 10,
+        "present": [
+          "github:acme/billing#230",
+          "gmail:bfda57e5a3e21af0",
+          "gmail:c1abbf680fedaacd"
+        ]
+      },
+      "v13": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.23076923076923078,
+        "mrr": 0.5,
+        "size": 13,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-441@20260313T1900",
+          "notion:163647759184b558a347537639422466"
+        ]
+      },
+      "v14": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 12,
+        "present": [
+          "gmail:07c7430cafafc2e3",
+          "gmail:681e9cabc5b3cb1f",
+          "gmail:e98c5b9d26b114a1",
+          "slack:C08HIRE:1773156600.279355"
+        ]
+      },
+      "v15": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 0.3333333333333333,
+        "size": 12,
+        "present": [
+          "slack:C07FUND:1773421200.357681"
+        ]
+      },
+      "v16": {
+        "recall": 0.3333333333333333,
+        "complete": false,
+        "precision": 0.07692307692307693,
+        "mrr": 0.1111111111111111,
+        "size": 13,
+        "present": [
+          "gmail:bee95ff7ca51c987"
+        ]
+      },
+      "v17": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "v18": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.15384615384615385,
+        "mrr": 0.5,
+        "size": 13,
+        "present": [
+          "gmail:19d8c431017747e4",
+          "gmail:b3e0be40fd6f1fea"
+        ]
+      },
+      "v19": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 13,
+        "present": []
+      },
+      "v21": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "crm:deal:23a551d6fe",
+          "gmail:6dff2b861992469a",
+          "gmail:75d73520ec4c68f3"
+        ]
+      },
+      "t03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.23076923076923078,
+        "mrr": 0.3333333333333333,
+        "size": 13,
+        "present": [
+          "gmail:6dff2b861992469a",
+          "gmail:75d73520ec4c68f3",
+          "gmail:e1c3f7da79a69dcf"
+        ]
+      },
+      "t04": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "t05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.36363636363636365,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:07c7430cafafc2e3",
+          "gmail:681e9cabc5b3cb1f",
+          "gmail:e98c5b9d26b114a1",
+          "slack:C08HIRE:1773156600.279355"
+        ]
+      },
+      "t06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 0.3333333333333333,
+        "size": 12,
+        "present": [
+          "slack:C07FUND:1773421200.357681"
+        ]
+      },
+      "t07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.23076923076923078,
+        "mrr": 0.25,
+        "size": 13,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-441@20260313T1900",
+          "notion:163647759184b558a347537639422466"
+        ]
+      },
+      "n01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.09090909090909091,
+        "mrr": 0.09090909090909091,
+        "size": 11,
+        "present": [
+          "slack:C03GEN:1773414000.655032"
+        ]
+      },
+      "n02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.15384615384615385,
+        "mrr": 1.0,
+        "size": 13,
+        "present": [
+          "notion:fdfd76a06532aec244da50d79fa1676a",
+          "slack:C03GEN:1773414000.655032"
+        ]
+      },
+      "n03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.07142857142857142,
+        "mrr": 0.07692307692307693,
+        "size": 14,
+        "present": [
+          "gmail:7d508a6afb1224fb"
+        ]
+      },
+      "n05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.5,
+        "size": 10,
+        "present": [
+          "slack:C03GEN:1773328800.908829"
+        ]
+      },
+      "n06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.09090909090909091,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:6c967d680a755c1f"
+        ]
+      },
+      "w01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "notion:a005e60800e96d471e9ea49de3f49c3e",
+          "slack:C02PROD:1773331200.887947"
+        ]
+      },
+      "w02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 0.3333333333333333,
+        "size": 10,
+        "present": [
+          "gmail:32a980202cbd8f93",
+          "notion:1d661025d9081de511d174c8a6871148"
+        ]
+      },
+      "w03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "linear:ACME-480@20260306T1600",
+          "slack:C01ENG:1773334800.910984"
+        ]
+      },
+      "w04": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.16666666666666666,
+        "mrr": 0.5,
+        "size": 12,
+        "present": [
+          "linear:ACME-481@20260306T1700",
+          "slack:C01ENG:1773338400.739782"
+        ]
+      },
+      "w05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 0.5,
+        "size": 10,
+        "present": [
+          "gmail:2dbbf43ced346885",
+          "notion:32c79bea43b658e1eea8a977aa70b0e4"
+        ]
+      },
+      "w06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "notion:61f6d272497704be67c1d43e21410d9e",
+          "slack:C02PROD:1773342000.878146"
+        ]
+      },
+      "w07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:a8bee2a3cdcd15eb",
+          "notion:1c306b2522a0dee4bb268dcd8583284a"
+        ]
+      },
+      "k01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.07142857142857142,
+        "mrr": 1.0,
+        "size": 14,
+        "present": [
+          "gmail:2160a6b4c5ac5bdf"
+        ]
+      },
+      "k02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "gmail:49670ab720e678cb",
+          "gmail:4dd6e4165f18c195"
+        ]
+      }
+    },
+    "vector_x0.5": {
+      "q01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "gmail:c1abbf680fedaacd",
+          "slack:C01ENG:1773248400.000100"
+        ]
+      },
+      "q02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.42857142857142855,
+        "mrr": 1.0,
+        "size": 7,
+        "present": [
+          "gmail:ceece9b31878fe40",
+          "linear:ACME-142@20260314T2200",
+          "slack:C01ENG:1773522000.994933"
+        ]
+      },
+      "q03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.125,
+        "mrr": 0.5,
+        "size": 8,
+        "present": [
+          "calendar:2ded3454537257a5518fa9905e"
+        ]
+      },
+      "q04": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.25,
+        "mrr": 0.5,
+        "size": 8,
+        "present": [
+          "gmail:69d12ca0960f4a7d",
+          "slack:C02PROD:1772640000.222201"
+        ]
+      },
+      "q06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.25,
+        "mrr": 1.0,
+        "size": 8,
+        "present": [
+          "calendar:2ded3454537257a5518fa9905e",
+          "calendar:7d2712a17add94eb1a82e92b23"
+        ]
+      },
+      "q07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1111111111111111,
+        "mrr": 1.0,
+        "size": 9,
+        "present": [
+          "calendar:4554e5cfc14461dcdd7a91842f"
+        ]
+      },
+      "q08": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 7,
+        "present": [
+          "slack:C01ENG:1772812800.963148"
+        ]
+      },
+      "q09": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 1.0,
+        "size": 12,
+        "present": [
+          "gmail:ceece9b31878fe40"
+        ]
+      },
+      "q11": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.2,
+        "size": 10,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "q12": {
+        "recall": 0.6666666666666666,
+        "complete": false,
+        "precision": 0.25,
+        "mrr": 1.0,
+        "size": 8,
+        "present": [
+          "gmail:012ce504e5a045e9",
+          "gmail:75d73520ec4c68f3"
+        ]
+      },
+      "q15": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 1.0,
+        "mrr": 1.0,
+        "size": 1,
+        "present": [
+          "linear:ACME-231@20260304T1800"
+        ]
+      },
+      "v04": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.1111111111111111,
+        "mrr": 0.2,
+        "size": 9,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "v05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.125,
+        "mrr": 0.5,
+        "size": 8,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "v06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 9,
+        "present": [
+          "gmail:012ce504e5a045e9",
+          "gmail:75d73520ec4c68f3",
+          "gmail:e1c3f7da79a69dcf"
+        ]
+      },
+      "v12": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3,
+        "mrr": 0.16666666666666666,
+        "size": 10,
+        "present": [
+          "github:acme/billing#230",
+          "gmail:bfda57e5a3e21af0",
+          "gmail:c1abbf680fedaacd"
+        ]
+      },
+      "v13": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.23076923076923078,
+        "mrr": 0.3333333333333333,
+        "size": 13,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-441@20260313T1900",
+          "notion:163647759184b558a347537639422466"
+        ]
+      },
+      "v14": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.36363636363636365,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:07c7430cafafc2e3",
+          "gmail:681e9cabc5b3cb1f",
+          "gmail:e98c5b9d26b114a1",
+          "slack:C08HIRE:1773156600.279355"
+        ]
+      },
+      "v15": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.25,
+        "size": 10,
+        "present": [
+          "slack:C07FUND:1773421200.357681"
+        ]
+      },
+      "v16": {
+        "recall": 0.3333333333333333,
+        "complete": false,
+        "precision": 0.07692307692307693,
+        "mrr": 0.125,
+        "size": 13,
+        "present": [
+          "gmail:bee95ff7ca51c987"
+        ]
+      },
+      "v17": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.5,
+        "mrr": 0.5,
+        "size": 4,
+        "present": [
+          "gmail:805093022b56ece6",
+          "gmail:93c4a504d87495b9"
+        ]
+      },
+      "v18": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 0.5,
+        "size": 5,
+        "present": [
+          "gmail:19d8c431017747e4",
+          "gmail:b3e0be40fd6f1fea"
+        ]
+      },
+      "v19": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 1.0,
+        "mrr": 1.0,
+        "size": 2,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-440@20260306T1500"
+        ]
+      },
+      "v21": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 3,
+        "present": [
+          "gmail:75d73520ec4c68f3"
+        ]
+      },
+      "t03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 9,
+        "present": [
+          "gmail:012ce504e5a045e9",
+          "gmail:75d73520ec4c68f3",
+          "gmail:e1c3f7da79a69dcf"
+        ]
+      },
+      "t04": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.1111111111111111,
+        "mrr": 0.2,
+        "size": 9,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "t05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.36363636363636365,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:07c7430cafafc2e3",
+          "gmail:681e9cabc5b3cb1f",
+          "gmail:e98c5b9d26b114a1",
+          "slack:C08HIRE:1773156600.279355"
+        ]
+      },
+      "t06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 0.16666666666666666,
+        "size": 12,
+        "present": [
+          "slack:C07FUND:1773421200.357681"
+        ]
+      },
+      "t07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.23076923076923078,
+        "mrr": 0.2,
+        "size": 13,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-441@20260313T1900",
+          "notion:163647759184b558a347537639422466"
+        ]
+      },
+      "n01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2857142857142857,
+        "mrr": 0.25,
+        "size": 7,
+        "present": [
+          "gmail:7d508a6afb1224fb",
+          "slack:C03GEN:1773414000.655032"
+        ]
+      },
+      "n02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.5,
+        "mrr": 0.3333333333333333,
+        "size": 6,
+        "present": [
+          "gmail:7d508a6afb1224fb",
+          "notion:fdfd76a06532aec244da50d79fa1676a",
+          "slack:C03GEN:1773414000.655032"
+        ]
+      },
+      "n03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.14285714285714285,
+        "mrr": 0.2,
+        "size": 7,
+        "present": [
+          "gmail:7d508a6afb1224fb"
+        ]
+      },
+      "n05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.16666666666666666,
+        "mrr": 0.25,
+        "size": 6,
+        "present": [
+          "slack:C03GEN:1773328800.908829"
+        ]
+      },
+      "n06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 1.0,
+        "size": 12,
+        "present": [
+          "gmail:6c967d680a755c1f"
+        ]
+      },
+      "w01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 1.0,
+        "size": 5,
+        "present": [
+          "notion:a005e60800e96d471e9ea49de3f49c3e",
+          "slack:C02PROD:1773331200.887947"
+        ]
+      },
+      "w02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 1.0,
+        "size": 5,
+        "present": [
+          "gmail:32a980202cbd8f93",
+          "notion:1d661025d9081de511d174c8a6871148"
+        ]
+      },
+      "w03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 1.0,
+        "size": 5,
+        "present": [
+          "linear:ACME-480@20260306T1600",
+          "slack:C01ENG:1773334800.910984"
+        ]
+      },
+      "w04": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.16666666666666666,
+        "mrr": 0.5,
+        "size": 12,
+        "present": [
+          "linear:ACME-481@20260306T1700",
+          "slack:C01ENG:1773338400.739782"
+        ]
+      },
+      "w05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 0.1111111111111111,
+        "size": 10,
+        "present": [
+          "gmail:2dbbf43ced346885",
+          "notion:32c79bea43b658e1eea8a977aa70b0e4"
+        ]
+      },
+      "w06": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 14,
+        "present": []
+      },
+      "w07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:a8bee2a3cdcd15eb",
+          "notion:1c306b2522a0dee4bb268dcd8583284a"
+        ]
+      },
+      "k01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.07142857142857142,
+        "mrr": 1.0,
+        "size": 14,
+        "present": [
+          "gmail:2160a6b4c5ac5bdf"
+        ]
+      },
+      "k02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.25,
+        "mrr": 1.0,
+        "size": 8,
+        "present": [
+          "gmail:49670ab720e678cb",
+          "gmail:4dd6e4165f18c195"
+        ]
+      }
+    },
+    "vector_x2": {
+      "q01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "gmail:c1abbf680fedaacd",
+          "slack:C01ENG:1773248400.000100"
+        ]
+      },
+      "q02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.42857142857142855,
+        "mrr": 1.0,
+        "size": 7,
+        "present": [
+          "gmail:ceece9b31878fe40",
+          "linear:ACME-142@20260314T2200",
+          "slack:C01ENG:1773522000.994933"
+        ]
+      },
+      "q03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.25,
+        "mrr": 0.5,
+        "size": 8,
+        "present": [
+          "calendar:2ded3454537257a5518fa9905e",
+          "gmail:ff9c102bbfa27a06"
+        ]
+      },
+      "q04": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.25,
+        "mrr": 1.0,
+        "size": 8,
+        "present": [
+          "gmail:69d12ca0960f4a7d",
+          "slack:C02PROD:1772640000.222201"
+        ]
+      },
+      "q06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.375,
+        "mrr": 1.0,
+        "size": 8,
+        "present": [
+          "calendar:2ded3454537257a5518fa9905e",
+          "calendar:7d2712a17add94eb1a82e92b23",
+          "gmail:ff9c102bbfa27a06"
+        ]
+      },
+      "q07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1111111111111111,
+        "mrr": 1.0,
+        "size": 9,
+        "present": [
+          "calendar:4554e5cfc14461dcdd7a91842f"
+        ]
+      },
+      "q08": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.14285714285714285,
+        "mrr": 0.25,
+        "size": 7,
+        "present": [
+          "gmail:403df41545d6ec2d",
+          "slack:C01ENG:1772812800.963148"
+        ]
+      },
+      "q09": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.07692307692307693,
+        "mrr": 1.0,
+        "size": 13,
+        "present": [
+          "gmail:ceece9b31878fe40"
+        ]
+      },
+      "q11": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "q12": {
+        "recall": 0.6666666666666666,
+        "complete": false,
+        "precision": 0.2222222222222222,
+        "mrr": 1.0,
+        "size": 9,
+        "present": [
+          "gmail:012ce504e5a045e9",
+          "gmail:75d73520ec4c68f3"
+        ]
+      },
+      "q15": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 1.0,
+        "mrr": 1.0,
+        "size": 1,
+        "present": [
+          "linear:ACME-231@20260304T1800"
+        ]
+      },
+      "v04": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.1111111111111111,
+        "mrr": 0.5,
+        "size": 9,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "v05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.125,
+        "mrr": 1.0,
+        "size": 8,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "v06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "gmail:012ce504e5a045e9",
+          "gmail:75d73520ec4c68f3",
+          "gmail:e1c3f7da79a69dcf"
+        ]
+      },
+      "v12": {
+        "recall": 0.6666666666666666,
+        "complete": false,
+        "precision": 0.18181818181818182,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:bfda57e5a3e21af0",
+          "gmail:c1abbf680fedaacd"
+        ]
+      },
+      "v13": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-441@20260313T1900",
+          "notion:163647759184b558a347537639422466"
+        ]
+      },
+      "v14": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 12,
+        "present": [
+          "gmail:07c7430cafafc2e3",
+          "gmail:681e9cabc5b3cb1f",
+          "gmail:e98c5b9d26b114a1",
+          "slack:C08HIRE:1773156600.279355"
+        ]
+      },
+      "v15": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "slack:C07FUND:1773421200.357681"
+        ]
+      },
+      "v16": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2727272727272727,
+        "mrr": 0.14285714285714285,
+        "size": 11,
+        "present": [
+          "github:acme/api#231",
+          "gmail:bee95ff7ca51c987",
+          "linear:ACME-431@20260312T1800"
+        ]
+      },
+      "v17": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.5,
+        "mrr": 0.5,
+        "size": 4,
+        "present": [
+          "gmail:805093022b56ece6",
+          "gmail:93c4a504d87495b9"
+        ]
+      },
+      "v18": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 0.5,
+        "size": 5,
+        "present": [
+          "gmail:19d8c431017747e4",
+          "gmail:b3e0be40fd6f1fea"
+        ]
+      },
+      "v19": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 1.0,
+        "mrr": 1.0,
+        "size": 2,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-440@20260306T1500"
+        ]
+      },
+      "v21": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 3,
+        "present": [
+          "gmail:75d73520ec4c68f3"
+        ]
+      },
+      "t03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 9,
+        "present": [
+          "gmail:012ce504e5a045e9",
+          "gmail:75d73520ec4c68f3",
+          "gmail:e1c3f7da79a69dcf"
+        ]
+      },
+      "t04": {
+        "recall": 0.5,
+        "complete": false,
+        "precision": 0.1111111111111111,
+        "mrr": 0.16666666666666666,
+        "size": 9,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "t05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.3333333333333333,
+        "mrr": 1.0,
+        "size": 12,
+        "present": [
+          "gmail:07c7430cafafc2e3",
+          "gmail:681e9cabc5b3cb1f",
+          "gmail:e98c5b9d26b114a1",
+          "slack:C08HIRE:1773156600.279355"
+        ]
+      },
+      "t06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 0.3333333333333333,
+        "size": 12,
+        "present": [
+          "slack:C07FUND:1773421200.357681"
+        ]
+      },
+      "t07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.25,
+        "mrr": 0.3333333333333333,
+        "size": 12,
         "present": [
           "gmail:7d0d75121cdeaac6",
           "linear:ACME-441@20260313T1900",
@@ -2852,9 +3466,9 @@
       "n05": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.1,
-        "mrr": 0.25,
-        "size": 10,
+        "precision": 0.16666666666666666,
+        "mrr": 0.3333333333333333,
+        "size": 6,
         "present": [
           "slack:C03GEN:1773328800.908829"
         ]
@@ -2862,11 +3476,109 @@
       "n06": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.09090909090909091,
+        "precision": 0.1,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "gmail:6c967d680a755c1f"
+        ]
+      },
+      "w01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 1.0,
+        "size": 5,
+        "present": [
+          "notion:a005e60800e96d471e9ea49de3f49c3e",
+          "slack:C02PROD:1773331200.887947"
+        ]
+      },
+      "w02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 1.0,
+        "size": 5,
+        "present": [
+          "gmail:32a980202cbd8f93",
+          "notion:1d661025d9081de511d174c8a6871148"
+        ]
+      },
+      "w03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.4,
+        "mrr": 1.0,
+        "size": 5,
+        "present": [
+          "linear:ACME-480@20260306T1600",
+          "slack:C01ENG:1773334800.910984"
+        ]
+      },
+      "w04": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
         "mrr": 1.0,
         "size": 11,
         "present": [
-          "gmail:6c967d680a755c1f"
+          "linear:ACME-481@20260306T1700",
+          "slack:C01ENG:1773338400.739782"
+        ]
+      },
+      "w05": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 1.0,
+        "size": 10,
+        "present": [
+          "gmail:2dbbf43ced346885",
+          "notion:32c79bea43b658e1eea8a977aa70b0e4"
+        ]
+      },
+      "w06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.13333333333333333,
+        "mrr": 1.0,
+        "size": 15,
+        "present": [
+          "notion:61f6d272497704be67c1d43e21410d9e",
+          "slack:C02PROD:1773342000.878146"
+        ]
+      },
+      "w07": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 1.0,
+        "size": 11,
+        "present": [
+          "gmail:a8bee2a3cdcd15eb",
+          "notion:1c306b2522a0dee4bb268dcd8583284a"
+        ]
+      },
+      "k01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.07692307692307693,
+        "mrr": 0.16666666666666666,
+        "size": 13,
+        "present": [
+          "gmail:2160a6b4c5ac5bdf"
+        ]
+      },
+      "k02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2857142857142857,
+        "mrr": 1.0,
+        "size": 7,
+        "present": [
+          "gmail:49670ab720e678cb",
+          "gmail:4dd6e4165f18c195"
         ]
       }
     }
@@ -2886,20 +3598,19 @@
       "p02": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.15384615384615385,
-        "mrr": 1.0,
-        "size": 13,
+        "precision": 0.1,
+        "mrr": 0.3333333333333333,
+        "size": 10,
         "present": [
-          "gmail:6dff2b861992469a",
           "notion:d66e87731f6d486a58818da6ad1da108"
         ]
       },
       "p03": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.09090909090909091,
+        "precision": 0.08333333333333333,
         "mrr": 1.0,
-        "size": 11,
+        "size": 12,
         "present": [
           "gmail:e98c5b9d26b114a1"
         ]
@@ -2907,20 +3618,19 @@
       "p04": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.3,
+        "precision": 0.16666666666666666,
         "mrr": 1.0,
-        "size": 10,
+        "size": 12,
         "present": [
           "gmail:bfda57e5a3e21af0",
-          "notion:0f8a538c21e4ef3f1024c7d25666cd47",
-          "slack:C01ENG:1773331200.609253"
+          "notion:0f8a538c21e4ef3f1024c7d25666cd47"
         ]
       },
       "p06": {
         "recall": 1.0,
         "complete": true,
         "precision": 0.3,
-        "mrr": 0.3333333333333333,
+        "mrr": 0.5,
         "size": 10,
         "present": [
           "gmail:7d0d75121cdeaac6",
@@ -2932,7 +3642,7 @@
         "recall": 0.5,
         "complete": false,
         "precision": 0.1,
-        "mrr": 0.25,
+        "mrr": 0.16666666666666666,
         "size": 10,
         "present": [
           "github:acme/api#231"
@@ -2941,9 +3651,9 @@
       "p08": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.25,
-        "mrr": 1.0,
-        "size": 12,
+        "precision": 0.3,
+        "mrr": 0.3333333333333333,
+        "size": 10,
         "present": [
           "crm:deal:23a551d6fe",
           "gmail:6dff2b861992469a",
@@ -2953,9 +3663,9 @@
       "p09": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.16666666666666666,
+        "precision": 0.18181818181818182,
         "mrr": 1.0,
-        "size": 12,
+        "size": 11,
         "present": [
           "gmail:19d8c431017747e4",
           "gmail:b3e0be40fd6f1fea"
@@ -2964,9 +3674,9 @@
       "p10": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.3,
+        "precision": 0.2727272727272727,
         "mrr": 1.0,
-        "size": 10,
+        "size": 11,
         "present": [
           "gmail:805093022b56ece6",
           "gmail:93c4a504d87495b9",
@@ -2976,9 +3686,9 @@
       "p11": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.07142857142857142,
+        "precision": 0.08333333333333333,
         "mrr": 0.5,
-        "size": 14,
+        "size": 12,
         "present": [
           "calendar:de4afcd47267780be961f09a4f"
         ]
@@ -2987,7 +3697,7 @@
         "recall": 1.0,
         "complete": true,
         "precision": 0.1,
-        "mrr": 0.2,
+        "mrr": 0.25,
         "size": 10,
         "present": [
           "gmail:69d12ca0960f4a7d"
@@ -3004,15 +3714,12 @@
         ]
       },
       "p16": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.13333333333333333,
-        "mrr": 0.09090909090909091,
-        "size": 15,
-        "present": [
-          "gmail:7d508a6afb1224fb",
-          "slack:C03GEN:1773414000.655032"
-        ]
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 11,
+        "present": []
       },
       "p17": {
         "recall": 0.0,
@@ -3027,7 +3734,7 @@
         "complete": false,
         "precision": 0.0,
         "mrr": 0.0,
-        "size": 12,
+        "size": 13,
         "present": []
       }
     },
@@ -3043,9 +3750,9 @@
       "p02": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 0.5,
-        "size": 3,
+        "precision": 0.1111111111111111,
+        "mrr": 0.3333333333333333,
+        "size": 9,
         "present": [
           "notion:d66e87731f6d486a58818da6ad1da108"
         ]
@@ -3053,9 +3760,156 @@
       "p03": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.14285714285714285,
+        "precision": 0.08333333333333333,
+        "mrr": 0.3333333333333333,
+        "size": 12,
+        "present": [
+          "gmail:e98c5b9d26b114a1"
+        ]
+      },
+      "p04": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.16666666666666666,
         "mrr": 0.5,
+        "size": 12,
+        "present": [
+          "gmail:bfda57e5a3e21af0",
+          "notion:0f8a538c21e4ef3f1024c7d25666cd47"
+        ]
+      },
+      "p06": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 0.125,
+        "size": 11,
+        "present": [
+          "gmail:7d0d75121cdeaac6",
+          "linear:ACME-441@20260313T1900"
+        ]
+      },
+      "p07": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 10,
+        "present": []
+      },
+      "p08": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 0.3333333333333333,
+        "size": 10,
+        "present": [
+          "crm:deal:23a551d6fe",
+          "notion:d66e87731f6d486a58818da6ad1da108"
+        ]
+      },
+      "p09": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 0.25,
+        "size": 11,
+        "present": [
+          "gmail:19d8c431017747e4",
+          "gmail:b3e0be40fd6f1fea"
+        ]
+      },
+      "p10": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.3333333333333333,
+        "size": 10,
+        "present": [
+          "gmail:93c4a504d87495b9"
+        ]
+      },
+      "p11": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
         "size": 7,
+        "present": []
+      },
+      "p13": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.3333333333333333,
+        "size": 10,
+        "present": [
+          "gmail:69d12ca0960f4a7d"
+        ]
+      },
+      "p15": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1111111111111111,
+        "mrr": 0.5,
+        "size": 9,
+        "present": [
+          "gmail:012ce504e5a045e9"
+        ]
+      },
+      "p16": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 11,
+        "present": []
+      },
+      "p17": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 12,
+        "present": []
+      },
+      "p18": {
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 7,
+        "present": []
+      }
+    },
+    "vector_only": {
+      "p01": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.16666666666666666,
+        "size": 10,
+        "present": [
+          "gmail:469b8c07901db7d8"
+        ]
+      },
+      "p02": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.2,
+        "mrr": 0.2,
+        "size": 10,
+        "present": [
+          "crm:deal:23a551d6fe",
+          "notion:d66e87731f6d486a58818da6ad1da108"
+        ]
+      },
+      "p03": {
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.08333333333333333,
+        "mrr": 0.14285714285714285,
+        "size": 12,
         "present": [
           "gmail:e98c5b9d26b114a1"
         ]
@@ -3074,154 +3928,6 @@
       "p06": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.25,
-        "mrr": 0.1,
-        "size": 12,
-        "present": [
-          "gmail:7d0d75121cdeaac6",
-          "linear:ACME-441@20260313T1900",
-          "notion:163647759184b558a347537639422466"
-        ]
-      },
-      "p07": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 10,
-        "present": []
-      },
-      "p08": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.4,
-        "mrr": 1.0,
-        "size": 5,
-        "present": [
-          "crm:deal:23a551d6fe",
-          "notion:d66e87731f6d486a58818da6ad1da108"
-        ]
-      },
-      "p09": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 11,
-        "present": []
-      },
-      "p10": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.5,
-        "size": 10,
-        "present": [
-          "gmail:93c4a504d87495b9"
-        ]
-      },
-      "p11": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 6,
-        "present": []
-      },
-      "p13": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 0.3333333333333333,
-        "size": 11,
-        "present": [
-          "gmail:69d12ca0960f4a7d"
-        ]
-      },
-      "p15": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1111111111111111,
-        "mrr": 0.5,
-        "size": 9,
-        "present": [
-          "gmail:012ce504e5a045e9"
-        ]
-      },
-      "p16": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 0.09090909090909091,
-        "size": 11,
-        "present": [
-          "slack:C03GEN:1773414000.655032"
-        ]
-      },
-      "p17": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 10,
-        "present": []
-      },
-      "p18": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
-        "size": 6,
-        "present": []
-      }
-    },
-    "vector_only": {
-      "p01": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.16666666666666666,
-        "size": 10,
-        "present": [
-          "gmail:469b8c07901db7d8"
-        ]
-      },
-      "p02": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 0.5,
-        "size": 11,
-        "present": [
-          "gmail:6dff2b861992469a",
-          "notion:d66e87731f6d486a58818da6ad1da108"
-        ]
-      },
-      "p03": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.08333333333333333,
-        "mrr": 0.25,
-        "size": 12,
-        "present": [
-          "gmail:e98c5b9d26b114a1"
-        ]
-      },
-      "p04": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.3,
-        "mrr": 1.0,
-        "size": 10,
-        "present": [
-          "gmail:bfda57e5a3e21af0",
-          "notion:0f8a538c21e4ef3f1024c7d25666cd47",
-          "slack:C01ENG:1773331200.609253"
-        ]
-      },
-      "p06": {
-        "recall": 1.0,
-        "complete": true,
         "precision": 0.3,
         "mrr": 0.5,
         "size": 10,
@@ -3235,7 +3941,7 @@
         "recall": 0.5,
         "complete": false,
         "precision": 0.08333333333333333,
-        "mrr": 0.5,
+        "mrr": 0.3333333333333333,
         "size": 12,
         "present": [
           "github:acme/api#231"
@@ -3244,9 +3950,9 @@
       "p08": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.21428571428571427,
+        "precision": 0.23076923076923078,
         "mrr": 1.0,
-        "size": 14,
+        "size": 13,
         "present": [
           "crm:deal:23a551d6fe",
           "gmail:6dff2b861992469a",
@@ -3256,23 +3962,21 @@
       "p09": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 0.5,
-        "size": 11,
+        "precision": 0.16666666666666666,
+        "mrr": 1.0,
+        "size": 12,
         "present": [
           "gmail:19d8c431017747e4",
           "gmail:b3e0be40fd6f1fea"
         ]
       },
       "p10": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.1,
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
         "size": 10,
-        "present": [
-          "gmail:93c4a504d87495b9"
-        ]
+        "present": []
       },
       "p11": {
         "recall": 1.0,
@@ -3296,31 +4000,27 @@
         "recall": 1.0,
         "complete": true,
         "precision": 0.09090909090909091,
-        "mrr": 0.25,
+        "mrr": 1.0,
         "size": 11,
         "present": [
           "crm:note:d6985a6da8"
         ]
       },
       "p16": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.08333333333333333,
-        "mrr": 0.09090909090909091,
-        "size": 12,
-        "present": [
-          "gmail:7d508a6afb1224fb"
-        ]
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 11,
+        "present": []
       },
       "p17": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.16666666666666666,
-        "size": 10,
-        "present": [
-          "gmail:b0358e336931b315"
-        ]
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 12,
+        "present": []
       },
       "p18": {
         "recall": 0.0,
@@ -3345,19 +4045,18 @@
       "p02": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 0.5,
-        "size": 11,
+        "precision": 0.1111111111111111,
+        "mrr": 0.2,
+        "size": 9,
         "present": [
-          "gmail:6dff2b861992469a",
-          "notion:d66e87731f6d486a58818da6ad1da108"
+          "gmail:6dff2b861992469a"
         ]
       },
       "p03": {
         "recall": 1.0,
         "complete": true,
         "precision": 0.08333333333333333,
-        "mrr": 0.25,
+        "mrr": 0.14285714285714285,
         "size": 12,
         "present": [
           "gmail:e98c5b9d26b114a1"
@@ -3366,13 +4065,12 @@
       "p04": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.3,
+        "precision": 0.18181818181818182,
         "mrr": 1.0,
-        "size": 10,
+        "size": 11,
         "present": [
           "gmail:bfda57e5a3e21af0",
-          "notion:0f8a538c21e4ef3f1024c7d25666cd47",
-          "slack:C01ENG:1773331200.609253"
+          "notion:0f8a538c21e4ef3f1024c7d25666cd47"
         ]
       },
       "p06": {
@@ -3391,7 +4089,7 @@
         "recall": 0.5,
         "complete": false,
         "precision": 0.08333333333333333,
-        "mrr": 0.5,
+        "mrr": 0.3333333333333333,
         "size": 12,
         "present": [
           "github:acme/api#231"
@@ -3400,9 +4098,9 @@
       "p08": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.21428571428571427,
-        "mrr": 1.0,
-        "size": 14,
+        "precision": 0.3,
+        "mrr": 0.3333333333333333,
+        "size": 10,
         "present": [
           "crm:deal:23a551d6fe",
           "gmail:6dff2b861992469a",
@@ -3412,23 +4110,21 @@
       "p09": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 0.5,
-        "size": 11,
+        "precision": 0.16666666666666666,
+        "mrr": 1.0,
+        "size": 12,
         "present": [
           "gmail:19d8c431017747e4",
           "gmail:b3e0be40fd6f1fea"
         ]
       },
       "p10": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.1,
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
         "size": 10,
-        "present": [
-          "gmail:93c4a504d87495b9"
-        ]
+        "present": []
       },
       "p11": {
         "recall": 1.0,
@@ -3451,32 +4147,29 @@
       "p15": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.1,
+        "precision": 0.25,
         "mrr": 0.5,
-        "size": 10,
+        "size": 8,
         "present": [
+          "crm:note:d6985a6da8",
           "gmail:012ce504e5a045e9"
         ]
       },
       "p16": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.08333333333333333,
-        "mrr": 0.09090909090909091,
-        "size": 12,
-        "present": [
-          "gmail:7d508a6afb1224fb"
-        ]
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 11,
+        "present": []
       },
       "p17": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.1,
-        "mrr": 0.16666666666666666,
-        "size": 10,
-        "present": [
-          "gmail:b0358e336931b315"
-        ]
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 12,
+        "present": []
       },
       "p18": {
         "recall": 0.0,
@@ -3499,9 +4192,9 @@
       "p02": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.3333333333333333,
-        "mrr": 0.5,
-        "size": 3,
+        "precision": 0.1,
+        "mrr": 1.0,
+        "size": 10,
         "present": [
           "notion:d66e87731f6d486a58818da6ad1da108"
         ]
@@ -3509,9 +4202,9 @@
       "p03": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.14285714285714285,
-        "mrr": 0.5,
-        "size": 7,
+        "precision": 0.08333333333333333,
+        "mrr": 0.3333333333333333,
+        "size": 12,
         "present": [
           "gmail:e98c5b9d26b114a1"
         ]
@@ -3519,9 +4212,9 @@
       "p04": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 1.0,
-        "size": 11,
+        "precision": 0.16666666666666666,
+        "mrr": 0.5,
+        "size": 12,
         "present": [
           "gmail:bfda57e5a3e21af0",
           "notion:0f8a538c21e4ef3f1024c7d25666cd47"
@@ -3530,13 +4223,12 @@
       "p06": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.25,
-        "mrr": 0.1,
-        "size": 12,
+        "precision": 0.18181818181818182,
+        "mrr": 0.125,
+        "size": 11,
         "present": [
           "gmail:7d0d75121cdeaac6",
-          "linear:ACME-441@20260313T1900",
-          "notion:163647759184b558a347537639422466"
+          "linear:ACME-441@20260313T1900"
         ]
       },
       "p07": {
@@ -3550,27 +4242,31 @@
       "p08": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.4,
+        "precision": 0.3,
         "mrr": 1.0,
-        "size": 5,
+        "size": 10,
         "present": [
           "crm:deal:23a551d6fe",
+          "gmail:6dff2b861992469a",
           "notion:d66e87731f6d486a58818da6ad1da108"
         ]
       },
       "p09": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.18181818181818182,
+        "mrr": 0.25,
         "size": 11,
-        "present": []
+        "present": [
+          "gmail:19d8c431017747e4",
+          "gmail:b3e0be40fd6f1fea"
+        ]
       },
       "p10": {
         "recall": 1.0,
         "complete": true,
         "precision": 0.1,
-        "mrr": 0.5,
+        "mrr": 0.3333333333333333,
         "size": 10,
         "present": [
           "gmail:93c4a504d87495b9"
@@ -3581,15 +4277,15 @@
         "complete": false,
         "precision": 0.0,
         "mrr": 0.0,
-        "size": 6,
+        "size": 7,
         "present": []
       },
       "p13": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.09090909090909091,
+        "precision": 0.1,
         "mrr": 0.3333333333333333,
-        "size": 11,
+        "size": 10,
         "present": [
           "gmail:69d12ca0960f4a7d"
         ]
@@ -3603,21 +4299,19 @@
         "present": []
       },
       "p16": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.09090909090909091,
-        "mrr": 0.09090909090909091,
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
         "size": 11,
-        "present": [
-          "slack:C03GEN:1773414000.655032"
-        ]
+        "present": []
       },
       "p17": {
         "recall": 0.0,
         "complete": false,
         "precision": 0.0,
         "mrr": 0.0,
-        "size": 10,
+        "size": 12,
         "present": []
       },
       "p18": {
@@ -3625,7 +4319,7 @@
         "complete": false,
         "precision": 0.0,
         "mrr": 0.0,
-        "size": 6,
+        "size": 7,
         "present": []
       }
     },
@@ -3643,9 +4337,9 @@
       "p02": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.15384615384615385,
+        "precision": 0.16666666666666666,
         "mrr": 1.0,
-        "size": 13,
+        "size": 12,
         "present": [
           "gmail:6dff2b861992469a",
           "notion:d66e87731f6d486a58818da6ad1da108"
@@ -3654,9 +4348,9 @@
       "p03": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.09090909090909091,
+        "precision": 0.08333333333333333,
         "mrr": 1.0,
-        "size": 11,
+        "size": 12,
         "present": [
           "gmail:e98c5b9d26b114a1"
         ]
@@ -3664,20 +4358,19 @@
       "p04": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.3,
+        "precision": 0.16666666666666666,
         "mrr": 1.0,
-        "size": 10,
+        "size": 12,
         "present": [
           "gmail:bfda57e5a3e21af0",
-          "notion:0f8a538c21e4ef3f1024c7d25666cd47",
-          "slack:C01ENG:1773331200.609253"
+          "notion:0f8a538c21e4ef3f1024c7d25666cd47"
         ]
       },
       "p06": {
         "recall": 1.0,
         "complete": true,
         "precision": 0.3,
-        "mrr": 0.3333333333333333,
+        "mrr": 0.5,
         "size": 10,
         "present": [
           "gmail:7d0d75121cdeaac6",
@@ -3689,7 +4382,7 @@
         "recall": 0.5,
         "complete": false,
         "precision": 0.1,
-        "mrr": 0.25,
+        "mrr": 0.16666666666666666,
         "size": 10,
         "present": [
           "github:acme/api#231"
@@ -3698,9 +4391,9 @@
       "p08": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.25,
+        "precision": 0.23076923076923078,
         "mrr": 1.0,
-        "size": 12,
+        "size": 13,
         "present": [
           "crm:deal:23a551d6fe",
           "gmail:6dff2b861992469a",
@@ -3710,9 +4403,9 @@
       "p09": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.16666666666666666,
+        "precision": 0.18181818181818182,
         "mrr": 1.0,
-        "size": 12,
+        "size": 11,
         "present": [
           "gmail:19d8c431017747e4",
           "gmail:b3e0be40fd6f1fea"
@@ -3721,9 +4414,9 @@
       "p10": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.3,
+        "precision": 0.2727272727272727,
         "mrr": 1.0,
-        "size": 10,
+        "size": 11,
         "present": [
           "gmail:805093022b56ece6",
           "gmail:93c4a504d87495b9",
@@ -3733,9 +4426,9 @@
       "p11": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.07142857142857142,
+        "precision": 0.08333333333333333,
         "mrr": 0.5,
-        "size": 14,
+        "size": 12,
         "present": [
           "calendar:de4afcd47267780be961f09a4f"
         ]
@@ -3744,7 +4437,7 @@
         "recall": 1.0,
         "complete": true,
         "precision": 0.1,
-        "mrr": 0.2,
+        "mrr": 0.25,
         "size": 10,
         "present": [
           "gmail:69d12ca0960f4a7d"
@@ -3753,23 +4446,21 @@
       "p15": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.07692307692307693,
-        "mrr": 0.125,
-        "size": 13,
+        "precision": 0.18181818181818182,
+        "mrr": 0.25,
+        "size": 11,
         "present": [
-          "crm:note:d6985a6da8"
+          "crm:note:d6985a6da8",
+          "gmail:012ce504e5a045e9"
         ]
       },
       "p16": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.13333333333333333,
-        "mrr": 0.09090909090909091,
-        "size": 15,
-        "present": [
-          "gmail:7d508a6afb1224fb",
-          "slack:C03GEN:1773414000.655032"
-        ]
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 11,
+        "present": []
       },
       "p17": {
         "recall": 0.0,
@@ -3784,7 +4475,7 @@
         "complete": false,
         "precision": 0.0,
         "mrr": 0.0,
-        "size": 12,
+        "size": 13,
         "present": []
       }
     },
@@ -3802,20 +4493,19 @@
       "p02": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.15384615384615385,
-        "mrr": 1.0,
-        "size": 13,
+        "precision": 0.1111111111111111,
+        "mrr": 0.3333333333333333,
+        "size": 9,
         "present": [
-          "gmail:6dff2b861992469a",
           "notion:d66e87731f6d486a58818da6ad1da108"
         ]
       },
       "p03": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.1,
+        "precision": 0.08333333333333333,
         "mrr": 1.0,
-        "size": 10,
+        "size": 12,
         "present": [
           "gmail:e98c5b9d26b114a1"
         ]
@@ -3823,9 +4513,9 @@
       "p04": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.18181818181818182,
-        "mrr": 1.0,
-        "size": 11,
+        "precision": 0.16666666666666666,
+        "mrr": 0.5,
+        "size": 12,
         "present": [
           "gmail:bfda57e5a3e21af0",
           "notion:0f8a538c21e4ef3f1024c7d25666cd47"
@@ -3835,7 +4525,7 @@
         "recall": 1.0,
         "complete": true,
         "precision": 0.3,
-        "mrr": 0.3333333333333333,
+        "mrr": 0.5,
         "size": 10,
         "present": [
           "gmail:7d0d75121cdeaac6",
@@ -3846,9 +4536,9 @@
       "p07": {
         "recall": 0.5,
         "complete": false,
-        "precision": 0.09090909090909091,
-        "mrr": 0.16666666666666666,
-        "size": 11,
+        "precision": 0.1,
+        "mrr": 0.14285714285714285,
+        "size": 10,
         "present": [
           "github:acme/api#231"
         ]
@@ -3856,21 +4546,20 @@
       "p08": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.2727272727272727,
-        "mrr": 1.0,
-        "size": 11,
+        "precision": 0.2,
+        "mrr": 0.3333333333333333,
+        "size": 10,
         "present": [
           "crm:deal:23a551d6fe",
-          "gmail:6dff2b861992469a",
           "notion:d66e87731f6d486a58818da6ad1da108"
         ]
       },
       "p09": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.16666666666666666,
-        "mrr": 0.5,
-        "size": 12,
+        "precision": 0.18181818181818182,
+        "mrr": 1.0,
+        "size": 11,
         "present": [
           "gmail:19d8c431017747e4",
           "gmail:b3e0be40fd6f1fea"
@@ -3879,9 +4568,9 @@
       "p10": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.3,
+        "precision": 0.2727272727272727,
         "mrr": 1.0,
-        "size": 10,
+        "size": 11,
         "present": [
           "gmail:805093022b56ece6",
           "gmail:93c4a504d87495b9",
@@ -3892,7 +4581,7 @@
         "recall": 1.0,
         "complete": true,
         "precision": 0.07142857142857142,
-        "mrr": 0.3333333333333333,
+        "mrr": 0.25,
         "size": 14,
         "present": [
           "calendar:de4afcd47267780be961f09a4f"
@@ -3901,9 +4590,9 @@
       "p13": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.09090909090909091,
+        "precision": 0.1,
         "mrr": 0.25,
-        "size": 11,
+        "size": 10,
         "present": [
           "gmail:69d12ca0960f4a7d"
         ]
@@ -3919,15 +4608,12 @@
         ]
       },
       "p16": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.14285714285714285,
-        "mrr": 0.09090909090909091,
-        "size": 14,
-        "present": [
-          "gmail:7d508a6afb1224fb",
-          "slack:C03GEN:1773414000.655032"
-        ]
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 11,
+        "present": []
       },
       "p17": {
         "recall": 0.0,
@@ -3942,7 +4628,7 @@
         "complete": false,
         "precision": 0.0,
         "mrr": 0.0,
-        "size": 12,
+        "size": 13,
         "present": []
       }
     },
@@ -3960,11 +4646,10 @@
       "p02": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.15384615384615385,
-        "mrr": 1.0,
-        "size": 13,
+        "precision": 0.1,
+        "mrr": 0.3333333333333333,
+        "size": 10,
         "present": [
-          "gmail:6dff2b861992469a",
           "notion:d66e87731f6d486a58818da6ad1da108"
         ]
       },
@@ -3981,20 +4666,19 @@
       "p04": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.3,
+        "precision": 0.2,
         "mrr": 1.0,
         "size": 10,
         "present": [
           "gmail:bfda57e5a3e21af0",
-          "notion:0f8a538c21e4ef3f1024c7d25666cd47",
-          "slack:C01ENG:1773331200.609253"
+          "notion:0f8a538c21e4ef3f1024c7d25666cd47"
         ]
       },
       "p06": {
         "recall": 1.0,
         "complete": true,
         "precision": 0.3,
-        "mrr": 0.3333333333333333,
+        "mrr": 0.5,
         "size": 10,
         "present": [
           "gmail:7d0d75121cdeaac6",
@@ -4015,9 +4699,9 @@
       "p08": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.25,
-        "mrr": 1.0,
-        "size": 12,
+        "precision": 0.3,
+        "mrr": 0.3333333333333333,
+        "size": 10,
         "present": [
           "crm:deal:23a551d6fe",
           "gmail:6dff2b861992469a",
@@ -4027,9 +4711,9 @@
       "p09": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.18181818181818182,
+        "precision": 0.16666666666666666,
         "mrr": 1.0,
-        "size": 11,
+        "size": 12,
         "present": [
           "gmail:19d8c431017747e4",
           "gmail:b3e0be40fd6f1fea"
@@ -4038,9 +4722,9 @@
       "p10": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.3,
+        "precision": 0.2727272727272727,
         "mrr": 1.0,
-        "size": 10,
+        "size": 11,
         "present": [
           "gmail:805093022b56ece6",
           "gmail:93c4a504d87495b9",
@@ -4058,33 +4742,33 @@
         ]
       },
       "p13": {
-        "recall": 0.0,
-        "complete": false,
-        "precision": 0.0,
-        "mrr": 0.0,
+        "recall": 1.0,
+        "complete": true,
+        "precision": 0.1,
+        "mrr": 0.1111111111111111,
         "size": 10,
-        "present": []
+        "present": [
+          "gmail:69d12ca0960f4a7d"
+        ]
       },
       "p15": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.1,
+        "precision": 0.2222222222222222,
         "mrr": 0.5,
-        "size": 10,
+        "size": 9,
         "present": [
+          "crm:note:d6985a6da8",
           "gmail:012ce504e5a045e9"
         ]
       },
       "p16": {
-        "recall": 1.0,
-        "complete": true,
-        "precision": 0.15384615384615385,
-        "mrr": 0.09090909090909091,
-        "size": 13,
-        "present": [
-          "gmail:7d508a6afb1224fb",
-          "slack:C03GEN:1773414000.655032"
-        ]
+        "recall": 0.0,
+        "complete": false,
+        "precision": 0.0,
+        "mrr": 0.0,
+        "size": 11,
+        "present": []
       },
       "p17": {
         "recall": 0.0,
@@ -4105,9 +4789,9 @@
     }
   },
   "ms": {
-    "fts": 0.21310493519360368,
-    "vector": 41.81199624541808,
-    "person": 0.24000739424743436,
-    "structured": 0.15939110325592937
+    "fts": 0.2214920518565036,
+    "vector": 18.51040851657412,
+    "person": 0.17167225347033568,
+    "structured": 0.174708908335084
   }
 }

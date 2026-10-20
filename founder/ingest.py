@@ -6,8 +6,8 @@ import time
 
 import numpy as np
 
-from . import config, dedupe, extract, followups, llm, stale, store
-from .identity import IdentityResolver
+from . import config, dates, dedupe, extract, followups, glossary, llm, retrieve, route, stale, store
+from .identity import IdentityResolver, format_report, resolution_report
 from .normalize import normalize_all
 
 
@@ -36,7 +36,11 @@ def embed_text(item, ident):
             'doc': f"Notion page edited {day} by {author}, {item['title']}",
             'deal': f"CRM deal ({item['status']}), {item['title']}",
             'note': f"CRM note on {day}, {item['title']}"}[item['kind']]
-    return f"{head}\n{item['body']}".strip()
+    text = f"{head}\n{item['body']}"
+    if 'forwarded' in item['flags']:
+        # the forwarded message is what the email is about. it is embedded with the note, and stays out of the body
+        text += f"\nForwarded message: {item['quoted'][:800]}"
+    return text.strip()
 
 
 def novelty_scores(items, plain):
@@ -61,8 +65,13 @@ def novelty_scores(items, plain):
 def run(skip_decisions=False):
     started = time.time()
     ensure_raw_data()
-    ident = IdentityResolver(config.RAW_DIR)
+    ident = IdentityResolver(config.RAW_DIR, embed=llm.embed)
     items = normalize_all(config.RAW_DIR, ident)
+    print(f'{ident.learn_nicknames(items)} nicknames learned from the mail')
+    for line in format_report(resolution_report(items)):
+        print(line)
+    order = dates.detect_slash_order(f"{i['title']} {i['body']}" for i in items)
+    dates.set_slash_order(order)
     for item in items:
         item['embed_text'] = embed_text(item, ident)
         # machine mail and bot posts are indexed but not 'current': they repeat
@@ -112,6 +121,11 @@ def run(skip_decisions=False):
 
     conn = store.reset()
     store.write_items(conn, items, ident.people)
+    conn.execute("INSERT OR REPLACE INTO settings VALUES ('slash_order', ?)", (order,))
+    vocab = {r['term']: r['doc'] for r in conn.execute('SELECT term, doc FROM vocab')}
+    terms = glossary.build(items, vocab, retrieve.STOP | route.FILLER)
+    glossary.write(conn, terms)
+    print(f'{len(terms)} words have related words in the search glossary')
     conn.executemany('INSERT INTO links VALUES (?,?,?)', links)
     extract.write_decisions(conn, decisions)
     stale.write_stale(conn, stale_rows)

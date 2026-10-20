@@ -9,7 +9,7 @@ import re
 import time
 from datetime import datetime
 
-from . import brief, config, llm, retrieve, route, store
+from . import brief, config, llm, retrieve, route, stale, store
 
 BODY_CHARS = 450
 CANT_FIND = "I can't find that in the available data."
@@ -71,6 +71,9 @@ DIGESTS = {
     'customers': ({'customer'}, 'List each customer problem, how many times it was reported, over how many days, '
                                 'and whether a fix came back.'),
 }
+# how many facts a model is shown when it phrases a digest. only the model path has a budget (a local
+# model reads 8192 tokens). a list rendered by code has no reason to leave anything out, and a founder
+# asking for the docket wants all of it
 DIGEST_LIMIT = 8
 FOLLOWUP_LIMIT = 12
 BLOCKED_LIMIT = 12
@@ -104,7 +107,7 @@ def render_item(conn, item, label, people_names):
         tags.append(row['status'].upper())
         attendees = ', '.join(people_names.get(p, p) for p in row['people'])
         if 'all_day' in row['flags']:
-            when = f"all day {row['start'][:10]}"
+            when = f"all day {row['meta'].get('start_local', row['start'])[:10]}"
         else:
             when = f"{_when(row['start'])} to {_when(row['end'])}"
             zone, local = row['meta'].get('time_zone', ''), row['meta'].get('start_local', '')
@@ -135,11 +138,11 @@ def render_item(conn, item, label, people_names):
                 f"owner {author}, updated {_when(row['ts'])}, title: {row['title']}")
 
     decision = conn.execute('SELECT * FROM decisions WHERE item_id=?', (row['id'],)).fetchone()
-    stale = conn.execute('SELECT s.current_fact, n.ts, n.source FROM stale_records s '
+    newer_info = conn.execute('SELECT s.current_fact, n.ts, n.source FROM stale_records s '
                          'JOIN items n ON n.id = s.newer_id WHERE s.item_id=?', (row['id'],)).fetchone()
-    if stale:
-        newer = f", for example: {stale['current_fact']}" if stale['current_fact'] else ''
-        tags.append(f"STALE: newer information from {stale['source']} on {stale['ts'][:10]} changes this{newer}. "
+    if newer_info:
+        newer = f", for example: {newer_info['current_fact']}" if newer_info['current_fact'] else ''
+        tags.append(f"STALE: newer information from {newer_info['source']} on {newer_info['ts'][:10]} changes this{newer}. "
                     'this record is NOT up to date')
     elif decision:
         if decision['status'] == 'stale':
@@ -147,6 +150,8 @@ def render_item(conn, item, label, people_names):
                         'so it is NOT up to date')
         else:
             tags.append(decision['status'].upper())
+    if row['state'] == 'automated':
+        tags.append('automated message from a system, not a person')
     siblings = [r for r in conn.execute(
         'SELECT source, title FROM items WHERE dup_group=? AND id!=?', (row['dup_group'], row['id']))] \
         if row['dup_group'] else []
@@ -158,6 +163,13 @@ def render_item(conn, item, label, people_names):
         tags = [t for t in tags if t != 'data issues: ']
     line = head + (f" ({'; '.join(tags)})" if tags else '')
     body = row['body'][:BODY_CHARS]
+    # 'next Friday' means a date only against the day it was written, and a model that is left to work it out
+    # does it wrong (it called Friday Mar 20 'March 21')
+    resolved = stale.relative_phrases(row['body'], datetime.fromisoformat(row['ts'].replace('Z', '+00:00'))) if kind in ('email', 'message') else []
+    if resolved:
+        body += '\n    dates in this message: ' + '; '.join(f"'{p}' is {d.strftime('%a %b %-d')}" for p, d in resolved)
+    if 'forwarded' in row['flags'] and row['quoted']:
+        body += f"\n    forwarded message: {row['quoted'][:BODY_CHARS]}"
     if kind == 'event' and body:
         body = f'calendar note: {body}'
     return f"{line}\n    {body}"
@@ -326,6 +338,10 @@ def ground_citations(text, blocks, current):
     dropped = added = 0
     issues = []
     out_lines = []
+    # the dates, prices, percentages and durations each block states. short numbers cannot be
+    # compared as words ('20' and '22' are one character apart, and every header carries '2026'
+    # and a time), so a claim's values have to appear in the blocks that carry its citations
+    values = {n: stale.concrete_values(blocks[n]) for n in blocks}
     for line in text.split('\n'):
         pieces = []
         for sentence in re.split(r'(?<=[.!?])\s+', line):
@@ -352,6 +368,17 @@ def ground_citations(text, blocks, current):
                     kind = 'unsupported' if model_marks else ('uncited' if len(sentence.split()) > 4 else '')
             elif len(kept) < len(model_marks):
                 kind = 'partly_unsupported'
+            claimed = stale.concrete_values(CITE_RE.sub('', sentence))
+            if kept and claimed:
+                missing = claimed - set().union(*[values[n] for n in kept])
+                if missing:
+                    # the value is in another block that also supports the sentence: cite that one too
+                    holders = [n for n in current if missing <= values[n] and support[n] >= MIN_SHARED]
+                    if holders:
+                        kept = kept + [max(holders, key=lambda n: support[n])]
+                        added += 1
+                    elif not kind:
+                        kind = 'value_mismatch'
             # a claim whose other citations held is supported, and a remark about the answer is not a claim
             if kind == 'partly_unsupported' or (kind and not is_claim(sentence)):
                 kind = ''
@@ -390,7 +417,7 @@ def is_claim(sentence):
     return bool(re.search(r'\d|[A-Z]{2,}-\d|(?<!^)(?<=[a-z,;] )[A-Z][a-z]+', sentence.strip()))
 
 
-ISSUE_ORDER = {'unsupported': 0, 'reattributed': 1, 'partly_unsupported': 2, 'uncited': 3}
+ISSUE_ORDER = {'unsupported': 0, 'value_mismatch': 1, 'reattributed': 2, 'partly_unsupported': 3, 'uncited': 4}
 
 
 def investigate(issues, blocks, labels, ids_by_label=None):
@@ -453,6 +480,15 @@ def verify(text, labels):
     return mapped, list(dict.fromkeys(cited)), ungrounded
 
 
+def _shown(plan, kind, facts, limit):
+    """Every fact when code renders the list. A model gets at most limit of them, and plan.total keeps
+    the full count so the answer can say how many were left out"""
+    plan.total = len(facts)
+    if kind in CODE_DIGESTS and os.environ.get('FOUNDER_DIGEST', 'code') == 'code':
+        return facts
+    return facts[:limit]
+
+
 def digest_facts(conn, plan, question):
     """(kind, facts, instruction) when the plan calls for a digest, else None"""
     kind = plan.kind
@@ -464,17 +500,15 @@ def digest_facts(conn, plan, question):
         return None
     cats, instruction = DIGESTS[kind]
     if kind == 'company':
-        return kind, brief.company_facts(conn, plan)[:PREP_LIMIT], instruction
+        return kind, _shown(plan, kind, brief.company_facts(conn, plan), PREP_LIMIT), instruction
     if kind == 'prep':
-        return kind, brief.prep_facts(conn, plan, question)[:PREP_LIMIT], instruction
+        return kind, _shown(plan, kind, brief.prep_facts(conn, plan, question), PREP_LIMIT), instruction
     if kind == 'blocked':
-        facts = brief.blocked_facts(conn, mine_only=plan.mine)
-        plan.total = len(facts)
-        return kind, facts[:BLOCKED_LIMIT], instruction
+        return kind, _shown(plan, kind, brief.blocked_facts(conn, mine_only=plan.mine), BLOCKED_LIMIT), instruction
     if kind == 'meeting_emails':
-        return kind, brief.meeting_email_facts(conn)[:DIGEST_LIMIT], instruction
+        return kind, _shown(plan, kind, brief.meeting_email_facts(conn), DIGEST_LIMIT), instruction
     if kind == 'schedule':
-        return kind, brief.schedule_facts(conn, plan.start, plan.end, plan.people or None)[:SCHEDULE_LIMIT], instruction
+        return kind, _shown(plan, kind, brief.schedule_facts(conn, plan.start, plan.end, plan.people or None), SCHEDULE_LIMIT), instruction
     facts = brief.collect_facts(conn)
     if cats:
         facts = [f for f in facts if f['cat'] in cats]
@@ -490,7 +524,7 @@ def digest_facts(conn, plan, question):
             facts = [f for f in facts if set(f.get('people', [])) & set(plan.people)]
         if re.search(r'overdue|past due|late|slipp', question, re.I):
             facts = [f for f in facts if f.get('overdue')]
-    return kind, facts[:FOLLOWUP_LIMIT if kind == 'followups' else DIGEST_LIMIT], instruction
+    return kind, _shown(plan, kind, facts, FOLLOWUP_LIMIT if kind == 'followups' else DIGEST_LIMIT), instruction
 
 
 def ambiguity_note(conn, plan):
@@ -567,18 +601,18 @@ def render_digest(name, facts, plan_label='', total=0):
         lines = ['Waiting on you:'] + ([f"- {f['text']} {cite(f)}" for f in asks] or ['- nothing'])
         lines += ['', 'You said you would:'] + ([f"- {f['text']} {cite(f)}" for f in promises] or ['- nothing'])
         if done:
-            lines += ['', 'Already handled:'] + [f"- {f['text']} {cite(f)}" for f in done[:3]]
+            lines += ['', 'Already handled:'] + [f"- {f['text']} {cite(f)}" for f in done]
         return '\n'.join(lines)
     if name == 'catchup':
-        sections = (('What changed', ('change',), 8), ('At risk', ('stale', 'customer', 'blocked'), 5),
-                    ('Waiting on you', ('ask', 'promise'), 5), ('Coming up today', ('meeting',), 2))
+        sections = (('What changed', ('change',)), ('At risk', ('stale', 'customer', 'blocked')),
+                    ('Waiting on you', ('ask', 'promise')), ('Coming up today', ('meeting',)))
         lines = []
-        for title, cats, limit in sections:
+        for title, cats in sections:
             rows = [f for f in facts if f['cat'] in cats]
             if cats == ('change',):
                 rows = sorted(rows, key=lambda f: f.get('ts', ''), reverse=True)
             if rows:
-                lines += [f'{title}:'] + [f"- {f.get('short', f['text'])} {cite(f)}" for f in rows[:limit]] + ['']
+                lines += [f'{title}:'] + [f"- {f.get('short', f['text'])} {cite(f)}" for f in rows] + ['']
         return '\n'.join(lines).strip()
     if name == 'prep':
         return '\n'.join([facts[0]['text'], 'Before it:'] + [f"- {f['text']} {cite(f)}" for f in facts[1:]]) if len(facts) > 1 else facts[0]['text'] + ' ' + cite(facts[0])
@@ -627,6 +661,9 @@ def ask_digest(conn, question, digest, started, plan=None):
                 'seconds': time.time() - started}
     labels = {n: f['ids'][0] for n, f in enumerate(facts, 1)}
     context = '\n\n'.join(f"[{n}] {f['text']}" for n, f in enumerate(facts, 1))
+    left = getattr(plan, 'total', len(facts)) - len(facts)
+    if left > 0:
+        context += f'\n\n({left} more items exist and are not listed above. Say that {left} more exist.)'
     result = llm.chat(SYSTEM, f'Context items:\n\n{context}\n\nQuestion: {question}\n{instruction}\n'
                       'These items already answer the question. Summarise them, and do not refuse.',
                       max_tokens=300)

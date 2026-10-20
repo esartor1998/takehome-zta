@@ -9,11 +9,21 @@
     "notion:4324f4a965bc64d11787c2369776502e",
     "notion:fdfd76a06532aec244da50d79fa1676a",
     "linear:ACME-460@20260304T1800",
-    "crm:deal:feeb461b12"
+    "crm:deal:feeb461b12",
+    "notion:a005e60800e96d471e9ea49de3f49c3e",
+    "notion:1d661025d9081de511d174c8a6871148",
+    "linear:ACME-480@20260306T1600",
+    "linear:ACME-481@20260306T1700",
+    "notion:32c79bea43b658e1eea8a977aa70b0e4"
   ],
   "must_not_be_stale": [
     "notion:163647759184b558a347537639422466",
     "linear:ACME-441@20260313T1900",
-    "notion:4bae63a7e71c19eae755005daf03a5cf"
+    "notion:4bae63a7e71c19eae755005daf03a5cf",
+    "notion:61f6d272497704be67c1d43e21410d9e",
+    "notion:1c306b2522a0dee4bb268dcd8583284a",
+    "notion:8c194cecb9a5a1d46e58108e2ae470cc",
+    "notion:bb99d013de107fd46b9c6b77b725b4f7",
+    "notion:1d491e81eee6ac6499f322b9b678c1f3"
   ]
 }

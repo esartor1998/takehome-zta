@@ -31,7 +31,7 @@ import hashlib
 import re
 
 from . import llm
-from .normalize import ACME_RE
+from .normalize import issue_refs
 
 # explicit wording. 'ship', 'now' and plain 'moved' appear in filler and would
 # send hundreds of items to the model for nothing
@@ -80,7 +80,8 @@ ANCHOR_SCORE = 0.74       # gate score at which an item counts as a real change 
 MERGE_COSINE = 0.74       # an anchor pair this close merges two groups
 ENTITY_COSINE = 0.58      # a pair that shares a specific entity needs only this
 GROUP_COSINE = 0.68       # average cosine between anchors of two merging groups
-ATTACH_COSINE = 0.70      # a non-anchor joins the anchor group it is this close to
+# a group with no anchor of its own joins an anchor group by these same cutoffs (MERGE_COSINE, or ENTITY_COSINE
+# with a shared entity). an ATTACH_COSINE of 0.70 was once defined for it and never read, so it was removed
 SPECIFIC_DF = 20          # an entity in more items than this links nothing
 SCHEMA = {
     'type': 'object',
@@ -192,7 +193,7 @@ def candidates(items, scores):
     # shares a topic with one (the roadmap email thread and its issue have no
     # explicit id in common, only a matching title). older snapshots of an issue
     # we already chose come along so its history is complete
-    refs = {r for i in chosen for r in ACME_RE.findall(i['title'] + ' ' + i['body'])}
+    refs = {r for i in chosen for r in issue_refs(i['title'] + ' ' + i['body'])}
     topics = {i['topic'] for i in chosen}
     chosen_idents = {i['meta']['identifier'] for i in chosen if i['source'] == 'linear'}
     linear = [i for i in live if i['source'] == 'linear'
@@ -257,7 +258,7 @@ def validate(item, parsed):
         value = item['body'].replace('\n', ' ')[:200] if item['source'] != 'crm' else item['body'][:200]
     subject = re.sub(r'[^a-z0-9 ]', ' ', parsed.get('subject', '').lower()).strip()
     if not subject or len(subject.split()) > 6:
-        subject = re.sub(r'\s*\(ACME-\d+\)|^(re|fwd?):\s*', '', item['title'].lower()).strip()
+        subject = re.sub(r'\s*\([a-z][a-z0-9]{1,9}-\d+\)|^(re|fwd?):\s*', '', item['title'].lower()).strip()
     return {'kind': kind, 'subject': subject, 'value': value, 'retracts': retracts}, disagreed
 
 
@@ -299,7 +300,7 @@ def entity_map(items, ident):
         if item['state'] == 'automated':
             continue
         text = f"{item['title']} {item['body']}".lower()
-        ents = {pid for pid in ident.match_name(text) if ident.people[pid].external}
+        ents = {pid for pid in ident.match_name(text, nicknames=False) if ident.people[pid].external}
         ents |= {f'org:{org}' for org in orgs if re.search(rf'\b{re.escape(org.split()[0])}\b', text)}
         ents |= {p for p in ([item['author']] + item['people']) if p and ident.people[p].external}
         # a company is also its people, so a deal with Jordan and a doc naming Northwind meet

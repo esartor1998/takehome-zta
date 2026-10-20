@@ -16,16 +16,16 @@ decides what to do with the ambiguity
 """
 import json
 import re
+from collections import Counter
 from dataclasses import dataclass, field
+
+from .names import NameSense
 
 SIGNATURE_RE = re.compile(r'(?:^|\s)(?:--|—|-)\s*([A-Z][a-z]+)\s*$')
 
-# short forms people use for each other in chat. we match these in questions
-# and message text, never when merging identities
-NICKNAMES = {
-    'daniel': ('dan', 'danny'), 'rebecca': ('becky', 'bec'),
-    'priya': ('pri',), 'marcus': ('marc',), 'sofia': ('sof',), 'hannah': ('han',),
-}
+# how a message opens ('Hi Becky,') and how it closes ('-- Dan'). names people call each
+# other, which is where nicknames are learned
+SALUTATION_RE = re.compile(r'^\W*(?:hi|hey|hello|dear|yo)\s+([A-Za-z]+)\b', re.I)
 
 # a sender is a machine when the local part says so or a bulk header is set
 AUTOMATED_LOCAL_RE = re.compile(r'^(no-?reply|notifications?|newsletter|news|billing|receipts?|'
@@ -48,15 +48,19 @@ class Person:
     title: str = ''
     role: str = ''           # customer, investor, candidate and so on, for outsiders
     external: bool = False
+    nicknames: set = field(default_factory=set)   # learned from the mail (see learn_nicknames), never listed by hand
 
     @property
     def first(self):
         return self.name.split()[0].lower()
 
-    def aliases(self):
-        """Lowercase names this person goes by in chat"""
+    def aliases(self, nicknames=True):
+        """Lowercase names this person goes by in chat. nicknames=False leaves out the learned ones, for
+        uses where a nickname that is also a plain word ('mark', 'bill') would link unrelated text"""
         parts = self.name.lower().replace('.', '').split()
-        out = {self.name.lower(), parts[0], *NICKNAMES.get(parts[0], ())}
+        out = {self.name.lower(), parts[0]}
+        if nicknames:
+            out |= self.nicknames
         if len(parts) > 1:
             out.add(parts[0][0] + parts[-1][0])           # initials like 'dk'
             out.add(f'{parts[0]} {parts[-1]}')
@@ -82,6 +86,27 @@ def parse_addresses(header):
     return out
 
 
+def resolution_report(items, top=5):
+    """How well the people in the export were placed, so a gap shows up at ingest and not as a wrong answer.
+    Senders that matched no one, mailboxes shared by a team, and calendar guests that no directory knows
+    all drop out of later stages quietly: they have no person id to count, link or ask about"""
+    mail = [i for i in items if i['kind'] == 'email']
+    how = Counter(i['author_how'] for i in mail)
+    unresolved = Counter(i['meta'].get('from', '') for i in mail if i['author_how'] == 'unresolved')
+    unknown = Counter(a for i in items if i['kind'] == 'event' for a in i['meta'].get('unknown_attendees', []))
+    return {'senders': dict(how), 'unresolved_senders': unresolved.most_common(top),
+            'unknown_guests': unknown.most_common(top), 'unknown_guest_total': sum(unknown.values())}
+
+
+def format_report(report):
+    lines = ['senders by how they were placed: ' + ', '.join(f'{n} {k}' for k, n in sorted(report['senders'].items(), key=lambda kv: -kv[1]))]
+    if report['unresolved_senders']:
+        lines.append('senders no rule could place: ' + '; '.join(f'{a or "(blank)"} x{n}' for a, n in report['unresolved_senders']))
+    if report['unknown_guests']:
+        lines.append(f"calendar guests in no directory ({report['unknown_guest_total']}): " + '; '.join(f'{a} x{n}' for a, n in report['unknown_guests']))
+    return lines
+
+
 def _read(raw_dir, name, default=None):
     try:
         return json.loads((raw_dir / name).read_text())
@@ -90,7 +115,7 @@ def _read(raw_dir, name, default=None):
 
 
 class IdentityResolver:
-    def __init__(self, raw_dir):
+    def __init__(self, raw_dir, embed=None):
         self.people = {}
         self.by_email = {}
         self.by_slack = {}
@@ -101,6 +126,7 @@ class IdentityResolver:
         self.shared_inboxes = set()
         self._load(raw_dir)
         self.company_domain = self._company_domain()
+        self.sense = NameSense({p.first for p in self.people.values()}, embed)
 
     def _add_email(self, pid, email):
         email = email.lower()
@@ -189,8 +215,9 @@ class IdentityResolver:
         hits = []
         for person in self.people.values():
             parts = person.name.lower().replace('.', '').split()
-            # 'Dan F.' is Daniel Foster: a nickname stands for the first name it shortens
-            if (parts[0] == first or first in NICKNAMES.get(parts[0], ())) and (parts[-1] == last or (len(last) == 1 and parts[-1][0] == last)):
+            # 'Dan F.' is Daniel Foster: a nickname stands for the first name it shortens. the last
+            # name or initial has to agree as well, which is what makes a loose first-name test safe
+            if (parts[0] == first or parts[0] in self.sense.resolve(first)) and (parts[-1] == last or (len(last) == 1 and parts[-1][0] == last)):
                 hits.append(person.id)
         return hits[0] if len(hits) == 1 else None
 
@@ -240,10 +267,13 @@ class IdentityResolver:
             return hits.pop(), 'handle_match'
         return None, 'unresolved'
 
-    def from_signature(self, body):
-        """Resolve by a trailing full name, or '-- Name' with an unambiguous
-        first name. A full name wins, so '- Daniel Foster, Globex' is Foster
-        and not either Daniel"""
+    def from_signature(self, body, thread_people=(), internal_only=False):
+        """Resolve by a trailing full name, or by '-- Name' when that first name points at
+        one person. A full name wins, so '- Daniel Foster, Globex' is Foster and not either
+        Daniel. A first name is looked up among everyone, outsiders included, because customers
+        and investors sign with first names too. When it fits several people the writer has to
+        be someone in the conversation (thread_people). A role address on our own domain can
+        only be a teammate (internal_only), since nobody outside sends from it"""
         tail = '\n'.join(body.strip().splitlines()[-4:]).lower()
         for person in self.people.values():
             if len(person.name.split()) > 1 and person.name.lower() in tail:
@@ -252,10 +282,42 @@ class IdentityResolver:
         if not match:
             return None
         first = match.group(1).lower()
-        # '-- Dan' signs as Daniel. teammates first: outsiders sign with a full name
+        stands = self.sense.resolve(first)
         hits = [p.id for p in self.people.values()
-                if (p.first == first or first in NICKNAMES.get(p.first, ())) and not p.external]
-        return hits[0] if len(hits) == 1 else None
+                if (p.first == first or p.first in stands) and not (internal_only and p.external)]
+        if len(hits) == 1:
+            return hits[0]
+        scoped = [h for h in hits if h in thread_people]
+        return scoped[0] if len(scoped) == 1 else None
+
+    def learn_nicknames(self, items):
+        """Find the names this team and its contacts use for each other, from the mail itself:
+        the first word of display names in headers, how messages open ('Hi Becky,') and how
+        they close ('-- Dan'). A word is kept as a nickname only if the name rules in
+        names.py tie it to a roster first name. Nothing here is listed in advance"""
+        seen = set()
+        for item in items:
+            if item['kind'] != 'email':
+                continue
+            for header in (item['meta'].get('from', ''), item['meta'].get('to', ''), item['meta'].get('cc', '')):
+                for display, _ in parse_addresses(header):
+                    tokens = self._name_tokens(display)
+                    if tokens:
+                        seen.add(tokens[0])
+            lines = item['body'].strip().splitlines()
+            if lines and (m := SALUTATION_RE.match(lines[0])):
+                seen.add(m.group(1).lower())
+            if m := SIGNATURE_RE.search(item['body'].strip()):
+                seen.add(m.group(1).lower())
+        firsts = {p.first for p in self.people.values()}
+        learned = 0
+        for token in sorted(seen - firsts):
+            for first in self.sense.resolve(token):
+                for person in self.people.values():
+                    if person.first == first:
+                        person.nicknames.add(token)
+                        learned += 1
+        return learned
 
     def from_slack(self, user_id):
         return self.by_slack.get(user_id)
@@ -275,14 +337,14 @@ class IdentityResolver:
         person = self.people[pid]
         return f'{person.name} ({person.org})' if person.org else person.name
 
-    def match_name(self, text):
+    def match_name(self, text, nicknames=True):
         """Every person a lowercase name or nickname in text could mean. One
         first name can match several people, which is how a question like 'what
         is daniel saying' learns it is ambiguous"""
         text = text.lower()
         hits = []
         for person in self.people.values():
-            for alias in person.aliases():
+            for alias in person.aliases(nicknames):
                 if len(alias) >= 2 and re.search(rf'(?<![a-z0-9]){re.escape(alias)}(?![a-z0-9])', text):
                     hits.append(person.id)
                     break

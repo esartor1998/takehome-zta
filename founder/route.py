@@ -21,7 +21,8 @@ import re
 from dataclasses import dataclass, field
 from datetime import timedelta
 
-from . import config
+from . import config, llm
+from .names import NameSense
 
 TWO_LETTER_WORDS = frozenset('am as at be by do go he if in is it me my no of on or so to up us we an ok hi'.split())
 
@@ -53,21 +54,9 @@ OVERVIEW_WORDS = frozenset('story deal status update updates news happening goin
                            'summary overview situation anything account customer'.split())
 DECISION_WORDS = frozenset('decision decisions decided decide made make recently were was lately'.split())
 
-# role words and the crm status that marks them
-ROLE_WORDS = {'investor': 'investor', 'vc': 'investor', 'candidate': 'candidate', 'recruiter': 'recruiter'}
-
-# one word that stands for a family of words. 'investors' appears nowhere in a
-# term sheet email, and embeddings alone are weak on a one-word question
-SYNONYMS = {
-    'investor': 'investor investors vc fund ventures capital term sheet round seed raise fundraising cap table partner',
-    'customer': 'customer customers client escalation renewal contract',
-    'hiring': 'hiring hire candidate offer recruiter interview',
-    'pricing': 'pricing price seat plan per seat',
-    'billing': 'billing invoice payment cutover paymint ledgerly',
-    'sso': 'sso okta login redirect auth',
-    'roadmap': 'roadmap ship freeze launch release date',
-    'runway': 'runway burn cash balance bank',
-}
+# a role word is the crm status of some contacts ('investor', 'candidate', 'recruiter'), read from the people
+# table. customers are companies and are asked about by name or as a digest, so they are not a role here
+NOT_ROLES = frozenset({'customer'})
 
 
 @dataclass
@@ -78,7 +67,8 @@ class Plan:
     start: object = None
     end: object = None
     day_label: str = ''
-    expansions: list = field(default_factory=list)   # extra search words from SYNONYMS
+    expansions: list = field(default_factory=list)   # spellings the inbox holds for a word of the question
+    related: list = field(default_factory=list)      # words the glossary built at ingest relates to the question's words
     terms: list = field(default_factory=list)        # topic words left after filler is removed
     group: str = ''                                   # 'investors' when the question names a role, not a person
     fixes: dict = field(default_factory=dict)         # typos corrected in the question, word -> word
@@ -88,6 +78,18 @@ class Plan:
 
 
 _vocab_cache = {}
+_glossary_cache = {}
+
+
+def glossary(conn):
+    """term -> words this inbox uses alongside it, built at ingest (glossary.py)"""
+    key = conn.execute('PRAGMA database_list').fetchone()[2]
+    if key not in _glossary_cache:
+        try:
+            _glossary_cache[key] = {r['term']: r['related'].split() for r in conn.execute('SELECT term, related FROM glossary')}
+        except Exception:
+            _glossary_cache[key] = {}
+    return _glossary_cache[key]
 
 
 def vocabulary(conn):
@@ -228,6 +230,30 @@ def match_people(conn, q, original=''):
     return list(dict.fromkeys(hits)), ambiguous
 
 
+RARE_WORD_DOCS = 5      # a word in fewer items than this may be a name the mail never used
+_sense_cache = {}
+
+
+def unseen_nicknames(conn, q, vocab, known):
+    """Person ids for words that look like a nickname the inbox has never used ('bex', 'liz'). The
+    ones the mail does use were learned at ingest and are already aliases. The same name rules
+    apply (names.py), and only rare words are tried, so 'mar' in 'mar 20' is left alone"""
+    key = conn.execute('PRAGMA database_list').fetchone()[2]
+    if key not in _sense_cache:
+        rows = [dict(r) for r in conn.execute('SELECT id, name FROM people')]
+        _sense_cache[key] = (NameSense({r['name'].split()[0].lower() for r in rows}, llm.embed), rows)
+    sense, rows = _sense_cache[key]
+    hits = {}
+    for word in dict.fromkeys(re.findall(r'[a-z]{3,}', q)):
+        if word in known or word in FILLER or word in QUESTION_WORDS or vocab.get(word, 0) >= RARE_WORD_DOCS:
+            continue
+        ids = [r['id'] for first in sense.resolve(word) for r in rows
+               if r['name'].split()[0].lower() == first and r['id'] != config.FOUNDER_PERSON_ID]
+        if ids:
+            hits[word] = ids
+    return hits
+
+
 def rows_by_id(rows, pid):
     return next(r for r in rows if r['id'] == pid)
 
@@ -235,9 +261,14 @@ def rows_by_id(rows, pid):
 def plan(conn, question):
     q = normalise(question)
     vocab = vocabulary(conn)
-    q, fixes = fix_typos(q, vocab, keep=set(SYNONYMS) | set(ROLE_WORDS))
+    q, fixes = fix_typos(q, vocab)
     window = day_window(q)
     people, ambiguous = match_people(conn, q, question)
+    if not people:
+        for word, ids in unseen_nicknames(conn, q, vocab, set(fixes.values())).items():
+            people += ids
+            if len(ids) > 1:
+                ambiguous[word] = ids
     mine = bool(re.search(r"\b(i|my|me|mine|i have|i am)\b", q))
     kind = 'topic'
     for name, pattern in KIND_PATTERNS:
@@ -281,22 +312,24 @@ def plan(conn, question):
     # a role word stands for the people who have it: 'investors' is Jordan and
     # Caroline, 'candidates' is Taylor
     group = ''
-    for word, role in ROLE_WORDS.items():
-        if any(t.startswith(word) for t in terms) and not people:
+    roles = {r['role'] for r in conn.execute("SELECT DISTINCT role FROM people WHERE role != ''")} - NOT_ROLES
+    gloss = glossary(conn)
+    for role in sorted(roles):
+        if not people and any(t.startswith(role) or role in gloss.get(t, ()) for t in terms):
             ids = [r['id'] for r in conn.execute('SELECT id FROM people WHERE role=?', (role,))]
-            if ids:
-                people, group = ids, word.rstrip('s') + 's'
-                kind = 'person' if kind == 'topic' else kind
+            people, group = ids, role + 's'
+            kind = 'person' if kind == 'topic' else kind
     people = people or org_people
-    expansions = []
-    for key, words_ in SYNONYMS.items():
-        if any(t.startswith(key[:5]) for t in terms):
-            expansions += words_.split()
+    # the corrected spelling is what the inbox holds, so it is searched for alongside what was typed
+    expansions, related = list(fixes.values()), []
+    for t in terms:
+        related += gloss.get(t) or gloss.get(t.rstrip('s'), [])
     # the other direction: the inbox may hold the misspelling. 'northwind' also searches 'northwnd'
     for t in terms:
         if t in vocab:
             expansions += near_words(vocab, t)
     plan_ = Plan(kind=kind, people=people, ambiguous=ambiguous, group=group, expansions=list(dict.fromkeys(expansions)),
+                 related=list(dict.fromkeys(related)),
                  terms=terms, mine=mine, fixes=fixes, org_people=org_people, orgs=list(dict.fromkeys(orgs)))
     if window:
         plan_.start, plan_.end, plan_.day_label = window

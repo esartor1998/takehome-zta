@@ -11,17 +11,22 @@ Pulls, each returning ranked item ids:
 Time is resolved against the fixed clock in config.NOW, never the machine's
 """
 import json
+import os
 import re
 from datetime import timedelta
 
 from . import config, llm, route, store
+from .identity import parse_addresses
 
 RRF_K = 60            # standard rrf damping constant
-PULL_WEIGHTS = {'structured': 3.0, 'fts': 1.0, 'vector': 1.0, 'person': 1.0, 'window': 1.0, 'source': 2.0}
+PULL_WEIGHTS = {'structured': 3.0, 'fts': 1.0, 'vector': 1.0, 'person': 1.0, 'window': 1.0, 'source': 2.0, 'machine': 2.0, 'related': 1.0}
 # a word that names where to look. 'is the notion page current' searches pages, 'what does the crm say' deals
 SOURCE_WORDS = {'notion': 'doc', 'page': 'doc', 'doc': 'doc', 'docs': 'doc', 'document': 'doc', 'wiki': 'doc',
                 'crm': 'deal', 'deal': 'deal', 'linear': 'issue', 'issue': 'issue', 'ticket': 'issue',
                 'github': 'pr', 'pr': 'pr', 'slack': 'message', 'calendar': 'event', 'invite': 'event'}
+# words from the best vector hits that the question did not use. a one-word question ('billing', 'investors')
+# says little to a text search, but the items the embedding finds for it say what the inbox calls the thing
+MACHINE_LIMIT = 8
 FTS_LIMIT = 30
 VECTOR_LIMIT = 30
 STOP = frozenset('what which who whom when where how why is are was were do does did the a an '
@@ -148,6 +153,46 @@ def source_kinds(question):
     return sorted({SOURCE_WORDS[w] for w in re.findall(r'[a-z]+', question.lower()) if w in SOURCE_WORDS})
 
 
+PLUMBING = frozenset({'noreply', 'reply', 'mailer', 'daemon', 'info'})
+_machine_cache = {}
+
+
+def machine_senders(conn):
+    """address -> the words that name it, for every system that mails us (a billing service, a receipt
+    sender, a notification bot). Read off the mail: the display name and the local part of each sender.
+    Machine mail is kept out of the pulls above so it does not crowd out people, which would make 'did the
+    Paymint invoice arrive' unanswerable. A question that names one of these senders gets its own pull"""
+    key = conn.execute('PRAGMA database_list').fetchone()[2]
+    if key not in _machine_cache:
+        senders = {}
+        for row in conn.execute("SELECT meta FROM items WHERE state='automated' AND kind='email'"):
+            name, address = (parse_addresses(json.loads(row['meta']).get('from', '')) or [('', '')])[0]
+            words = {w.rstrip('s') for w in re.findall(r'[a-z]{4,}', f"{name} {address.split('@')[0]}".lower())}
+            if address:
+                senders.setdefault(address.lower(), set()).update(words - PLUMBING - {w.rstrip('s') for w in SOURCE_WORDS})
+        _machine_cache[key] = senders
+    return _machine_cache[key]
+
+
+def pull_machine(conn, question):
+    """Automated mail from the system a question names, newest first, those that mention the rest of the
+    question's words ahead of those that do not"""
+    senders = machine_senders(conn)
+    terms = {t.lower().rstrip('s') for t in _terms(question)}
+    named = {a for a, words in senders.items() if terms & words}
+    if not named:
+        return []
+    rest = terms - set().union(*[senders[a] for a in named])
+    scored = []
+    for row in conn.execute("SELECT id, title, body, ts, meta FROM items WHERE state='automated' AND kind='email' "
+                            'AND ts <= ? ORDER BY ts DESC', (_iso(config.NOW),)):
+        name, address = (parse_addresses(json.loads(row['meta']).get('from', '')) or [('', '')])[0]
+        if address.lower() in named:
+            text = f"{row['title']} {row['body']}".lower()
+            scored.append((-sum(1 for t in rest if t in text), -len(scored), row['id']))
+    return [i for _, _, i in sorted(scored)][:MACHINE_LIMIT]
+
+
 def pull_person(conn, people, question):
     """Items written by a named person, ranked by how well they match the rest
     of the question. Recency alone buried 'what did Rebecca say about Globex'
@@ -215,7 +260,7 @@ def pull_named_refs(conn, question):
     """Items the question names outright: an issue id like ACME-440 or a PR like
     'PR #231'. An exact reference is the strongest signal there is"""
     ids = []
-    for ident in dict.fromkeys(re.findall(r'\bACME-\d+\b', question, re.I)):
+    for ident in dict.fromkeys(re.findall(r'\b[A-Za-z][A-Za-z0-9]{1,9}-\d+\b', question)):
         row = conn.execute("SELECT id FROM items WHERE source='linear' AND state='current' AND "
                            "json_extract(meta,'$.identifier')=? COLLATE NOCASE", (ident,)).fetchone()
         if row:
@@ -373,11 +418,15 @@ def retrieve(conn, question, k=10, plan=None, disable=None, weights=None):
         if plan.kind == 'blocked':
             intents.add('blocked')
     extras = {}
+    vector = [] if 'vector' in disable else pull_vector(conn, search_text)
     pulls = {
         'fts': [] if 'fts' in disable else pull_fts(conn, search_text),
-        'vector': [] if 'vector' in disable else pull_vector(conn, search_text),
+        'vector': vector,
         'window': pull_fts(conn, search_text, window) if window and 'window' not in disable else [],
         'source': pull_fts(conn, search_text, kinds=source_kinds(question)) if source_kinds(question) and 'source' not in disable else [],
+        'machine': [] if 'machine' in disable else pull_machine(conn, question),
+        # the glossary's words get a pull of their own, so they add recall without blurring the question's own words
+        'related': pull_fts(conn, ' '.join(plan.related)) if plan and plan.related and 'related' not in disable else [],
         'person': [] if 'person' in disable else pull_person(conn, people - {config.FOUNDER_PERSON_ID}, question),
         'structured': [] if 'structured' in disable else pull_structured(conn, question, intents, window, people, extras),
     }

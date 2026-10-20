@@ -11,7 +11,8 @@ import sqlite3
 import chromadb
 from chromadb.config import Settings
 
-from . import config
+from . import config, dates
+from .normalize import TRAILING_REF_RE
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS items (
@@ -24,7 +25,7 @@ CREATE TABLE IF NOT EXISTS items (
 CREATE INDEX IF NOT EXISTS items_ts ON items(ts);
 CREATE INDEX IF NOT EXISTS items_topic ON items(topic);
 CREATE VIRTUAL TABLE IF NOT EXISTS items_fts USING fts5(
-    title, body, who, content='', tokenize='porter unicode61'
+    title, body, who, fwd, content='', tokenize='porter unicode61'
 );
 CREATE TABLE IF NOT EXISTS people (
     id TEXT PRIMARY KEY, name TEXT, emails TEXT, slack_handle TEXT, linear_name TEXT,
@@ -32,6 +33,8 @@ CREATE TABLE IF NOT EXISTS people (
 );
 CREATE TABLE IF NOT EXISTS links (a TEXT, b TEXT, reason TEXT);
 CREATE TABLE IF NOT EXISTS vocab (term TEXT PRIMARY KEY, doc INTEGER);
+CREATE TABLE IF NOT EXISTS glossary (term TEXT PRIMARY KEY, related TEXT);
+CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE IF NOT EXISTS stale_records (
     item_id TEXT PRIMARY KEY, newer_id TEXT, current_fact TEXT, why TEXT
 );
@@ -51,6 +54,11 @@ def connect():
     config.STATE_DIR.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(config.DB_PATH)
     conn.row_factory = sqlite3.Row
+    try:
+        row = conn.execute("SELECT value FROM settings WHERE key='slash_order'").fetchone()
+        dates.set_slash_order(row['value'] if row else 'mdy')
+    except sqlite3.OperationalError:
+        pass            # a database from before settings existed
     return conn
 
 
@@ -113,16 +121,20 @@ def write_items(conn, items, people):
                      [row[c] for c in cols])
         names = ' '.join(people[p].name for p in [item['author']] + item['people']
                          if p and p in people)
-        conn.execute('INSERT INTO items_fts(rowid, title, body, who) VALUES '
-                     '((SELECT rowid FROM items WHERE id=?),?,?,?)',
-                     (item['id'], f"{item['title']} {item['meta'].get('identifier', '')}".strip(), item['body'], names))
+        # the text of a forwarded message is searchable, though it is not the forwarder's own words: it stays out
+        # of the body so no decision, price or ask in it is credited to the person who passed it on
+        forwarded = item['quoted'] if 'forwarded' in item['flags'] else ''
+        conn.execute('INSERT INTO items_fts(rowid, title, body, who, fwd) VALUES '
+                     '((SELECT rowid FROM items WHERE id=?),?,?,?,?)',
+                     (item['id'], f"{item['title']} {item['meta'].get('identifier', '')}".strip(), item['body'], names, forwarded))
     # the words the inbox contains, unstemmed, with how many items use each. the fts
     # index holds stems ('price' for 'pricing'), which cannot correct a typo
     counts = {}
     for item in items:
         if item['state'] == 'automated':
             continue
-        for word in set(re.findall(r'[a-z]{3,}', f"{item['title']} {item['body']}".lower())):
+        forwarded = item['quoted'] if 'forwarded' in item['flags'] else ''
+        for word in set(re.findall(r'[a-z]{3,}', f"{item['title']} {item['body']} {forwarded}".lower())):
             counts[word] = counts.get(word, 0) + 1
     for person in people.values():
         for word in re.findall(r'[a-z]{3,}', ' '.join([person.name, person.org]).lower()):
@@ -148,7 +160,7 @@ def topic_label(conn, topic):
         "SELECT i.title FROM decisions d JOIN items i ON i.id=d.item_id WHERE d.topic=? "
         "AND d.source='linear' ORDER BY d.ts DESC LIMIT 1", (topic,)).fetchone()
     if row:
-        return re.sub(r'\s*\(ACME-\d+\)$', '', row['title'])
+        return TRAILING_REF_RE.sub('', row['title'])
     # the subject of the event that changed the plan, not of a stray message that followed it
     row = conn.execute('SELECT subject FROM decisions WHERE topic=? ORDER BY anchor DESC, ts DESC LIMIT 1', (topic,)).fetchone()
     return row['subject'] if row and row['subject'] else 'plan'
