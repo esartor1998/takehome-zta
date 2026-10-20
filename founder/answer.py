@@ -82,7 +82,7 @@ SCHEDULE_LIMIT = 14
 # cancelled meeting called 'superseded', an open ask listed as handled), so
 # they are rendered by code. FOUNDER_DIGEST=llm sends them through the model
 # anyway, which is how the benchmark compares models on the same facts
-CODE_DIGESTS = ('schedule', 'followups', 'customers', 'decisions', 'blocked', 'meeting_emails', 'prep', 'company')
+CODE_DIGESTS = ('schedule', 'followups', 'customers', 'decisions', 'blocked', 'meeting_emails', 'prep', 'company', 'catchup')
 
 CITE_RE = re.compile(r'\[(\d+(?:\s*,\s*\d+)*)\]')
 
@@ -352,6 +352,9 @@ def ground_citations(text, blocks, current):
                     kind = 'unsupported' if model_marks else ('uncited' if len(sentence.split()) > 4 else '')
             elif len(kept) < len(model_marks):
                 kind = 'partly_unsupported'
+            # a claim whose other citations held is supported, and a remark about the answer is not a claim
+            if kind == 'partly_unsupported' or (kind and not is_claim(sentence)):
+                kind = ''
             if kind:
                 issues.append({'claim': CITE_RE.sub('', sentence).strip(), 'kind': kind,
                                'model_labels': model_marks, 'labels': list(kept)})
@@ -374,6 +377,19 @@ INVESTIGATE_SYSTEM = (
     'no source says it.\n'
     'best_source: the number of the source that supports the claim best, or 0 if none does.\n'
     'reason: under 20 words, naming what is missing or wrong.')
+META_RE = re.compile(r"^\W*(nothing|no one|none|nobody|there (is|are) no|what('s| is| remains)( still)? (open|outstanding)|"
+                     r"note\b|overall|in summary|to summari[sz]e|open question|still open)", re.I)
+
+
+def is_claim(sentence):
+    """A sentence that states something about the data: it has a number, a date, an id or
+    a name past the first word, and it is not a remark about the answer itself ('Nothing is
+    marked STALE', 'What remains open: ...'). Only claims can be unsupported"""
+    if META_RE.match(sentence):
+        return False
+    return bool(re.search(r'\d|[A-Z]{2,}-\d|(?<!^)(?<=[a-z,;] )[A-Z][a-z]+', sentence.strip()))
+
+
 ISSUE_ORDER = {'unsupported': 0, 'reattributed': 1, 'partly_unsupported': 2, 'uncited': 3}
 
 
@@ -453,6 +469,7 @@ def digest_facts(conn, plan, question):
         return kind, brief.prep_facts(conn, plan, question)[:PREP_LIMIT], instruction
     if kind == 'blocked':
         facts = brief.blocked_facts(conn, mine_only=plan.mine)
+        plan.total = len(facts)
         return kind, facts[:BLOCKED_LIMIT], instruction
     if kind == 'meeting_emails':
         return kind, brief.meeting_email_facts(conn)[:DIGEST_LIMIT], instruction
@@ -462,9 +479,8 @@ def digest_facts(conn, plan, question):
     if cats:
         facts = [f for f in facts if f['cat'] in cats]
     elif kind == 'catchup':
-        # what changed first, then what is at risk, then what is waiting
-        order = {'change': 0, 'stale': 1, 'customer': 2, 'ask': 3, 'promise': 4, 'blocked': 5, 'meeting': 6}
-        facts = sorted((f for f in facts if f['cat'] != 'schedule'), key=lambda f: order.get(f['cat'], 9))
+        # the digest renders its own sections and limits, so it gets every fact
+        return kind, [f for f in facts if f['cat'] != 'schedule'], instruction
     if kind == 'followups':
         # asks with a deadline first, then the rest. facts are already scored
         facts = [f for f in facts if f['cat'] in ('ask', 'promise')]
@@ -536,7 +552,7 @@ def ask(conn, question, k=10):
     }
 
 
-def render_digest(name, facts, plan_label=''):
+def render_digest(name, facts, plan_label='', total=0):
     """A digest as plain text with citations, no model involved"""
     def cite(f):
         return ''.join(f'[{i}]' for i in f['ids'][:2])
@@ -553,13 +569,25 @@ def render_digest(name, facts, plan_label=''):
         if done:
             lines += ['', 'Already handled:'] + [f"- {f['text']} {cite(f)}" for f in done[:3]]
         return '\n'.join(lines)
+    if name == 'catchup':
+        sections = (('What changed', ('change',), 7), ('At risk', ('stale', 'customer', 'blocked'), 5),
+                    ('Waiting on you', ('ask', 'promise'), 5), ('Coming up today', ('meeting',), 2))
+        lines = []
+        for title, cats, limit in sections:
+            rows = [f for f in facts if f['cat'] in cats]
+            if cats == ('change',):
+                rows = sorted(rows, key=lambda f: f.get('ts', ''), reverse=True)
+            if rows:
+                lines += [f'{title}:'] + [f"- {f.get('short', f['text'])} {cite(f)}" for f in rows[:limit]] + ['']
+        return '\n'.join(lines).strip()
     if name == 'prep':
         return '\n'.join([facts[0]['text'], 'Before it:'] + [f"- {f['text']} {cite(f)}" for f in facts[1:]]) if len(facts) > 1 else facts[0]['text'] + ' ' + cite(facts[0])
     if name == 'blocked':
-        total = len(facts)
+        total = total or len(facts)
         mine = sum(1 for f in facts if f.get('mine'))
         head = f"{total} blocked issue{'s' if total != 1 else ''}, {mine} yours:"
-        return '\n'.join([head] + [f"- {f['text']} {cite(f)}" for f in facts])
+        more = [f'- and {total - len(facts)} more'] if total > len(facts) else []
+        return '\n'.join([head] + [f"- {f['text']} {cite(f)}" for f in facts] + more)
     return '\n'.join(f"- {f['text']} {cite(f)}" for f in facts)
 
 
@@ -571,7 +599,7 @@ def ask_digest(conn, question, digest, started, plan=None):
         heading = (f"{label.capitalize()} ({day.strftime('%b %-d')} to {plan.end.strftime('%b %-d')})"
                    if label in ('coming up', 'next week', 'this week', 'last week')
                    else f"{label.capitalize()} ({day.strftime('%A %b %-d')})")
-        text = render_digest(name, facts, heading)
+        text = render_digest(name, facts, heading, getattr(plan, 'total', 0) if plan else 0)
         cited = [i for f in facts for i in f['ids'][:2]]
         return {'question': question, 'answer': text, 'cited': list(dict.fromkeys(cited)), 'found': True,
                 'cites_dropped': 0, 'cites_added': 0, 'ungrounded_sentences': [],
@@ -599,7 +627,8 @@ def ask_digest(conn, question, digest, started, plan=None):
                 'seconds': time.time() - started}
     labels = {n: f['ids'][0] for n, f in enumerate(facts, 1)}
     context = '\n\n'.join(f"[{n}] {f['text']}" for n, f in enumerate(facts, 1))
-    result = llm.chat(SYSTEM, f'Context items:\n\n{context}\n\nQuestion: {question}\n{instruction}',
+    result = llm.chat(SYSTEM, f'Context items:\n\n{context}\n\nQuestion: {question}\n{instruction}\n'
+                      'These items already answer the question. Summarise them, and do not refuse.',
                       max_tokens=300)
     blocks = {n: context_block(context, n) for n in labels}
     text, dropped, added, issues = ground_citations(result['text'].strip(), blocks, list(labels))

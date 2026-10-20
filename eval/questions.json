@@ -279,7 +279,7 @@
     "id": "q17",
     "category": "followups",
     "question": "What follow-ups am I missing?",
-    "reference": "Open asks: Priya Nair wants cohort ARR for Northwind and approval of the Blue Harbor data room request, Jordan Pryce wants cohort ARR before Tuesday, Caroline Ades wants data room access, Daniel Foster wants confirmation of the SSO fix before Mar 20, Marcus Webb and Omar Haddad each want a PR review. Open promises: cohort ARR to Jordan Pryce and data room access to Caroline Ades, both overdue.",
+    "reference": "Waiting on you: Priya Nair (cohort ARR for Northwind; approve the Blue Harbor data room request), Jordan Pryce (cohort ARR before Tuesday), Caroline Ades (data room access), Daniel Foster (confirm the SSO fix before Mar 20), Marcus Webb (review PR 231), Omar Haddad (review PR 230), and Hannah Park (add a risks slide to the roadmap deck). Open promises: cohort ARR to Jordan Pryce, data room access to Caroline Ades and the SOC 2 summary to Sam Okafor, all overdue.",
     "answerable": true,
     "expected_ids": [
       [
@@ -302,6 +302,9 @@
       ],
       [
         "github:acme/billing#230"
+      ],
+      [
+        "gmail:6a959648587ee4e0"
       ]
     ],
     "forbidden_ids": []
@@ -310,11 +313,15 @@
     "id": "q18",
     "category": "meeting_prep",
     "question": "Which emails relate to upcoming meetings?",
-    "reference": "Hannah Park's email 'Weekly Product Sync moved' (Mar 10), and Jordan Pryce's emails about the Tuesday Mar 17 partner update.",
+    "reference": "Emails tied to upcoming meetings: Hannah Park's 'Weekly Product Sync moved' (Mar 10), Daniel Foster's SSO thread for today's Globex check-in, Jordan Pryce's emails for the Tuesday Mar 17 Northwind partner update, and the routine 'Sprint planning' emails for Monday's planning.",
     "answerable": true,
     "expected_ids": [
       [
         "gmail:ff9c102bbfa27a06"
+      ],
+      [
+        "gmail:bee95ff7ca51c987",
+        "gmail:ef094c02c13dd962"
       ],
       [
         "gmail:6dff2b861992469a",
@@ -452,7 +459,7 @@
     "id": "v07",
     "category": "vague_followups",
     "question": "who's waiting on me",
-    "reference": "Waiting on you: Priya Nair (cohort ARR for Northwind; approve the Blue Harbor data room request), Jordan Pryce (cohort ARR before Tuesday), Caroline Ades (data room access), Daniel Foster (confirm the SSO fix before Mar 20), Marcus Webb (review PR 231), Omar Haddad (review PR 230).",
+    "reference": "Waiting on you: Priya Nair (cohort ARR for Northwind; approve the Blue Harbor data room request), Jordan Pryce (cohort ARR before Tuesday), Caroline Ades (data room access), Daniel Foster (confirm the SSO fix before Mar 20), Marcus Webb (review PR 231), Omar Haddad (review PR 230), and Hannah Park (add a risks slide to the roadmap deck).",
     "answerable": true,
     "expected_ids": [
       [
@@ -475,6 +482,9 @@
       ],
       [
         "github:acme/billing#230"
+      ],
+      [
+        "gmail:6a959648587ee4e0"
       ]
     ],
     "forbidden_ids": []
@@ -552,7 +562,7 @@
     "id": "v11",
     "category": "vague_tasks",
     "question": "what's blocked",
-    "reference": "Blocked and owned by you: ACME-316, ACME-342, ACME-349, ACME-352 and ACME-365. Elsewhere on the team, ACME-433 Hooli export timeout is blocked by infra change ACME-420.",
+    "reference": "Blocked, with the five that are yours first: ACME-316, ACME-342, ACME-349, ACME-352 and ACME-365. The rest of the team has more, and the one facing a customer is ACME-433, the Hooli export timeout, blocked by infra change ACME-420.",
     "answerable": true,
     "expected_ids": [
       [
@@ -569,6 +579,9 @@
       ],
       [
         "linear:ACME-365@20260222T0500"
+      ],
+      [
+        "linear:ACME-433@20260311T1500"
       ]
     ],
     "forbidden_ids": []
@@ -816,7 +829,7 @@
     "id": "s03",
     "category": "spec_blocked",
     "question": "Which tasks are blocked?",
-    "reference": "Blocked and owned by you: ACME-316, ACME-342, ACME-349, ACME-352 and ACME-365. Elsewhere on the team, ACME-433 Hooli export timeout is blocked by infra change ACME-420.",
+    "reference": "Blocked, with the five that are yours first: ACME-316, ACME-342, ACME-349, ACME-352 and ACME-365. The rest of the team has more, and the one facing a customer is ACME-433, the Hooli export timeout, blocked by infra change ACME-420.",
     "answerable": true,
     "expected_ids": [
       [
@@ -833,6 +846,9 @@
       ],
       [
         "linear:ACME-365@20260222T0500"
+      ],
+      [
+        "linear:ACME-433@20260311T1500"
       ]
     ],
     "forbidden_ids": []
@@ -863,11 +879,14 @@
     "id": "t02",
     "category": "typo",
     "question": "who is waitng on me",
-    "reference": "Waiting on you: Priya Nair (cohort ARR for Northwind; approve the Blue Harbor data room request), Jordan Pryce (cohort ARR before Tuesday), Caroline Ades (data room access), Daniel Foster (confirm the SSO fix before Mar 20), Marcus Webb (review PR 231), Omar Haddad (review PR 230).",
+    "reference": "Waiting on you: Priya Nair (cohort ARR for Northwind; approve the Blue Harbor data room request), Jordan Pryce (cohort ARR before Tuesday), Caroline Ades (data room access), Daniel Foster (confirm the SSO fix before Mar 20), Marcus Webb (review PR 231), Omar Haddad (review PR 230), and Hannah Park (add a risks slide to the roadmap deck).",
     "answerable": true,
     "expected_ids": [
       [
         "slack:C07FUND:1773419400.449808"
+      ],
+      [
+        "slack:C07FUND:1773500400.415602"
       ],
       [
         "gmail:75d73520ec4c68f3"
@@ -883,6 +902,9 @@
       ],
       [
         "github:acme/billing#230"
+      ],
+      [
+        "gmail:6a959648587ee4e0"
       ]
     ],
     "forbidden_ids": []
@@ -973,7 +995,7 @@
     "id": "t08",
     "category": "typo",
     "question": "whats blockd",
-    "reference": "Blocked and owned by you: ACME-316, ACME-342, ACME-349, ACME-352 and ACME-365. Elsewhere, ACME-433 is blocked by ACME-420.",
+    "reference": "Blocked, with the five that are yours first: ACME-316, ACME-342, ACME-349, ACME-352 and ACME-365. The rest of the team has more, and the one facing a customer is ACME-433, the Hooli export timeout, blocked by infra change ACME-420.",
     "answerable": true,
     "expected_ids": [
       [
@@ -990,6 +1012,9 @@
       ],
       [
         "linear:ACME-365@20260222T0500"
+      ],
+      [
+        "linear:ACME-433@20260311T1500"
       ]
     ],
     "forbidden_ids": []

@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS followups (
 );
 CREATE TABLE IF NOT EXISTS decisions (
     item_id TEXT PRIMARY KEY, topic TEXT, kind TEXT, value TEXT, retracts TEXT,
-    summary TEXT, ts TEXT, status TEXT, why TEXT, source TEXT, subject TEXT
+    summary TEXT, ts TEXT, status TEXT, why TEXT, source TEXT, subject TEXT, anchor INTEGER DEFAULT 0
 );
 """
 
@@ -149,5 +149,6 @@ def topic_label(conn, topic):
         "AND d.source='linear' ORDER BY d.ts DESC LIMIT 1", (topic,)).fetchone()
     if row:
         return re.sub(r'\s*\(ACME-\d+\)$', '', row['title'])
-    row = conn.execute('SELECT subject FROM decisions WHERE topic=? ORDER BY ts DESC LIMIT 1', (topic,)).fetchone()
+    # the subject of the event that changed the plan, not of a stray message that followed it
+    row = conn.execute('SELECT subject FROM decisions WHERE topic=? ORDER BY anchor DESC, ts DESC LIMIT 1', (topic,)).fetchone()
     return row['subject'] if row and row['subject'] else 'plan'

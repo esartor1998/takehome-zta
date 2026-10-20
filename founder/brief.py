@@ -163,11 +163,12 @@ def recent_decisions(conn):
         current = [r for r in rows if r['status'] == 'current']
         if not current:
             continue
+        current = [r for r in current if r['anchor']] or current     # the change itself, not what followed it
         norm = lambda text: re.sub(r'\W+', ' ', text.lower()).strip()
         # what it replaced has to differ from what it is now. the same value posted
         # in slack and in email is one decision, not 'Mar 31 replacing Mar 31'
         out.append({'label': store.topic_label(conn, topic), 'current': current[-1],
-                    'history': [r for r in rows if r['status'] == 'superseded'
+                    'history': [r for r in rows if r['status'] == 'superseded' and len(r['value'].split()) >= 2
                                 and norm(r['value']) != norm(current[-1]['value'])]})
     return out
 
@@ -303,10 +304,13 @@ def build_facts(conn, names):
         add(72, f"{r['title']} ({r['source']}) still says '{r['says']}'{fact}. It is out of date and needs updating",
             [r['item_id'], r['newer_id']], 'stale')
     for d in recent_decisions(conn):
-        text = f"{d['label']}: current plan is '{d['current']['value']}'"
+        short = f"{d['current']['ts'][5:10]} {d['label']}: {d['current']['value']}"
         if d['history']:
-            text += f", replacing '{d['history'][-1]['value']}'"
-        add(25, text + '. Records already reflect this, no action needed', [d['current']['item_id']], 'change', handled=True)
+            short += f" (replaced '{d['history'][-1]['value']}')"
+        text = f"{d['label']}: current plan is '{d['current']['value']}'" + (
+            f", replacing '{d['history'][-1]['value']}'" if d['history'] else '')
+        add(25, text + '. Records already reflect this, no action needed', [d['current']['item_id']], 'change',
+            handled=True, short=short, ts=d['current']['ts'])
     for row in followup_rows(conn):
         done = row['status'] != 'open'
         base = 70 if row['kind'] == 'ask' else 70
@@ -450,7 +454,9 @@ def blocked_facts(conn, mine_only=False):
     rows = [store.row_to_item(r) for r in conn.execute(
         "SELECT * FROM items WHERE source='linear' AND state='current' AND status='Blocked'")]
     mine = sorted((r for r in rows if r['author'] == config.FOUNDER_PERSON_ID), key=_rank)
-    others = sorted((r for r in rows if r['author'] != config.FOUNDER_PERSON_ID), key=lambda r: (_rank(r), r['ts']))
+    # a customer-facing issue outranks an internal one of the same priority
+    others = sorted((r for r in rows if r['author'] != config.FOUNDER_PERSON_ID),
+                    key=lambda r: ('customer' not in r['meta'].get('labels', []), _rank(r), r['ts']))
     out = []
     for r in mine + ([] if mine_only else others):
         why = re.search(r'blocked by [^.]+', r['body'], re.I)

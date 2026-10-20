@@ -65,6 +65,11 @@ GATE_RECORD_FRACTION = 0.25   # tools of record get a wider net, since a stale
 HEDGE_RE = re.compile(r"\b(i think|maybe|not sure|might|thinking (?:about|of)|should we|what if|probably|unsure|"
                       r"tentatively|perhaps|wondering)\b|\?\s*$", re.I | re.M)
 
+# template mail ('Quick update on this, X owns the next step') is nearly identical to other
+# mail, and a message that is not distinctive and says nothing decisive is not a decision. the
+# floor sits between the template filler (0.02 to 0.13) and the planted messages (0.15 and up)
+NOVELTY_FLOOR = 0.14
+
 DECISION_KINDS = ('decision', 'reversal', 'correction')
 RECORD_SOURCES = ('linear', 'notion', 'crm')   # a tool of record can go stale
 GATE_KINDS = ('email', 'message', 'doc', 'issue', 'note', 'comment', 'deal')
@@ -195,6 +200,10 @@ def candidates(items, scores):
                    or i['meta']['identifier'] in chosen_idents)]
     seen, out = set(), []
     for item in chosen + linear:
+        # a template message that does not read like a decision never reaches the model
+        if item['source'] not in RECORD_SOURCES and item['novelty'] < NOVELTY_FLOOR \
+                and not HINT_RE.search(item['title'] + ' ' + item['body']):
+            continue
         if item['id'] not in seen:
             seen.add(item['id'])
             out.append(item)
@@ -409,7 +418,10 @@ def resolve(events):
         # anchor (a linear issue closed once the email went out) agree with it
         # which records still state an old plan is a separate pass (stale.py)
         changers = [e for e in live if e['kind'] in ('reversal', 'correction')]
-        anchor = (changers or live)[-1]
+        # a stray later message in the group (a template email that names the same issue) must not
+        # become the current state: only an event that reads like a change can anchor it
+        anchors = [e for e in live if e['anchor']]
+        anchor = (changers or anchors or live)[-1]
         for event in live:
             if event['ts'] >= anchor['ts'] or event['dup_group'] == anchor['dup_group']:
                 event['status'] = 'current'
@@ -420,6 +432,6 @@ def resolve(events):
 
 def write_decisions(conn, events):
     for e in events:
-        conn.execute('INSERT OR REPLACE INTO decisions VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+        conn.execute('INSERT OR REPLACE INTO decisions VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
                      (e['item_id'], e['topic'], e['kind'], e['value'], e['retracts'],
-                      e['summary'], e['ts'], e['status'], e['why'], e['source'], e['subject']))
+                      e['summary'], e['ts'], e['status'], e['why'], e['source'], e['subject'], int(e['anchor'])))

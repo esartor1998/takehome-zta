@@ -17,7 +17,11 @@ from datetime import timedelta
 from . import config, llm, route, store
 
 RRF_K = 60            # standard rrf damping constant
-PULL_WEIGHTS = {'structured': 3.0, 'fts': 1.0, 'vector': 1.0, 'person': 1.0, 'window': 1.0}
+PULL_WEIGHTS = {'structured': 3.0, 'fts': 1.0, 'vector': 1.0, 'person': 1.0, 'window': 1.0, 'source': 2.0}
+# a word that names where to look. 'is the notion page current' searches pages, 'what does the crm say' deals
+SOURCE_WORDS = {'notion': 'doc', 'page': 'doc', 'doc': 'doc', 'docs': 'doc', 'document': 'doc', 'wiki': 'doc',
+                'crm': 'deal', 'deal': 'deal', 'linear': 'issue', 'issue': 'issue', 'ticket': 'issue',
+                'github': 'pr', 'pr': 'pr', 'slack': 'message', 'calendar': 'event', 'invite': 'event'}
 FTS_LIMIT = 30
 VECTOR_LIMIT = 30
 STOP = frozenset('what which who whom when where how why is are was were do does did the a an '
@@ -104,7 +108,7 @@ def _terms(question):
     return [w for w in words if w.lower() not in STOP and w.lower() not in route.FILLER and len(w) > 1]
 
 
-def pull_fts(conn, question, window=None):
+def pull_fts(conn, question, window=None, kinds=None):
     """bm25 over title, body and participant names. With a window it only
     looks inside it, which is how 'this week' gets used: as its own pull,
     not as a hard filter on the others. a hard filter dropped the answer to
@@ -120,6 +124,9 @@ def pull_fts(conn, question, window=None):
     if window:
         sql += 'AND i.ts >= ? AND i.ts < ? '
         args += [_iso(window[0]), _iso(window[1])]
+    if kinds:
+        sql += f"AND i.kind IN ({','.join('?' * len(kinds))}) "
+        args += list(kinds)
     sql += 'ORDER BY bm25(items_fts, 4.0, 1.0, 2.0) LIMIT ?'
     return [r['id'] for r in conn.execute(sql, args + [FTS_LIMIT])]
 
@@ -135,6 +142,10 @@ def pull_vector(conn, question):
     rows = {r['id']: r for r in conn.execute(
         f'SELECT id, ts, kind FROM items WHERE id IN ({marks})', ids)}
     return [i for i in ids if rows[i]['kind'] == 'event' or rows[i]['ts'] <= _iso(config.NOW)]
+
+
+def source_kinds(question):
+    return sorted({SOURCE_WORDS[w] for w in re.findall(r'[a-z]+', question.lower()) if w in SOURCE_WORDS})
 
 
 def pull_person(conn, people, question):
@@ -366,6 +377,7 @@ def retrieve(conn, question, k=10, plan=None, disable=None, weights=None):
         'fts': [] if 'fts' in disable else pull_fts(conn, search_text),
         'vector': [] if 'vector' in disable else pull_vector(conn, search_text),
         'window': pull_fts(conn, search_text, window) if window and 'window' not in disable else [],
+        'source': pull_fts(conn, search_text, kinds=source_kinds(question)) if source_kinds(question) and 'source' not in disable else [],
         'person': [] if 'person' in disable else pull_person(conn, people - {config.FOUNDER_PERSON_ID}, question),
         'structured': [] if 'structured' in disable else pull_structured(conn, question, intents, window, people, extras),
     }

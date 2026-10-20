@@ -29,8 +29,8 @@ from . import answer, config, evaluate, llm, retrieve, route, store
 CONFIGS = {
     'full': {},
     'no_vector': {'disable': {'vector'}},
-    'vector_only': {'disable': {'fts', 'window', 'person', 'structured'}},
-    'no_fts': {'disable': {'fts', 'window'}},
+    'vector_only': {'disable': {'fts', 'window', 'person', 'structured', 'source'}},
+    'no_fts': {'disable': {'fts', 'window', 'source'}},
     'fts_only': {'disable': {'vector', 'person', 'structured'}},
     'no_structured': {'disable': {'structured'}},
     'vector_x0.5': {'weights': {'vector': 0.5}},
