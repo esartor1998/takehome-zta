@@ -3,8 +3,8 @@ as of 14:00 UTC
 
 ## Focus today
 1. Meeting today: 17:30-18:00 UTC Globex check-in with Marcus Webb, Daniel Foster (Globex) (10:30 Los Angeles time; customer check-in about SSO and the Mar 23 rollout). Before it: Daniel Foster (Globex) is waiting on you: Can you confirm a fix ships before Mar 20?; Globex SSO redirect loop is Reopened; Globex integration is Blocked [calendar:bbeda5b103cb82876dd4651501]
-2. You promised Jordan Pryce (Northwind Ventures): Slipping on the cohort metrics, due 2026-03-09 (overdue), and it is still open [gmail:ccd9c787ded3995d]
-3. You promised Caroline Ades (Blue Harbor Capital): send data room access, due 2026-03-10 (overdue), and it is still open [gmail:3794ed2c45e9c301]
+2. You promised Sam Okafor (Hooli): will send the summary, due 2026-03-12 (overdue), and it is still open [gmail:c81c70603acf1120]
+3. You promised Jordan Pryce (Northwind Ventures): Slipping on the cohort metrics, due 2026-03-09 (overdue), and it is still open [gmail:ccd9c787ded3995d]
 
 ## Today
 - all day Offsite travel with Priya Nair, Marcus Webb, Sofia Reyes, Daniel Kim (in progress; flights, see the offsite doc) [calendar:f99876efd6449d8ae5bf15d181]
@@ -20,16 +20,21 @@ as of 14:00 UTC
 
 ## Plans that changed
 - Globex SSO redirect loop: reopening ACME-431 (as of 2026-03-12) [slack:C04INC:1773339300.924615]; replaced 'Recurred for Globex users on Okta. Needs a second fix.' [linear:ACME-431@20260312T1800]
-- weekly product sync time: Sun Mar 15 16:00 UTC (as of 2026-03-10) [slack:C03GEN:1773172800.739474]
-- billing cutover date: Mar 31 (as of 2026-03-12) [gmail:bfda57e5a3e21af0]; replaced 'Cutover date: Mar 24.' [notion:0f8a538c21e4ef3f1024c7d25666cd47]
-- v2 API authentication: Ship v2 API with OAuth only (as of 2026-03-14) [linear:ACME-142@20260314T2200]; replaced 'Confirmed: OAuth + API keys.' [slack:C01ENG:1772996400.232344]
-- Q1 roadmap dates: ship Mar 22 (as of 2026-03-04) [slack:C02PROD:1772640000.222201]; replaced 'Freeze Mar 10. Ship Mar 20.' [gmail:bee81dbe3dbe6a7f]
-- fundraising close date: Jordan says they cannot close before May 15 because of the partner calendar. (as of 2026-03-13) [slack:C07FUND:1773421200.357681]; replaced 'Target close: Apr 30. Raise: $3M extension at $12M pre. Lead: Northwind Ventures. Backup: Blue Harbor Capital. Owner: Priya Nair.' [notion:d66e87731f6d486a58818da6ad1da108]
-- Update pricing page to $59/seat for new customers: New customers see $59 per seat, existing stay at $49. (as of 2026-03-13) [linear:ACME-441@20260313T1900]; replaced 'Decision: new customers pay $59 per seat, existing customers stay at $49 (grandfathered).' [notion:163647759184b558a347537639422466]
+- weekly product sync meeting date: Moving Weekly Product Sync from Fri Mar 13 to Sun Mar 15 16:00 UTC. (as of 2026-03-10) [gmail:ff9c102bbfa27a06]
+- billing cutover date: Mar 31 (as of 2026-03-12) [gmail:bfda57e5a3e21af0]
+- v2 API authentication: Reverting to OAuth-only (as of 2026-03-14) [slack:C01ENG:1773522000.994933]; replaced 'Confirmed: OAuth + API keys.' [slack:C01ENG:1772996400.232344]
+- Q1 roadmap dates: ship Mar 22 (as of 2026-03-04) [slack:C02PROD:1772640000.222201]
+- fundraising close date: Jordan says they cannot close before May 15 because of the partner calendar. (as of 2026-03-13) [slack:C07FUND:1773421200.357681]; replaced 'freeze stays Mar 10' [notion:4bae63a7e71c19eae755005daf03a5cf]
+- Update pricing page to $59/seat for new customers: Team, the pricing page is live: $59 per seat for new customers, existing customers stay at $49. (as of 2026-03-13) [gmail:7d0d75121cdeaac6]; replaced 'Decision: new customers pay $59 per seat, existing customers stay at $49 (grandfathered).' [notion:163647759184b558a347537639422466]
+- Initech renewal paperwork: initech renewal is 2 yr at 15% now, legal redlining (as of 2026-03-13) [slack:C03GEN:1773414000.655032]
+- hiring - senior backend: Alex, Taylor accepted another offer, so we are closing the loop on this one. Lena (as of 2026-03-13) [gmail:e98c5b9d26b114a1]
   - out of date: Seed extension plan (notion) still says 'Target close: Apr 30. Raise: $3M extension at $12M pre. Lead: Northwind Ventures', newer says: Jordan says they cannot close before May 15 because of the partner calendar., update it [notion:d66e87731f6d486a58818da6ad1da108] [slack:C07FUND:1773421200.357681]
-  - out of date: Update pricing page to $49/seat (linear) still says 'Change the pricing page to $49 per seat for everyone.', newer says: New customers see $59 per seat, existing stay at $49., update it [linear:ACME-440@20260306T1500] [linear:ACME-441@20260313T1900]
+  - out of date: Update pricing page to $49/seat (linear) still says 'Change the pricing page to $49 per seat for everyone.', newer says: Team, the pricing page is live: $59 per seat for new customers, existing customers stay at $49., update it [linear:ACME-440@20260306T1500] [gmail:7d0d75121cdeaac6]
   - out of date: Northwind Ventures - seed extension (crm) still says 'Deal stage: partner meeting. Amount: $3,000,000. Expected close date: 2026-03-31', newer says: Target close: Apr 30., update it [crm:deal:23a551d6fe] [notion:d66e87731f6d486a58818da6ad1da108]
   - out of date: Pricing v3 (notion) still says 'Decision: $49 per seat per month for all customers. Owner: Hannah Park.', newer says: Decision: new customers pay $59 per seat, existing customers stay at $49 (grandfathered)., update it [notion:5b97d1fb3cdcf59ddcfe591d5807d0dc] [notion:163647759184b558a347537639422466]
+  - out of date: Initech renewal paperwork (linear) still says 'Prepare 1 year renewal at 10% discount for legal.', newer says: initech renewal is 2 yr at 15% now, legal redlining, update it [linear:ACME-460@20260304T1800] [slack:C03GEN:1773414000.655032]
+  - out of date: Initech - renewal (crm) still says 'Deal stage: contract sent. Amount: $84,000. Expected close date: 2026-03-31. Typ', newer says: initech renewal is 2 yr at 15% now, legal redlining, update it [crm:deal:feeb461b12] [slack:C03GEN:1773414000.655032]
+  - out of date: Initech renewal terms (notion) still says 'Term: 1 year. Discount: 10%. Owner: Rebecca Liu. Status: draft sent to legal.', newer says: initech renewal is 2 yr at 15% now, legal redlining, update it [notion:fdfd76a06532aec244da50d79fa1676a] [slack:C03GEN:1773414000.655032]
   - out of date: Hiring - Senior Backend (notion) still says 'Offer to Taylor Brooks approved at $165k. Status: offer out.', newer says: Alex, Taylor accepted another offer, so we are closing the loop on this one. Lena, update it [notion:0f72e0247be2673ff5388bb55ebd12b3] [gmail:e98c5b9d26b114a1]
   - out of date: Billing migration plan (notion) still says 'Cutover date: Mar 24. Vendor: Ledgerly replaces Paymint. Owner: Omar Haddad.', newer says: Heads up, billing cutover is now Mar 31 (was Mar 24)., update it [notion:0f8a538c21e4ef3f1024c7d25666cd47] [gmail:bfda57e5a3e21af0]
   - out of date: Roadmap (Q1) (notion) still says 'Freeze Mar 10. Ship Mar 20. Owner: Sofia Reyes.', newer says: Roadmap: freeze Mar 10, ship Mar 22 (corrected from Mar 20)., update it [notion:4324f4a965bc64d11787c2369776502e] [slack:C02PROD:1772640000.222201]
@@ -47,14 +52,15 @@ as of 14:00 UTC
 - Priya Nair asked you: approve the data room request for Blue Harbor (nobody has handled it) [slack:C07FUND:1773500400.415602]
 
 ## You said you would
+- You promised Sam Okafor (Hooli): will send the summary, due 2026-03-12 (overdue), and it is still open [gmail:c81c70603acf1120]
 - You promised Jordan Pryce (Northwind Ventures): Slipping on the cohort metrics, due 2026-03-09 (overdue), and it is still open [gmail:ccd9c787ded3995d]
 - You promised Caroline Ades (Blue Harbor Capital): send data room access, due 2026-03-10 (overdue), and it is still open [gmail:3794ed2c45e9c301]
 
 ## Asked, already handled
 - Rebecca Liu asked you: Update ACME-142, due 2026-03-20 (already handled) [gmail:ceece9b31878fe40] [linear:ACME-142@20260314T2200]
+- Sam Okafor (Hooli) asked you: can u send by 3/18?, due 2026-03-18 (already answered) [gmail:b0358e336931b315] [gmail:c81c70603acf1120]
 - Hannah Park asked you: Please decline the old invite. (already handled) [gmail:ff9c102bbfa27a06] [calendar:7d2712a17add94eb1a82e92b23]
-- Mei Tanaka (Initech) asked you: Could you confirm? (already answered) [gmail:b3e0be40fd6f1fea] [gmail:19d8c431017747e4]
-- Priya Nair asked you: Log in Linear (already answered) [gmail:403df41545d6ec2d] [gmail:1cba60683d78b2ee]
+- Rebecca Liu asked you: ok by you? (already answered) [gmail:42a6081b54253d8a] [gmail:7d508a6afb1224fb]
 
 ## Blocked on you
 - ACME-365 Rate limit tuning, urgent [linear:ACME-365@20260222T0500]

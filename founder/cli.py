@@ -47,7 +47,9 @@ def cmd_eval(args):
 
 def cmd_bench(args):
     from . import bench
-    if args.rejudge:
+    if args.judge_check:
+        bench.judge_agreement([args.judge] + args.judge_check)
+    elif args.rejudge:
         bench.rejudge_all(args.judge)
         bench.report()
     elif args.report:
@@ -95,6 +97,7 @@ def main(argv=None):
     ev.add_argument('--only', nargs='*', help='question ids to run')
     ev.set_defaults(func=cmd_eval)
     bn = sub.add_parser('bench', help='run ingest, brief and eval on each model and compare')
+    bn.add_argument('--judge-check', nargs='+', metavar='JUDGE', help='measure judge self-consistency and agreement with these other judges')
     bn.add_argument('--rejudge', action='store_true', help='re-grade saved answers with the current judge')
     bn.add_argument('--report', action='store_true', help='re-render the table from saved results')
     bn.add_argument('models', nargs='*', help="e.g. ollama:llama3.2:latest anthropic:claude-haiku-4-5-20251001")

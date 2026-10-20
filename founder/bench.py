@@ -208,6 +208,43 @@ def rejudge_all(judge):
         print(f"{data['model']}: accuracy {data['ask']['accuracy']:.0%}")
 
 
+def judge_agreement(judges, path=None):
+    """How much do graders agree? Re-grade one model's saved answers with each judge,
+    twice for the first (self-consistency, which should be 100% at temperature 0 and
+    is not for hosted models), and report raw agreement and Cohen's kappa between
+    judges. Accuracy numbers mean little without this: a judge that disagrees with
+    itself or with a second judge on a fifth of the answers caps what any benchmark
+    can show"""
+    path = path or sorted(MODELS_DIR.glob('*.json'))[0]
+    data = json.loads(path.read_text())
+    questions = {q['id']: q for q in json.loads(evaluate.QUESTIONS_PATH.read_text())}
+    verdicts = {}
+    for label, judge in [(f'{judges[0]} (first pass)', judges[0]), (f'{judges[0]} (second pass)', judges[0])] + \
+            [(j, j) for j in judges[1:]]:
+        verdicts[label] = [evaluate.judge(questions[r['id']]['question'], questions[r['id']]['reference'], r['answer'], judge)[0]
+                           for r in data['rows']]
+    labels = list(verdicts)
+    saved = [r['correct'] for r in data['rows']]
+    out = {'answers_graded': len(saved), 'model': data['model'], 'pairs': []}
+
+    def kappa(a, b):
+        n = len(a)
+        po = sum(x == y for x, y in zip(a, b)) / n
+        pa, pb = sum(a) / n, sum(b) / n
+        pe = pa * pb + (1 - pa) * (1 - pb)
+        return (po - pe) / (1 - pe) if pe < 1 else 1.0
+
+    for i, a in enumerate(labels):
+        for b in labels[i + 1:]:
+            out['pairs'].append({'a': a, 'b': b, 'agreement': sum(x == y for x, y in zip(verdicts[a], verdicts[b])) / len(saved),
+                                 'kappa': kappa(verdicts[a], verdicts[b])})
+    out['accuracy_by_judge'] = {k: sum(v) / len(v) for k, v in verdicts.items()}
+    (config.ROOT / 'eval' / 'results' / 'judge_agreement.json').write_text(json.dumps(out, indent=2))
+    for pair in out['pairs']:
+        print(f"{pair['a']} vs {pair['b']}: agree {pair['agreement']:.0%}, kappa {pair['kappa']:.2f}")
+    return out
+
+
 def load_all():
     """Every model result saved so far, so a benchmark run of one model adds a
     column to the table instead of replacing it"""

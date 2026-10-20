@@ -1,0 +1,29 @@
+{
+  "answers_graded": 61,
+  "model": "anthropic:claude-haiku-4-5-20251001",
+  "pairs": [
+    {
+      "a": "anthropic:claude-haiku-4-5-20251001 (first pass)",
+      "b": "anthropic:claude-haiku-4-5-20251001 (second pass)",
+      "agreement": 1.0,
+      "kappa": 1.0
+    },
+    {
+      "a": "anthropic:claude-haiku-4-5-20251001 (first pass)",
+      "b": "ollama:llama3.2:latest",
+      "agreement": 0.7213114754098361,
+      "kappa": -0.05924412665985706
+    },
+    {
+      "a": "anthropic:claude-haiku-4-5-20251001 (second pass)",
+      "b": "ollama:llama3.2:latest",
+      "agreement": 0.7213114754098361,
+      "kappa": -0.05924412665985706
+    }
+  ],
+  "accuracy_by_judge": {
+    "anthropic:claude-haiku-4-5-20251001 (first pass)": 0.8524590163934426,
+    "anthropic:claude-haiku-4-5-20251001 (second pass)": 0.8524590163934426,
+    "ollama:llama3.2:latest": 0.8360655737704918
+  }
+}
