@@ -250,7 +250,7 @@ def pull_structured(conn, question, intents, window, people, extras=None):
         # question about the auth decision also dragged the roadmap in and the
         # model mixed the two. a generic 'what was decided' keeps everything
         rows = conn.execute(
-            "SELECT d.item_id, d.status, i.title, i.body FROM decisions d JOIN items i ON i.id=d.item_id "
+            "SELECT d.item_id, d.status, d.topic, i.title, i.body FROM decisions d JOIN items i ON i.id=d.item_id "
             "WHERE d.status IN ('current','stale') ORDER BY (d.status='stale') DESC, d.ts DESC").fetchall()
         words = {t.lower() for t in _terms(question)} - GENERIC_DECISION_WORDS
         if words:
@@ -259,19 +259,15 @@ def pull_structured(conn, question, intents, window, people, extras=None):
             # 'ship', so only the better-covered topic survives
             topic_words = {}
             for r in rows:
-                topic = conn.execute('SELECT topic FROM items WHERE id=?', (r['item_id'],)).fetchone()['topic']
-                topic_words.setdefault(topic, set()).update(
+                topic_words.setdefault(r['topic'], set()).update(
                     words & set(re.findall(r'[a-z0-9]+', (r['title'] + ' ' + r['body']).lower())))
             best = max((len(w) for w in topic_words.values()), default=0)
             if best:
                 keep = {t for t, w in topic_words.items() if len(w) == best}
-                rows = [r for r in rows if conn.execute(
-                    'SELECT topic FROM items WHERE id=?', (r['item_id'],)).fetchone()['topic'] in keep]
+                rows = [r for r in rows if r['topic'] in keep]
         ids += [r['item_id'] for r in rows[:12]]
         if extras is not None:
-            extras['decision_topics'] = list(dict.fromkeys(
-                conn.execute('SELECT topic FROM decisions WHERE item_id=?', (r['item_id'],)).fetchone()['topic']
-                for r in rows[:12]))
+            extras['decision_topics'] = list(dict.fromkeys(r['topic'] for r in rows[:12]))
 
     if 'followups' in intents:
         ids += [r['id'] for r in conn.execute(

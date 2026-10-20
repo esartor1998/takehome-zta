@@ -27,12 +27,19 @@ CREATE VIRTUAL TABLE IF NOT EXISTS items_fts USING fts5(
     title, body, who, content='', tokenize='porter unicode61'
 );
 CREATE TABLE IF NOT EXISTS people (
-    id TEXT PRIMARY KEY, name TEXT, emails TEXT, slack_handle TEXT, linear_name TEXT
+    id TEXT PRIMARY KEY, name TEXT, emails TEXT, slack_handle TEXT, linear_name TEXT,
+    org TEXT, external INTEGER, aliases TEXT
 );
 CREATE TABLE IF NOT EXISTS links (a TEXT, b TEXT, reason TEXT);
+CREATE TABLE IF NOT EXISTS stale_records (
+    item_id TEXT PRIMARY KEY, newer_id TEXT, current_fact TEXT, why TEXT
+);
+CREATE TABLE IF NOT EXISTS followups (
+    item_id TEXT, kind TEXT, who TEXT, whom TEXT, what TEXT, due TEXT, status TEXT, evidence TEXT, ts TEXT
+);
 CREATE TABLE IF NOT EXISTS decisions (
     item_id TEXT PRIMARY KEY, topic TEXT, kind TEXT, value TEXT, retracts TEXT,
-    summary TEXT, ts TEXT, status TEXT, why TEXT, source TEXT
+    summary TEXT, ts TEXT, status TEXT, why TEXT, source TEXT, subject TEXT
 );
 """
 
@@ -84,9 +91,10 @@ def row_to_item(row):
 
 def write_items(conn, items, people):
     for person in people.values():
-        conn.execute('INSERT OR REPLACE INTO people VALUES (?,?,?,?,?)',
+        conn.execute('INSERT OR REPLACE INTO people VALUES (?,?,?,?,?,?,?,?)',
                      (person.id, person.name, json.dumps(sorted(person.emails)),
-                      person.slack_handle, person.linear_name))
+                      person.slack_handle, person.linear_name, person.org, int(person.external),
+                      json.dumps(sorted(person.aliases()))))
     for item in items:
         row = dict(item)
         for key in JSON_FIELDS:
@@ -120,10 +128,11 @@ def write_vectors(collection, items, vectors):
 
 def topic_label(conn, topic):
     """A readable name for a decision topic: the linear title if the topic has
-    an issue, else the earliest email subject without its Re: prefix"""
+    an issue, else the subject the model gave the newest event"""
     row = conn.execute(
-        "SELECT title FROM items WHERE topic=? AND source='linear' ORDER BY ts LIMIT 1", (topic,)).fetchone()
-    if not row:
-        row = conn.execute(
-            "SELECT title FROM items WHERE topic=? AND kind='email' ORDER BY ts LIMIT 1", (topic,)).fetchone()
-    return re.sub(r'^(re:\s*)+', '', row['title'], flags=re.I) if row else 'plan'
+        "SELECT i.title FROM decisions d JOIN items i ON i.id=d.item_id WHERE d.topic=? "
+        "AND d.source='linear' ORDER BY d.ts DESC LIMIT 1", (topic,)).fetchone()
+    if row:
+        return re.sub(r'\s*\(ACME-\d+\)$', '', row['title'])
+    row = conn.execute('SELECT subject FROM decisions WHERE topic=? ORDER BY ts DESC LIMIT 1', (topic,)).fetchone()
+    return row['subject'] if row and row['subject'] else 'plan'

@@ -4,7 +4,7 @@ import subprocess
 import sys
 import time
 
-from . import config, dedupe, extract, llm, store
+from . import config, dedupe, extract, llm, stale, store
 from .identity import IdentityResolver
 from .normalize import normalize_all
 
@@ -28,7 +28,12 @@ def embed_text(item, ident):
             'event': f"Calendar event ({item['status']}) {item['title']} on {day}",
             'message': f"Slack {item['title']} message from {author} on {day}",
             'issue': f"Linear issue {item['meta'].get('identifier', '')} ({item['status']}) "
-                     f"assigned to {author}, {item['title']}"}[item['kind']]
+                     f"assigned to {author}, {item['title']}",
+            'pr': f"GitHub pull request ({item['status']}) by {author}, {item['title']}",
+            'comment': f"GitHub comment from {author} on {item['title']}",
+            'doc': f"Notion page edited {day} by {author}, {item['title']}",
+            'deal': f"CRM deal ({item['status']}), {item['title']}",
+            'note': f"CRM note on {day}, {item['title']}"}[item['kind']]
     return f"{head}\n{item['body']}".strip()
 
 
@@ -39,7 +44,10 @@ def run(skip_decisions=False):
     items = normalize_all(config.RAW_DIR, ident)
     for item in items:
         item['embed_text'] = embed_text(item, ident)
-        item['state'] = 'quarantined' if 'after_now' in item['flags'] else 'current'
+        # machine mail and bot posts are indexed but not 'current': they repeat
+        # what the real sources say and would crowd out the people in retrieval
+        item['state'] = ('quarantined' if 'after_now' in item['flags']
+                         else 'automated' if {'automated', 'bot'} & set(item['flags']) else 'current')
         item.update(superseded_by=None, dup_group=None, topic=None)
 
     print(f'embedding {len(items)} items with {config.EMBED_MODEL}')
@@ -58,12 +66,24 @@ def run(skip_decisions=False):
         for member in members:
             by_id[member]['topic'] = topic_id
 
-    decisions = [] if skip_decisions else extract.extract_decisions(items, topics, ident)
+    decisions, stale_rows = [], []
+    if not skip_decisions:
+        pool = extract.scoring_pool(items)
+        scores = extract.gate_scores(pool, vectors)
+        entities = extract.entity_map(items, ident)
+        # header-free vectors for comparing items with each other. the retrieval
+        # vectors start with 'Email from X on date', which dominates short texts
+        plain = dict(zip((i['id'] for i in items),
+                         llm.embed([f"{i['title']}. {i['body']}"[:600] for i in items], kind='query')))
+        decisions = extract.extract_decisions(items, topics, ident, vectors, scores, entities, plain)
+        stale_rows = stale.find_stale(items, plain, scores, entities)
+        print(f'{len(stale_rows)} records still state an outdated plan')
 
     conn = store.reset()
     store.write_items(conn, items, ident.people)
     conn.executemany('INSERT INTO links VALUES (?,?,?)', links)
     extract.write_decisions(conn, decisions)
+    stale.write_stale(conn, stale_rows)
     conn.commit()
     store.write_vectors(store.reset_vectors(), items, vectors)
 

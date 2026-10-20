@@ -337,6 +337,12 @@ slack_raw.append({"type":"message","channel_id":"C01ENG","user":PEOPLE["P5"]["sl
     "text":"billing migration is blocked on my side, asked Priya by email to push it a week.",
     "ts":f"{int(_ts.timestamp())}.000100"})
 
+# ---- second layer: breadth and variance (separate seeded rng, runs after every draw above) ----
+_orig = dict(gmail=list(gmail_raw), cal=list(cal_raw), slack=list(slack_raw), linear=list(linear_raw))
+from synthetic_data_expansion import expand
+EXPANSION = expand(dict(PEOPLE=PEOPLE, hex=_hex, gmail_raw=gmail_raw, cal_raw=cal_raw,
+                        slack_raw=slack_raw, linear_raw=linear_raw, CURRENT_TIME=CURRENT_TIME))
+
 # ============================================================
 # WRITE RAW FILES
 # ============================================================
@@ -373,12 +379,20 @@ write_jsonl(f"{RAW}/gmail_messages.jsonl", gmail_raw)
 write_jsonl(f"{RAW}/calendar_events.jsonl", cal_raw)
 write_jsonl(f"{RAW}/slack_messages.jsonl", slack_raw)
 write_jsonl(f"{RAW}/linear_issues.jsonl", linear_raw)
+write_jsonl(f"{RAW}/github_pulls.jsonl", EXPANSION["github"])
+write_jsonl(f"{RAW}/notion_pages.jsonl", EXPANSION["notion"])
+write_jsonl(f"{RAW}/crm_deals.jsonl", EXPANSION["crm"])
+for fname, payload in (("github_users.json", EXPANSION["github_users"]),
+                       ("notion_users.json", EXPANSION["notion_users"]),
+                       ("crm_contacts.json", EXPANSION["crm_contacts"])):
+    with open(f"{RAW}/{fname}", "w") as f:
+        json.dump(payload, f, indent=2)
 
 # ============================================================
 # NORMALIZED LAYER (what your context engine produces)
 # ============================================================
 norm = []
-for g in gmail_raw:
+for g in _orig['gmail']:
     headers = {h["name"]: h["value"] for h in g["payload"]["headers"]}
     body = base64.urlsafe_b64decode(g["payload"]["body"]["data"] + "==").decode(errors="ignore")
     norm.append({
@@ -388,7 +402,7 @@ for g in gmail_raw:
         "subject":headers.get("Subject",""),"body":body,
         "snippet":g["snippet"],
     })
-for c in cal_raw:
+for c in _orig['cal']:
     norm.append({
         "source":"calendar","source_id":c["id"],"timestamp":c["start"]["dateTime"],
         "title":c["summary"],"status":c["status"],
@@ -398,13 +412,13 @@ for c in cal_raw:
         "description":c.get("description",""),
     })
 slack_handles = {v["slack_id"]: v["slack_handle"] for v in PEOPLE.values()}
-for s in slack_raw:
+for s in _orig['slack']:
     norm.append({
         "source":"slack","source_id":s["ts"],"timestamp":datetime.fromtimestamp(float(s["ts"]), tz=timezone.utc).isoformat(),
         "user":slack_handles.get(s.get("user"), s.get("user","")),"text":s["text"],
         "thread_ts":s.get("thread_ts"),"edited":bool(s.get("edited")),"channel":s.get("channel_id",""),
     })
-for l in linear_raw:
+for l in _orig['linear']:
     norm.append({
         "source":"linear","source_id":l["id"],"issue_id":l["identifier"],
         "timestamp":l["updatedAt"],"title":l["title"],"description":l["description"],
@@ -432,6 +446,8 @@ answer_key = {
     "linear": {"file":"raw/linear_issues.jsonl","shape":"Linear GraphQL issue query (per-snapshot)",
                "note":"Multiple records share the same identifier to simulate an audit export. A single GraphQL query returns one current state."},
   },
+  "expansion": EXPANSION["answer_key"],
+  "external_alt_emails": EXPANSION["alt_emails"],
   "required_cases": {
     "R3_identity": {
       "question": "What did Daniel Kim say about the billing migration?",
@@ -496,6 +512,7 @@ Shape follows `conversations.history`: `type`, `user` (a `U…` ID, not handle),
 Shape follows the GraphQL `issue` query: `id`, `identifier`, `title`, `description`, `state { name }`, `assignee { id name }`, `priority`, `createdAt`, `updatedAt`, `labels { nodes { name } }` [citation:16]. **Important:** a single GraphQL query returns one current state. This dataset emits multiple records with the same `identifier` to simulate an **audit/snapshot export** (e.g., webhook history or repeated polling). Document this in your README; a production adapter would dedupe by `identifier` and keep the record with max `updatedAt`.
 """)
 
-counts = {"gmail":len(gmail_raw),"calendar":len(cal_raw),"slack":len(slack_raw),"linear":len(linear_raw)}
+counts = {"gmail":len(gmail_raw),"calendar":len(cal_raw),"slack":len(slack_raw),"linear":len(linear_raw),
+          "github":len(EXPANSION["github"]),"notion":len(EXPANSION["notion"]),"crm":len(EXPANSION["crm"])}
 counts["total"] = sum(counts.values())
 print("Wrote", counts, "raw records +", len(norm), "normalized items")
