@@ -277,8 +277,10 @@ def ground_citations(text, blocks, current):
     current: labels that are not STALE, SUPERSEDED or CANCELLED. only these can
     be added to a sentence, so a bare 'ship date is Mar 22' is never pinned on
     the stale record that says Mar 20.
-    Returns (text, dropped, added) where the counts feed the eval"""
+    Returns (text, dropped, added, issues). issues lists every claim whose
+    citation could not be made to hold, for the founder and for investigate()"""
     dropped = added = 0
+    issues = []
     out_lines = []
     for line in text.split('\n'):
         pieces = []
@@ -292,19 +294,86 @@ def ground_citations(text, blocks, current):
             marks = [int(n) for m in CITE_RE.finditer(sentence) for n in re.split(r'\s*,\s*', m.group(1))]
             kept = [n for n in dict.fromkeys(marks)
                     if n in blocks and support[n] >= MIN_SHARED and support[n] >= KEEP_RATIO * best]
-            dropped += len([n for n in marks if n in blocks]) - len(kept)
+            model_marks = [n for n in dict.fromkeys(marks) if n in blocks]
+            dropped += len(model_marks) - len(kept)
+            kind = ''
             if not kept:
                 cands = [n for n in current if support[n] >= MIN_SHARED
                          and support[n] / len(words) >= ADD_MIN_RATIO]
                 if cands:
                     kept = [max(cands, key=lambda n: support[n])]
                     added += 1
+                    kind = 'reattributed' if model_marks else ''
+                else:
+                    kind = 'unsupported' if model_marks else ('uncited' if len(sentence.split()) > 4 else '')
+            elif len(kept) < len(model_marks):
+                kind = 'partly_unsupported'
+            if kind:
+                issues.append({'claim': CITE_RE.sub('', sentence).strip(), 'kind': kind,
+                               'model_labels': model_marks, 'labels': list(kept)})
             # markers go before the closing punctuation. after it, the sentence
             # splitter reads them as the start of the next sentence
             bare, tail = re.match(r'(.*?)([.!?]*)\s*$', CITE_RE.sub('', sentence).strip(), re.S).groups()
             pieces.append(bare.rstrip() + ''.join(f' [{n}]' for n in kept) + tail)
         out_lines.append(' '.join(pieces))
-    return '\n'.join(out_lines), dropped, added
+    return '\n'.join(out_lines), dropped, added, issues
+
+
+INVESTIGATE_LIMIT = 4        # claims checked per answer, worst first
+INVESTIGATE_SCHEMA = {'type': 'object',
+                      'properties': {'verdict': {'type': 'string', 'enum': ['supported', 'partly', 'not_supported']},
+                                     'best_source': {'type': 'integer'}, 'reason': {'type': 'string'}},
+                      'required': ['verdict', 'best_source', 'reason']}
+INVESTIGATE_SYSTEM = (
+    'You check one claim against numbered sources. Reply with JSON only.\n'
+    'verdict: supported = a source says this. partly = a source says some of it. not_supported = '
+    'no source says it.\n'
+    'best_source: the number of the source that supports the claim best, or 0 if none does.\n'
+    'reason: under 20 words, naming what is missing or wrong.')
+ISSUE_ORDER = {'unsupported': 0, 'reattributed': 1, 'partly_unsupported': 2, 'uncited': 3}
+
+
+def investigate(issues, blocks, labels, ids_by_label=None):
+    """Ask the model to look at each claim whose citation did not hold. It reads
+    the claim and the sources, says whether any source supports it, and names the
+    best one. A supported verdict with a named source repairs the citation. Anything
+    else becomes a flag for the founder. Lexical checks found the problems, and
+    the model only has to read them, which is a task a small model does well.
+    Returns (flags, repairs, usage) with repairs as {claim: label} and usage the
+    tokens, cost and projected cost of the checks, which count toward the answer's"""
+    flags, repairs = [], {}
+    usage = {'prompt_tokens': 0, 'completion_tokens': 0, 'cost': 0.0, 'projected_cost': 0.0}
+    for issue in sorted(issues, key=lambda i: ISSUE_ORDER.get(i['kind'], 9))[:INVESTIGATE_LIMIT]:
+        shown = list(dict.fromkeys(issue['model_labels'] + issue['labels']))
+        if not shown:
+            # nothing was cited: show the two sources that share the most words
+            words = _content_words(issue['claim'])
+            shown = sorted(blocks, key=lambda n: -len(words & _content_words(blocks[n])))[:2]
+        sources = '\n\n'.join(blocks[n][:500] for n in shown)
+        result = llm.chat(INVESTIGATE_SYSTEM, f"Claim: {issue['claim']}\n\nSources:\n{sources}",
+                          schema=INVESTIGATE_SCHEMA, max_tokens=80, role='verify')
+        for key in usage:
+            usage[key] += result[key] if key in result else 0
+        parsed = llm.parse_json(result['text'], None) or {}
+        verdict, best = parsed.get('verdict', 'not_supported'), parsed.get('best_source', 0)
+        if verdict == 'supported' and best in blocks:
+            repairs[issue['claim']] = best
+            continue
+        flags.append({'claim': issue['claim'], 'kind': issue['kind'], 'verdict': verdict,
+                      'reason': parsed.get('reason', '').strip() or 'no source says this',
+                      'cited': [ids_by_label[n] for n in issue['model_labels'] if ids_by_label and n in ids_by_label]})
+    # claims past the limit are still flagged, just not examined
+    for issue in sorted(issues, key=lambda i: ISSUE_ORDER.get(i['kind'], 9))[INVESTIGATE_LIMIT:]:
+        flags.append({'claim': issue['claim'], 'kind': issue['kind'], 'verdict': 'not examined',
+                      'reason': 'citation did not match the source and was not checked', 'cited': []})
+    return flags, repairs, usage
+
+
+def apply_repairs(text, repairs):
+    """Put a repaired citation on its claim"""
+    for claim, label in repairs.items():
+        text = text.replace(claim, f'{claim} [{label}]', 1) if claim in text else text
+    return text
 
 
 def verify(text, labels):
@@ -393,15 +462,22 @@ def ask(conn, question, k=10):
     blocks = {n: context_block(context, n) for n in labels}
     current = [n for n, block in blocks.items() if not re.search(
         r'\((?:[^)]*; )?(STALE|SUPERSEDED|CANCELLED)', block)]
-    repaired, dropped, added = ground_citations(result['text'].strip(), blocks, current)
+    repaired, dropped, added, issues = ground_citations(result['text'].strip(), blocks, current)
+    flags, extra = [], {'prompt_tokens': 0, 'completion_tokens': 0, 'cost': 0.0, 'projected_cost': 0.0}
+    if issues and os.environ.get('FOUNDER_VERIFY', '1') != '0':
+        flags, repairs, extra = investigate(issues, blocks, labels, labels)
+        repaired = apply_repairs(repaired, repairs)
     text, cited, ungrounded = verify(repaired, labels)
     cant = CANT_FIND.lower().rstrip('.') in text.lower()
     return {
         'question': question, 'answer': text, 'cited': [] if cant else cited,
         'found': not cant, 'cites_dropped': dropped, 'cites_added': added, 'ungrounded_sentences': [] if cant else ungrounded,
+        'flags': [] if cant else flags,
         'retrieved': ids, 'intents': found['intents'], 'pulls': found['pulls'],
-        'prompt_tokens': result['prompt_tokens'], 'completion_tokens': result['completion_tokens'],
-        'cost': result['cost'], 'projected_cost': result['projected_cost'],
+        'prompt_tokens': result['prompt_tokens'] + extra['prompt_tokens'],
+        'completion_tokens': result['completion_tokens'] + extra['completion_tokens'],
+        'cost': result['cost'] + extra['cost'], 'projected_cost': result['projected_cost'] + extra['projected_cost'],
+        'verify_tokens': extra['prompt_tokens'] + extra['completion_tokens'],
         'seconds': time.time() - started,
     }
 
@@ -470,15 +546,21 @@ def ask_digest(conn, question, digest, started, plan=None):
     result = llm.chat(SYSTEM, f'Context items:\n\n{context}\n\nQuestion: {question}\n{instruction}',
                       max_tokens=300)
     blocks = {n: context_block(context, n) for n in labels}
-    text, dropped, added = ground_citations(result['text'].strip(), blocks, list(labels))
+    text, dropped, added, issues = ground_citations(result['text'].strip(), blocks, list(labels))
+    flags, extra = [], {'prompt_tokens': 0, 'completion_tokens': 0, 'cost': 0.0, 'projected_cost': 0.0}
+    if issues and os.environ.get('FOUNDER_VERIFY', '1') != '0':
+        flags, repairs, extra = investigate(issues, blocks, labels, labels)
+        text = apply_repairs(text, repairs)
     text, cited, ungrounded = verify(text, labels)
     cant = CANT_FIND.lower().rstrip('.') in text.lower()
     return {
         'question': question, 'answer': text, 'cited': [] if cant else cited, 'found': not cant,
-        'cites_dropped': dropped, 'cites_added': added,
+        'cites_dropped': dropped, 'cites_added': added, 'flags': [] if cant else flags,
         'ungrounded_sentences': [] if cant else ungrounded, 'retrieved': list(labels.values()),
         'intents': [name], 'pulls': {'digest': len(facts)},
-        'prompt_tokens': result['prompt_tokens'], 'completion_tokens': result['completion_tokens'],
-        'cost': result['cost'], 'projected_cost': result['projected_cost'],
+        'prompt_tokens': result['prompt_tokens'] + extra['prompt_tokens'],
+        'completion_tokens': result['completion_tokens'] + extra['completion_tokens'],
+        'cost': result['cost'] + extra['cost'], 'projected_cost': result['projected_cost'] + extra['projected_cost'],
+        'verify_tokens': extra['prompt_tokens'] + extra['completion_tokens'],
         'seconds': time.time() - started,
     }

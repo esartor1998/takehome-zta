@@ -1,0 +1,217 @@
+[
+  {
+    "id": "p01",
+    "category": "semantic_probe",
+    "question": "who is unavailable this week",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:469b8c07901db7d8"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  },
+  {
+    "id": "p02",
+    "category": "semantic_probe",
+    "question": "how much money are we trying to raise",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:6dff2b861992469a",
+        "notion:d66e87731f6d486a58818da6ad1da108",
+        "crm:deal:23a551d6fe"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  },
+  {
+    "id": "p03",
+    "category": "semantic_probe",
+    "question": "did the person we made an offer to take the job",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:e98c5b9d26b114a1"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  },
+  {
+    "id": "p04",
+    "category": "semantic_probe",
+    "question": "when does the new payments vendor go live",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:bfda57e5a3e21af0",
+        "slack:C01ENG:1773331200.609253",
+        "notion:0f8a538c21e4ef3f1024c7d25666cd47"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  },
+  {
+    "id": "p05",
+    "category": "semantic_probe",
+    "question": "is the customer login problem fixed",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "linear:ACME-431@20260312T1800",
+        "gmail:bee95ff7ca51c987",
+        "github:acme/api#231"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  },
+  {
+    "id": "p06",
+    "category": "semantic_probe",
+    "question": "what are we charging per user",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:7d0d75121cdeaac6",
+        "notion:163647759184b558a347537639422466",
+        "linear:ACME-441@20260313T1900"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  },
+  {
+    "id": "p07",
+    "category": "semantic_probe",
+    "question": "who needs to look at my code changes",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "github:acme/api#231"
+      ],
+      [
+        "github:acme/billing#230"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  },
+  {
+    "id": "p08",
+    "category": "semantic_probe",
+    "question": "which venture firm is leading our round",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "crm:deal:23a551d6fe",
+        "notion:d66e87731f6d486a58818da6ad1da108",
+        "gmail:6dff2b861992469a"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  },
+  {
+    "id": "p09",
+    "category": "semantic_probe",
+    "question": "which company disputed the seat count on its bill",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:b3e0be40fd6f1fea",
+        "gmail:19d8c431017747e4"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  },
+  {
+    "id": "p10",
+    "category": "semantic_probe",
+    "question": "has anyone complained that data exports are slow",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:805093022b56ece6",
+        "gmail:93c4a504d87495b9",
+        "linear:ACME-433@20260311T1500"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  },
+  {
+    "id": "p11",
+    "category": "semantic_probe",
+    "question": "when is the board getting together",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "calendar:de4afcd47267780be961f09a4f"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  },
+  {
+    "id": "p12",
+    "category": "semantic_probe",
+    "question": "who changed the day of the weekly team meeting",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:ff9c102bbfa27a06",
+        "slack:C03GEN:1773172800.739474"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  },
+  {
+    "id": "p13",
+    "category": "semantic_probe",
+    "question": "why was the product launch date pushed",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:69d12ca0960f4a7d",
+        "slack:C02PROD:1772640000.222201"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  },
+  {
+    "id": "p14",
+    "category": "semantic_probe",
+    "question": "what happened to the engineering hire we were excited about",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:e98c5b9d26b114a1",
+        "gmail:07c7430cafafc2e3"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  },
+  {
+    "id": "p15",
+    "category": "semantic_probe",
+    "question": "which investor has not heard back from us",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:012ce504e5a045e9",
+        "crm:note:d6985a6da8"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  }
+]

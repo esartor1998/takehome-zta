@@ -175,7 +175,7 @@
   },
   "ask": {
     "questions": 41,
-    "model": "ollama:qwen3.5:9b",
+    "model": "ollama:llama3.2:latest",
     "judge_model": "anthropic:claude-haiku-4-5-20251001",
     "accuracy": 0.7073170731707317,
     "citation_recall": 0.9146341463414634,
@@ -194,8 +194,8 @@
     "projected_cost_mean": 0.0009148292682926829,
     "actual_cost_mean": 0.0,
     "actual_cost_total": 0.0,
-    "warm_seconds": 0.44521260261535645,
-    "wall_seconds": 424.0112659931183
+    "wall_seconds": 424.0112659931183,
+    "warm_seconds": 0.44521260261535645
   },
   "retries": 0,
   "judge_usage": {
@@ -316,7 +316,7 @@
       "question": "What is the exact revenue impact of the v2 API delay?",
       "answer": "I can't find that in the available data. The context contains decisions about v2 API authentication methods and metrics reports, but no information regarding revenue impact or financial delays. Items marked SUPERSEDED describe outdated plans for OAuth-only or OAuth plus API keys , while item  is CURRENT and confirms a final decision to ship with OAuth only after Globex signed an addendum [gmail:ceece9b31878fe40]. No data exists on revenue figures or the specific impact of any delay.",
       "correct": true,
-      "judge_reason": "correctly abstained",
+      "judge_reason": "ref: Revenue impact of v2 API delay not available | cand: Cannot find revenue impact data; no financial figures available",
       "found": false,
       "cited": [],
       "cite_recall": 1.0,
@@ -517,7 +517,7 @@
       "question": "What decisions were made recently?",
       "answer": "- Globex SSO redirect loop: current plan is 'reopening ACME-431', replacing 'Recurred for Globex users on Okta. Needs a second fix.'. Records already reflect this, no action needed [slack:C04INC:1773339300.924615]\n- sync day: current plan is 'Sun Mar 15 16:00 UTC'. Records already reflect this, no action needed [slack:C03GEN:1773172800.739474]\n- billing cutover date: current plan is 'Mar 31', replacing 'Ledgerly replaces Paymint'. Records already reflect this, no action needed [gmail:bfda57e5a3e21af0]\n- v2 API authentication: current plan is 'OAuth only', replacing 'OAuth + API keys'. Records already reflect this, no action needed [linear:ACME-142@20260314T2200]\n- Q1 roadmap dates: current plan is 'Mar 22', replacing 'Freeze Mar 10. Ship Mar 20.'. Records already reflect this, no action needed [slack:C02PROD:1772640000.222201]\n- closing date: current plan is 'May 15', replacing 'Target close: Apr 30.'. Records already reflect this, no action needed [slack:C07FUND:1773421200.357681]\n- Update pricing page to $59/seat for new customers: current plan is '$59/seat for new customers', replacing 'new customers pay $59 per seat, existing customers stay at $49'. Records already reflect this, no action needed [linear:ACME-441@20260313T1900]",
       "correct": false,
-      "judge_reason": "ref: Recent decisions: v2 API auth OAuth only, Q1 ship Mar 22, pricing $59 new/$49 existing, billing cutover Mar 31, seed close May 15, Taylor Brooks offer cancelled | cand: v2 API OAuth only, Q1 ship Mar 22, pricing $59 new customers, billing cutover Mar 31, seed close May 15. Missing Taylor Brooks offer decision.",
+      "judge_reason": "ref: Recent decisions: v2 API auth OAuth only, Q1 ship Mar 22, pricing $59/$49, billing Mar 31, seed close May 15, Taylor Brooks offer cancelled | cand: v2 API OAuth only, Q1 ship Mar 22, pricing $59 new/$49 existing, billing Mar 31, seed close May 15. No mention of Taylor Brooks offer.",
       "found": true,
       "cited": [
         "slack:C04INC:1773339300.924615",
@@ -694,7 +694,7 @@
       "question": "what's on today",
       "answer": "Today (Sunday Mar 15):\n- all day Offsite travel with Priya Nair, Marcus Webb, Sofia Reyes, Daniel Kim (in progress; flights, see the offsite doc) [calendar:f99876efd6449d8ae5bf15d181]\n- 09:30-09:45 UTC Standup with Priya Nair, Marcus Webb, Sofia Reyes, Daniel Kim (already happened) [calendar:c5457a3e77f0e609f8407d2ecf]\n- 11:00-11:45 UTC Investor update prep with Priya Nair (already happened) [calendar:cb4d6cb65474560e2b3602e163]\n- 15:00-15:30 UTC 1:1 Marcus with Marcus Webb (CANCELLED; cancelled, Marcus is covering the Globex fix) [calendar:0b466c05a14a1a7932b277708b]\n- 16:00-17:00 UTC Weekly Product Sync with Priya Nair, Marcus Webb, Hannah Park (rescheduled from Fri Mar 13) [calendar:2ded3454537257a5518fa9905e]\n- 17:30-18:00 UTC Globex check-in with Marcus Webb, Daniel Foster (Globex) (10:30 Los Angeles time; customer check-in about SSO and the Mar 23 rollout). Before it: Daniel Foster (Globex) is waiting on you: confirm a fix ships; Globex SSO redirect loop is Reopened; Globex integration is Blocked [calendar:bbeda5b103cb82876dd4651501][gmail:bee95ff7ca51c987]\n- 19:00-20:00 UTC Board prep with Priya Nair (tentative) [calendar:de4afcd47267780be961f09a4f]",
       "correct": true,
-      "judge_reason": "ref: Today (Sunday Mar 15): all-day Offsite travel; 09:30 Standup (done); 11:00 Investor update prep (done); 15:00 1:1 Marcus CANCELLED; 16:00 Weekly Product Sync (moved from Friday); 17:30 Globex check-in; 19:00 Board prep (tentative) | cand: All events match: all-day Offsite travel, 09:30 Standup (done), 11:00 Investor prep (done), 15:00 1:1 Marcus (CANCELLED), 16:00 Weekly Product Sync (rescheduled from Fri), 17:30 Globex check-in, 19:00 Board prep (tentative)",
+      "judge_reason": "ref: Today (Sunday Mar 15): all-day Offsite travel; 09:30 Standup (done); 11:00 Investor update prep (done); 15:00 1:1 Marcus CANCELLED; 16:00 Weekly Product Sync (moved from Friday); 17:30 Globex check-in; 19:00 Board prep (tentative) | cand: All events listed with same times, statuses, and cancellation. Candidate adds attendee names, meeting durations, and additional context details.",
       "found": true,
       "cited": [
         "calendar:f99876efd6449d8ae5bf15d181",
@@ -778,7 +778,7 @@
       "question": "what is daniel saying",
       "answer": "Daniel Kim approved PR #270 on Fri 2026-03-06 , asked to push billing migration a week on Wed 2026-03-11 , was OOO Mar 10-14 per email Mon 2026-03-09 , gave LGTM on PR #231 needing Alex auth on Fri 2026-03-13 , and thanked all in Slack Wed 2026-03-04 [gmail:c1abbf680fedaacd] [gmail:469b8c07901db7d8] [github:acme/api#231:c2682238862]. Daniel Foster reported Okta users looping again and asked for a fix before Mar 20 in email Thu 2026-03-12 [gmail:bee95ff7ca51c987].",
       "correct": true,
-      "judge_reason": "ref: Two Daniels: Kim asked to push billing migration a week, OOO Mar 10-14; Foster says SSO login loops are back, asks for fix before Mar 20 | cand: Daniel Kim approved PR, asked to push billing migration a week, was OOO Mar 10-14, gave LGTM on PR. Daniel Foster reported Okta users looping, asked for fix before Mar 20",
+      "judge_reason": "ref: Two Daniels: Kim asked to push billing migration a week, OOO Mar 10-14; Foster says SSO login loops are back, asks for fix before Mar 20 | cand: Daniel Kim approved PR #270, asked to push billing migration a week, was OOO Mar 10-14, gave LGTM on PR #231; Daniel Foster reported Okta users looping, asked for fix before Mar 20",
       "found": true,
       "cited": [
         "gmail:c1abbf680fedaacd",
@@ -926,7 +926,7 @@
       "question": "anything urgent",
       "answer": "1. Confirm the fix ships to unblock Globex integration and resolve the Reopened SSO redirect loop before the 17:30 UTC check-in with Marcus Webb and Daniel Foster, as they are currently waiting on this confirmation [calendar:bbeda5b103cb82876dd4651501].\n2. Send the promised deliverable to Jordan Pryce from Northwind Ventures immediately to address the overdue commitment made for 2026-03-09 which remains open [gmail:ccd9c787ded3995d].\n3. Provide data room access to Caroline Ades from Blue Harbor Capital now to resolve the overdue promise due on 2026-03-10 that is still open [gmail:3794ed2c45e9c301].",
       "correct": false,
-      "judge_reason": "ref: Urgent: Globex check-in 17:30 UTC today, SSO fix ships before Mar 20, cohort ARR owed to Northwind before Tuesday partner meeting, records with old plans | cand: Globex check-in 17:30 UTC with Daniel Foster on SSO fix; deliverable to Northwind Ventures overdue; data room access to Blue Harbor Capital overdue",
+      "judge_reason": "ref: Urgent: Globex check-in 17:30 UTC, SSO fix before Mar 20, cohort ARR to Northwind before Tuesday meeting, old plan records | cand: Globex check-in 17:30 UTC with SSO fix confirmation, Northwind deliverable overdue, Blue Harbor data room access overdue",
       "found": true,
       "cited": [
         "calendar:bbeda5b103cb82876dd4651501",
@@ -1090,7 +1090,7 @@
       "question": "when do we close the round",
       "answer": "The target close date was originally set for April 30 [notion:d66e87731f6d486a58818da6ad1da108]. However, Jordan now states the round cannot close before May 15 due to the partner calendar [slack:C07FUND:1773421200.357681]. The earlier plan in the notion page is marked STALE because of this new information [notion:d66e87731f6d486a58818da6ad1da108].",
       "correct": true,
-      "judge_reason": "ref: Round closes May 15, per Jordan at Northwind (Mar 13) | cand: Round closes May 15 per Jordan; earlier April 30 date is stale",
+      "judge_reason": "ref: Round closes May 15, per Jordan at Northwind (Mar 13) | cand: Round closes May 15 per Jordan; earlier April 30 plan is stale",
       "found": true,
       "cited": [
         "notion:d66e87731f6d486a58818da6ad1da108",
@@ -1256,7 +1256,7 @@
       "question": "how much runway do we have",
       "answer": "I can't find that in the available data. The provided context items discuss invoices, renewals, pricing decisions, and meeting notes but do not contain any information regarding company runway, financial reserves, or burn rate. Items marked STALE or SUPERSEDED relate to outdated pricing pages and are history, not current financial status.",
       "correct": true,
-      "judge_reason": "correctly abstained",
+      "judge_reason": "ref: No cash, burn, or runway figures available; only fundraising targets | cand: Cannot find runway data; context lacks cash, burn rate, or runway information",
       "found": false,
       "cited": [],
       "cite_recall": 1.0,
@@ -1277,7 +1277,7 @@
       "question": "who's our CFO",
       "answer": "I can't find that in the available data. The context mentions Alex Chen as the founder  but does not identify a CFO [slack:C07FUND:1773419400.449808]. Priya Nair owns the hiring loop next step which is blocked until Mar 14 [gmail:319d43c65089e537]. Alex C. Morgan owns the sprint planning next step which is done and was previously blocked on infra until Mar 05 [gmail:18f5f39909df4aaa].",
       "correct": true,
-      "judge_reason": "correctly abstained",
+      "judge_reason": "ref: CFO identity not available | cand: Cannot find CFO in available data",
       "found": false,
       "cited": [],
       "cite_recall": 1.0,

@@ -194,8 +194,8 @@
     "projected_cost_mean": 0.0008996341463414634,
     "actual_cost_mean": 0.0,
     "actual_cost_total": 0.0,
-    "warm_seconds": 0.0765829086303711,
-    "wall_seconds": 96.66618156433105
+    "wall_seconds": 96.66618156433105,
+    "warm_seconds": 0.0765829086303711
   },
   "retries": 0,
   "judge_usage": {
@@ -313,7 +313,7 @@
       "question": "What is the exact revenue impact of the v2 API delay?",
       "answer": "I can't find that in the available data.",
       "correct": true,
-      "judge_reason": "correctly abstained",
+      "judge_reason": "ref: Revenue impact of v2 API delay not available | cand: Cannot find in available data",
       "found": false,
       "cited": [],
       "cite_recall": 1.0,
@@ -598,7 +598,7 @@
       "question": "What should I focus on today?",
       "answer": "1. Confirm fix ships before Mar 20 [calendar:bbeda5b103cb82876dd4651501]\n2. Send early next week to Jordan Pryce by 2026-03-09 [gmail:ccd9c787ded3995d]\n3. Send data room access to Caroline Ades by 2026-03-10 [gmail:3794ed2c45e9c301]",
       "correct": false,
-      "judge_reason": "ref: Priorities: Globex check-in 17:30 UTC, SSO fix before Mar 20, cohort ARR to Jordan Pryce, stale records | cand: Confirm fix ships before Mar 20, send to Jordan Pryce by Mar 9, send data room access to Caroline Ades by Mar 10",
+      "judge_reason": "ref: Priorities: Globex check-in 17:30 UTC (SSO fix before Mar 20), cohort ARR to Jordan Pryce before Tuesday meeting, stale records with old plans | cand: 1. Confirm fix ships before Mar 20 2. Send to Jordan Pryce by 2026-03-09 3. Send data room access to Caroline Ades by 2026-03-10",
       "found": true,
       "cited": [
         "calendar:bbeda5b103cb82876dd4651501",
@@ -693,7 +693,7 @@
       "question": "what's on today",
       "answer": "Today (Sunday Mar 15):\n- all day Offsite travel with Priya Nair, Marcus Webb, Sofia Reyes, Daniel Kim (in progress; flights, see the offsite doc) [calendar:f99876efd6449d8ae5bf15d181]\n- 09:30-09:45 UTC Standup with Priya Nair, Marcus Webb, Sofia Reyes, Daniel Kim (already happened) [calendar:c5457a3e77f0e609f8407d2ecf]\n- 11:00-11:45 UTC Investor update prep with Priya Nair (already happened) [calendar:cb4d6cb65474560e2b3602e163]\n- 15:00-15:30 UTC 1:1 Marcus with Marcus Webb (CANCELLED; cancelled, Marcus is covering the Globex fix) [calendar:0b466c05a14a1a7932b277708b]\n- 16:00-17:00 UTC Weekly Product Sync with Priya Nair, Marcus Webb, Hannah Park (rescheduled from Fri Mar 13) [calendar:2ded3454537257a5518fa9905e]\n- 17:30-18:00 UTC Globex check-in with Marcus Webb, Daniel Foster (Globex) (10:30 Los Angeles time; customer check-in about SSO and the Mar 23 rollout). Before it: Daniel Foster (Globex) is waiting on you: confirm a fix ships before Mar 20; Globex SSO redirect loop is Reopened; Globex integration is Blocked [calendar:bbeda5b103cb82876dd4651501][gmail:bee95ff7ca51c987]\n- 19:00-20:00 UTC Board prep with Priya Nair (tentative) [calendar:de4afcd47267780be961f09a4f]",
       "correct": true,
-      "judge_reason": "ref: Today (Sunday Mar 15): all-day Offsite travel; 09:30 Standup (done); 11:00 Investor update prep (done); 15:00 1:1 Marcus CANCELLED; 16:00 Weekly Product Sync (moved from Friday); 17:30 Globex check-in; 19:00 Board prep (tentative) | cand: All events listed with same times, statuses, and cancellation. Candidate adds attendee names, calendar IDs, and additional context details not in reference.",
+      "judge_reason": "ref: Today's schedule: all-day offsite, standup (done), investor prep (done), 1:1 Marcus cancelled, product sync, Globex check-in, board prep | cand: Same events with additional details: attendees, times, status, and context about Globex issues and Daniel Foster's waiting items",
       "found": true,
       "cited": [
         "calendar:f99876efd6449d8ae5bf15d181",
@@ -984,7 +984,7 @@
       "question": "what's blocked",
       "answer": "12 blocked issues, 5 yours:\n- ACME-365 Rate limit tuning (yours, urgent) [linear:ACME-365@20260222T0500]\n- ACME-342 Add pagination (yours, high) [linear:ACME-342@20260225T0900]\n- ACME-349 Rate limit tuning (yours, high) [linear:ACME-349@20260307T0900]\n- ACME-352 Update dependency (yours, high) [linear:ACME-352@20260225T1100]\n- ACME-316 Billing webhook retry (yours, no priority) [linear:ACME-316@20260219T1200]\n- ACME-363 Rate limit tuning (owner Alex C. Morgan, urgent) [linear:ACME-363@20260220T1200]\n- ACME-311 Billing webhook retry (owner Omar Haddad, urgent) [linear:ACME-311@20260225T0900]\n- ACME-371 Fix flaky test (owner Daniel Kim, urgent) [linear:ACME-371@20260228T1900]\n- ACME-331 Update dependency (owner Sofia Reyes, urgent) [linear:ACME-331@20260302T0900]\n- ACME-325 Rate limit tuning (owner Marcus Webb, urgent) [linear:ACME-325@20260308T0500]\n- ACME-304 Fix flaky test (owner Sofia Reyes, urgent) [linear:ACME-304@20260314T2200]\n- ACME-328 Rate limit tuning (owner Hannah Park, high) [linear:ACME-328@20260219T1200]",
       "correct": false,
-      "judge_reason": "ref: Blocked issues: yours are ACME-316, ACME-342, ACME-349, ACME-352, ACME-365; ACME-433 blocked by ACME-420 | cand: Lists 12 blocked issues including the 5 yours correctly, but adds 7 others not mentioned in reference",
+      "judge_reason": "ref: Blocked issues: yours are ACME-316, ACME-342, ACME-349, ACME-352, ACME-365; ACME-433 blocked by ACME-420 | cand: Lists 12 blocked issues including the 5 yours (ACME-316, ACME-342, ACME-349, ACME-352, ACME-365) but omits ACME-433 and ACME-420 relationship",
       "found": true,
       "cited": [
         "linear:ACME-365@20260222T0500",
@@ -1045,7 +1045,7 @@
       "question": "pricing?",
       "answer": "The pricing page was updated to $59 per seat for new customers, and existing customers stay at $49 [gmail:7d0d75121cdeaac6] [linear:ACME-441@20260313T1900]. The decision was made on March 11, but the outdated notion page 'Pricing review notes Mar 11' still exists [notion:163647759184b558a347537639422466]. The linear issue ACME-441 is currently open, and the notion page 'Pricing v3' is outdated [linear:ACME-441@20260313T1900]. The email from Sofia Reyes on March 13 confirms the new pricing, but the STALE notion page 'Seed extension plan' still mentions a target close date of April 30 [notion:d66e87731f6d486a58818da6ad1da108].",
       "correct": true,
-      "judge_reason": "ref: Pricing: $59/seat new customers, $49 existing (Mar 11 decision) | cand: $59/seat new customers, $49 existing; decision Mar 11; Pricing v3 and ACME-441 outdated",
+      "judge_reason": "ref: Pricing: $59 per seat for new customers, $49 for existing customers (decided Mar 11) | cand: $59 per seat for new customers, existing customers $49, decision made March 11",
       "found": true,
       "cited": [
         "gmail:7d0d75121cdeaac6",
@@ -1119,7 +1119,7 @@
       "question": "what's the deal with sso",
       "answer": "The SSO redirect loop issue started on Monday  and was reported by Daniel Foster [gmail:c15f3037c23a7d15]. Marcus Webb reproduced the issue and is working on a fix, which was merged as PR #218 [github:acme/api#218]. The issue has recurred, and the pull request #231 is currently open, awaiting review from Alex Chen [github:acme/api#231]. The current status of the issue is that it has been reopened [linear:ACME-431@20260312T1800].",
       "correct": false,
-      "judge_reason": "ref: SSO redirect loop: reported Mar 3, fixed Mar 10 (PR 218), recurred Mar 12, PR 231 awaiting review, confirmation needed by Mar 20 | cand: SSO redirect loop started Monday, PR 218 merged, issue recurred, PR 231 open awaiting review, reopened",
+      "judge_reason": "ref: SSO redirect loop: reported Mar 3, fixed Mar 10 (PR 218), recurred Mar 12, PR 231 awaiting review, confirmation needed before Mar 20 | cand: SSO redirect loop started Monday, PR 218 merged, issue recurred, PR 231 open awaiting review, reopened",
       "found": true,
       "cited": [
         "gmail:c15f3037c23a7d15",
@@ -1145,7 +1145,7 @@
       "question": "what's hooli saying",
       "answer": "Here is the summary:\n\nSam Okafor (Hooli) - Export job timed out (504) on Wed 2026-03-04 [gmail:93c4a504d87495b9].\nSam Okafor (Hooli) - Nightly export timed out again on Wed 2026-03-11 [gmail:805093022b56ece6].",
       "correct": false,
-      "judge_reason": "ref: Nightly export timed out again, second time this month. ACME-433 tracked, blocked by ACME-420. | cand: Export timed out twice: 2026-03-04 and 2026-03-11. No mention of tracking tickets or blockers.",
+      "judge_reason": "ref: Nightly export timed out second time this month; ACME-433 blocked by ACME-420 | cand: Export timed out twice: March 4 and March 11; no mention of ticket numbers or blocking issue",
       "found": true,
       "cited": [
         "gmail:93c4a504d87495b9",
@@ -1239,7 +1239,7 @@
       "question": "who is jordan",
       "answer": "1. Jordan Pryce sent an email to Alex Chen on Fri 2026-03-13 16:00 UTC [gmail:75d73520ec4c68f3].\n2. Alex Chen confirmed he will send cohort ARR by Monday, in response to Jordan Pryce's email [gmail:75d73520ec4c68f3].",
       "correct": false,
-      "judge_reason": "ref: Jordan Pryce is partner at Northwind Ventures, lead seed extension candidate | cand: Jordan Pryce sent email to Alex Chen; Alex Chen will send cohort ARR by Monday",
+      "judge_reason": "ref: Jordan Pryce is partner at Northwind Ventures, lead candidate for seed extension | cand: Jordan Pryce sent email to Alex Chen on Fri 2026-03-13; Alex Chen confirmed he will send cohort ARR by Monday",
       "found": true,
       "cited": [
         "gmail:75d73520ec4c68f3"
@@ -1262,7 +1262,7 @@
       "question": "how much runway do we have",
       "answer": "I can't find that in the available data.",
       "correct": true,
-      "judge_reason": "correctly abstained",
+      "judge_reason": "ref: Runway information not available; no cash, burn, or runway figures in sources | cand: Cannot find that in available data",
       "found": false,
       "cited": [],
       "cite_recall": 1.0,
@@ -1283,7 +1283,7 @@
       "question": "who's our CFO",
       "answer": "I can't find that in the available data.",
       "correct": true,
-      "judge_reason": "correctly abstained",
+      "judge_reason": "ref: CFO identity not available | cand: Cannot find CFO information in available data",
       "found": false,
       "cited": [],
       "cite_recall": 1.0,

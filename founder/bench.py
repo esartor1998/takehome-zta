@@ -113,6 +113,10 @@ def bench_model(spec, judge, cold=True):
     return out
 
 
+def pct(value):
+    return '-' if value is None else f'{value:.0%}'
+
+
 def render(results):
     cols = [(r['model'].split(':', 1)[1] if r['model'].startswith('ollama') else r['model']) for r in results]
     cols = [f"{r['model']}" for r in results]
@@ -163,6 +167,9 @@ def render(results):
              row('ask citation recall', lambda r: f"{r['ask']['citation_recall']:.0%}"),
              row('ask citation recall, vague (v*)', lambda r: group_recall(r, 'v')),
              row('ask citation precision', lambda r: f"{r['ask']['citation_precision']:.0%}"),
+             row('ask answers with a citation flag', lambda r: str(r['ask'].get('flagged_answers', '-'))),
+             row('ask flag precision (flagged and judged wrong)', lambda r: pct(r['ask'].get('flag_precision'))),
+             row('ask flag recall (wrong answers that were flagged)', lambda r: pct(r['ask'].get('flag_recall'))),
              row('ask forbidden cites', lambda r: str(r['ask']['forbidden_cites'])),
              row('ask uncited sentences', lambda r: str(r['ask']['ungrounded_sentences'])),
              row('ask latency p50 (s)', lambda r: f"{r['ask']['latency_p50']:.1f}"),
@@ -180,6 +187,24 @@ def render(results):
              row('whole benchmark wall time (s)', lambda r: f"{r['ingest']['seconds'] + r['brief']['seconds'] + r['ask']['wall_seconds']:.0f}"),
              row('judge cost for this run ($)', lambda r: f"{r['judge_usage']['cost']:.4f}")]
     return '\n'.join(lines)
+
+
+def rejudge_all(judge):
+    """Re-grade every saved answer with the current judge, leaving the answers,
+    times and costs as they were. Used when the grading rule changes, so the
+    four columns stay comparable without re-running four models"""
+    questions = {q['id']: q for q in json.loads(evaluate.QUESTIONS_PATH.read_text())}
+    for path in sorted(MODELS_DIR.glob('*.json')):
+        data = json.loads(path.read_text())
+        llm.reset_usage()
+        for row in data['rows']:
+            q = questions[row['id']]
+            row['correct'], row['judge_reason'] = evaluate.judge(q['question'], q['reference'], row['answer'], judge)
+        kept = {k: data['ask'][k] for k in ('wall_seconds', 'warm_seconds') if k in data['ask']}
+        data['ask'] = {**evaluate.summarize(data['rows'], judge), **kept}
+        data['judge'] = judge
+        path.write_text(json.dumps(data, indent=2))
+        print(f"{data['model']}: accuracy {data['ask']['accuracy']:.0%}")
 
 
 def load_all():

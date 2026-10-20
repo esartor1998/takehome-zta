@@ -67,17 +67,6 @@ def judge(question, reference, candidate, model):
     return bool(parsed['correct']), f"ref: {parsed['reference_key_fact']} | cand: {parsed['candidate_says']}"
 
 
-def apply_abstention(question, found, correct, reason):
-    """Abstention is a fact about the run (the system said it could not find
-    it), not an opinion. the 3B judge passed 'I cannot find that' for answerable
-    questions, so this overrides it in both directions"""
-    if question['answerable'] and not found:
-        return False, 'abstained on an answerable question'
-    if not question['answerable']:
-        return (not found), ('correctly abstained' if not found else 'answered an unanswerable question')
-    return correct, reason
-
-
 def citation_scores(question, result):
     cited = set(result['cited'])
     groups = question['expected_ids']
@@ -101,8 +90,7 @@ def rejudge(path, judge_model=None):
     data = json.loads(path.read_text())
     for row in data['rows']:
         q = questions[row['id']]
-        correct, reason = judge(q['question'], q['reference'], row['answer'], judge_model)
-        row['correct'], row['judge_reason'] = apply_abstention(q, row['found'], correct, reason)
+        row['correct'], row['judge_reason'] = judge(q['question'], q['reference'], row['answer'], judge_model)
     data['summary'] = summarize(data['rows'], judge_model)
     return data
 
@@ -119,13 +107,12 @@ def run(judge_model=None, only=None, save=True):
     for q in questions:
         result = answer.ask(conn, q['question'])
         correct, reason = judge(q['question'], q['reference'], result['answer'], judge_model)
-        correct, reason = apply_abstention(q, result['found'], correct, reason)
         cites = citation_scores(q, result)
         rows.append({
             'id': q['id'], 'category': q['category'], 'question': q['question'],
             'answer': result['answer'], 'correct': correct, 'judge_reason': reason,
             'found': result['found'], 'cited': result['cited'], **{f'cite_{k}': v for k, v in cites.items()},
-            'ungrounded': len(result['ungrounded_sentences']), 'cites_dropped': result['cites_dropped'], 'cites_added': result['cites_added'], 'seconds': result['seconds'],
+            'ungrounded': len(result['ungrounded_sentences']), 'flags': result.get('flags', []), 'cites_dropped': result['cites_dropped'], 'cites_added': result['cites_added'], 'seconds': result['seconds'],
             'prompt_tokens': result['prompt_tokens'], 'completion_tokens': result['completion_tokens'],
             'cost': result['cost'], 'projected_cost': result['projected_cost'],
         })
@@ -155,6 +142,7 @@ def summarize(rows, judge_model):
         'latency_p95': secs[min(len(secs) - 1, int(round(0.95 * (len(secs) - 1))))],
         'latency_mean': mean(secs), 'schema_failures': llm.COUNTERS['schema_failures'],
         'refusals': sum(not r['found'] for r in rows),
+        **flag_quality(rows),
         'latency_over_budget': sum(s > BUDGET_SECONDS for s in secs),
         'tokens_in_mean': mean(r['prompt_tokens'] for r in rows),
         'tokens_out_mean': mean(r['completion_tokens'] for r in rows),
@@ -162,6 +150,20 @@ def summarize(rows, judge_model):
         'actual_cost_mean': mean(r['cost'] for r in rows),
         'actual_cost_total': sum(r['cost'] for r in rows),
     }
+
+
+def flag_quality(rows):
+    """Does the citation flag mean anything? An answer is flagged when a claim's
+    citation did not hold and the model could not repair it. Flag precision is the
+    share of flagged answers the judge also marked wrong, and flag recall is the
+    share of wrong answers that carried a flag. Both are low-count numbers on 41
+    questions, so read them as direction"""
+    flagged = [r for r in rows if r.get('flags')]
+    wrong = [r for r in rows if not r['correct']]
+    both = [r for r in flagged if not r['correct']]
+    return {'flagged_answers': len(flagged), 'flag_precision': len(both) / len(flagged) if flagged else None,
+            'flag_recall': len(both) / len(wrong) if wrong else None,
+            'flags_total': sum(len(r.get('flags', [])) for r in rows)}
 
 
 def render_summary(s):

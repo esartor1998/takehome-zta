@@ -22,7 +22,11 @@ def cmd_ask(args):
     conn = _ready()
     result = answer.ask(conn, ' '.join(args.question))
     print(result['answer'])
-    if result['ungrounded_sentences']:
+    if result.get('flags'):
+        print(f"\nCheck before relying on this ({len(result['flags'])}):")
+        for flag in result['flags']:
+            print(f"- {flag['claim'][:140]}  [{flag['verdict']}: {flag['reason']}]")
+    elif result['ungrounded_sentences']:
         print(f"\n(warning: {len(result['ungrounded_sentences'])} sentence(s) without a valid citation)")
     print(f"\n{result['seconds']:.1f}s, {result['prompt_tokens']}+{result['completion_tokens']} tokens")
 
@@ -43,10 +47,20 @@ def cmd_eval(args):
 
 def cmd_bench(args):
     from . import bench
-    if args.report:
+    if args.rejudge:
+        bench.rejudge_all(args.judge)
+        bench.report()
+    elif args.report:
         bench.report()
     else:
         bench.run(args.models, args.judge, cold=not args.warm_cache)
+
+
+def cmd_ablate(args):
+    from . import ablate
+    if args.model:
+        config.use_model(args.model)
+    ablate.run(e2e=args.e2e, judge=args.judge)
 
 
 def cmd_chat(args):
@@ -81,12 +95,18 @@ def main(argv=None):
     ev.add_argument('--only', nargs='*', help='question ids to run')
     ev.set_defaults(func=cmd_eval)
     bn = sub.add_parser('bench', help='run ingest, brief and eval on each model and compare')
+    bn.add_argument('--rejudge', action='store_true', help='re-grade saved answers with the current judge')
     bn.add_argument('--report', action='store_true', help='re-render the table from saved results')
     bn.add_argument('models', nargs='*', help="e.g. ollama:llama3.2:latest anthropic:claude-haiku-4-5-20251001")
     bn.add_argument('--judge', default='anthropic:claude-haiku-4-5-20251001',
                     help='fixed judge for every model (default: hosted haiku)')
     bn.add_argument('--warm-cache', action='store_true', help='reuse cached ingest labels')
     bn.set_defaults(func=cmd_bench)
+    ab = sub.add_parser('ablate', help='switch retrieval pulls off one at a time and measure the evidence')
+    ab.add_argument('--e2e', action='store_true', help='also answer and grade with the vector pull on and off')
+    ab.add_argument('--model', help='model whose store and answers to use (default: current)')
+    ab.add_argument('--judge', help='judge for --e2e (default: the answering model)')
+    ab.set_defaults(func=cmd_ablate)
     sub.add_parser('chat', help='interactive questions').set_defaults(func=cmd_chat)
 
     args = parser.parse_args(argv)

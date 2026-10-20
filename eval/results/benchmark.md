@@ -16,9 +16,9 @@ judge: `anthropic:claude-haiku-4-5-20251001` for every column. questions: 41.
 | brief invalid ids | 0 | 0 | 0 | 0 |
 | brief stale record called out | yes | yes | yes | yes |
 | brief meeting in focus | yes | NO | NO | yes |
-| **ask** accuracy (judge) | 78% | 63% | 71% | 61% |
+| **ask** accuracy (judge) | 78% | 63% | 71% | 63% |
 | ask accuracy, original questions (q*) | 15/18 | 12/18 | 12/18 | 12/18 |
-| ask accuracy, vague questions (v*) | 17/23 | 14/23 | 17/23 | 13/23 |
+| ask accuracy, vague questions (v*) | 17/23 | 14/23 | 17/23 | 14/23 |
 | ask citation recall | 90% | 90% | 91% | 90% |
 | ask citation recall, vague (v*) | 87% | 89% | 91% | 89% |
 | ask citation precision | 64% | 64% | 67% | 61% |

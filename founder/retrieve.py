@@ -334,15 +334,19 @@ def pull_structured(conn, question, intents, window, people, extras=None):
 
 # ---- fusion ----------------------------------------------------------------
 
-def fuse(pulls):
+def fuse(pulls, weights=None):
+    weights = {**PULL_WEIGHTS, **(weights or {})}
     scores = {}
     for name, ranked in pulls.items():
         for rank, item_id in enumerate(ranked):
-            scores[item_id] = scores.get(item_id, 0.0) + PULL_WEIGHTS[name] / (RRF_K + rank + 1)
+            scores[item_id] = scores.get(item_id, 0.0) + weights[name] / (RRF_K + rank + 1)
     return sorted(scores, key=scores.get, reverse=True)
 
 
-def retrieve(conn, question, k=10, plan=None):
+def retrieve(conn, question, k=10, plan=None, disable=None, weights=None):
+    """disable names pulls to skip and weights overrides their fusion weights, both
+    for the ablation tests. by default they come from the FOUNDER_DISABLE setting"""
+    disable = set(config.DISABLED_PULLS if disable is None else disable)
     window = time_window(question)
     intents = detect_intents(question)
     people = mentioned_people(conn, question)
@@ -357,18 +361,18 @@ def retrieve(conn, question, k=10, plan=None):
             intents.add('blocked')
     extras = {}
     pulls = {
-        'fts': pull_fts(conn, search_text),
-        'vector': pull_vector(conn, search_text),
-        'window': pull_fts(conn, search_text, window) if window else [],
-        'person': pull_person(conn, people - {config.FOUNDER_PERSON_ID}, question),
-        'structured': pull_structured(conn, question, intents, window, people, extras),
+        'fts': [] if 'fts' in disable else pull_fts(conn, search_text),
+        'vector': [] if 'vector' in disable else pull_vector(conn, search_text),
+        'window': pull_fts(conn, search_text, window) if window and 'window' not in disable else [],
+        'person': [] if 'person' in disable else pull_person(conn, people - {config.FOUNDER_PERSON_ID}, question),
+        'structured': [] if 'structured' in disable else pull_structured(conn, question, intents, window, people, extras),
     }
-    named = pull_named_events(conn, question)
-    refs = pull_named_refs(conn, question)
+    named = pull_named_events(conn, question) if 'structured' not in disable else []
+    refs = pull_named_refs(conn, question) if 'structured' not in disable else []
     pulls['structured'] = list(dict.fromkeys(refs + named + pulls['structured']))
-    if plan and plan.kind == 'person':
+    if plan and plan.kind == 'person' and 'structured' not in disable:
         pulls['structured'] = pull_person_activity(conn, [p for p in plan.people])
-    ranked = fuse(pulls)
+    ranked = fuse(pulls, weights)
 
     # one slot per duplicate group. the canonical copy represents the group and
     # lists where else it was posted, so a repost does not eat the budget

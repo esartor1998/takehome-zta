@@ -175,9 +175,9 @@
   },
   "ask": {
     "questions": 41,
-    "model": "ollama:qwen3.6:35b-a3b",
+    "model": "ollama:llama3.2:latest",
     "judge_model": "anthropic:claude-haiku-4-5-20251001",
-    "accuracy": 0.6097560975609756,
+    "accuracy": 0.6341463414634146,
     "citation_recall": 0.9044715447154471,
     "citation_precision": 0.6116434378629501,
     "forbidden_cites": 1,
@@ -194,8 +194,8 @@
     "projected_cost_mean": 0.0008974146341463415,
     "actual_cost_mean": 0.0,
     "actual_cost_total": 0.0,
-    "warm_seconds": 4.025202035903931,
-    "wall_seconds": 634.5541112422943
+    "wall_seconds": 634.5541112422943,
+    "warm_seconds": 4.025202035903931
   },
   "retries": 0,
   "judge_usage": {
@@ -316,7 +316,7 @@
       "question": "What is the exact revenue impact of the v2 API delay?",
       "answer": "I can't find that in the available data. The provided context items discuss authentication decisions (OAuth vs API keys) and general metrics like error rates and latency, but contain no revenue figures or impact analysis for a v2 API delay. Items , , , and  are marked SUPERSEDED and should not be relied upon as current state. The current status is OAuth-only per item  and [gmail:ceece9b31878fe40] [linear:ACME-142@20260314T2200].",
       "correct": true,
-      "judge_reason": "correctly abstained",
+      "judge_reason": "ref: Revenue impact of v2 API delay not available | cand: Cannot find revenue figures or impact analysis in available data",
       "found": false,
       "cited": [],
       "cite_recall": 1.0,
@@ -463,7 +463,7 @@
       "question": "Who is out of office this week and who has context on billing?",
       "answer": "Daniel Kim is out of office from March 10\u201314 [calendar:b2906b68d5b89b412dce4976fd]. Priya Nair has context on billing during his absence [gmail:469b8c07901db7d8] [slack:C03GEN:1773068400.685084]. The billing cutover date was updated to March 31, superseding the earlier plan for March 24 [notion:0f8a538c21e4ef3f1024c7d25666cd47]. Omar Haddad owns the billing migration and is handling Ledgerly questions while Daniel is away [notion:0f8a538c21e4ef3f1024c7d25666cd47] [slack:C01ENG:1773151200.499797]. The Notion page listing March 24 as the cutover date is stale and should not be relied upon [notion:0f8a538c21e4ef3f1024c7d25666cd47].",
       "correct": true,
-      "judge_reason": "ref: Daniel Kim out Mar 10-14; Priya Nair has billing context | cand: Daniel Kim out Mar 10-14; Priya Nair has billing context; billing cutover Mar 31; Omar Haddad owns migration",
+      "judge_reason": "ref: Daniel Kim out Mar 10-14; Priya Nair has billing context | cand: Daniel Kim out Mar 10-14; Priya Nair has billing context; billing cutover Mar 31",
       "found": true,
       "cited": [
         "calendar:b2906b68d5b89b412dce4976fd",
@@ -692,7 +692,7 @@
       "question": "what's on today",
       "answer": "Today (Sunday Mar 15):\n- all day Offsite travel with Priya Nair, Marcus Webb, Sofia Reyes, Daniel Kim (in progress; flights, see the offsite doc) [calendar:f99876efd6449d8ae5bf15d181]\n- 09:30-09:45 UTC Standup with Priya Nair, Marcus Webb, Sofia Reyes, Daniel Kim (already happened) [calendar:c5457a3e77f0e609f8407d2ecf]\n- 11:00-11:45 UTC Investor update prep with Priya Nair (already happened) [calendar:cb4d6cb65474560e2b3602e163]\n- 15:00-15:30 UTC 1:1 Marcus with Marcus Webb (CANCELLED; cancelled, Marcus is covering the Globex fix) [calendar:0b466c05a14a1a7932b277708b]\n- 16:00-17:00 UTC Weekly Product Sync with Priya Nair, Marcus Webb, Hannah Park (rescheduled from Fri Mar 13) [calendar:2ded3454537257a5518fa9905e]\n- 17:30-18:00 UTC Globex check-in with Marcus Webb, Daniel Foster (Globex) (10:30 Los Angeles time; customer check-in about SSO and the Mar 23 rollout). Before it: Daniel Foster (Globex) is waiting on you: confirm a fix ships before Mar 20; Globex SSO redirect loop is Reopened; Globex integration is Blocked [calendar:bbeda5b103cb82876dd4651501][gmail:bee95ff7ca51c987]\n- 19:00-20:00 UTC Board prep with Priya Nair (tentative) [calendar:de4afcd47267780be961f09a4f]",
       "correct": true,
-      "judge_reason": "ref: Today (Sunday Mar 15): all-day Offsite travel; 09:30 Standup (done); 11:00 Investor update prep (done); 15:00 1:1 Marcus CANCELLED; 16:00 Weekly Product Sync (moved from Friday); 17:30 Globex check-in; 19:00 Board prep (tentative) | cand: All events listed with same times, statuses, and cancellation. Candidate adds attendee names, calendar IDs, and additional context details not in reference.",
+      "judge_reason": "ref: Today's schedule: all-day offsite, standup (done), investor prep (done), 1:1 Marcus cancelled, product sync, Globex check-in, board prep | cand: Same events with additional details: attendees, times, status, and context about Globex issues and Daniel Foster's waiting items",
       "found": true,
       "cited": [
         "calendar:f99876efd6449d8ae5bf15d181",
@@ -951,7 +951,7 @@
       "question": "catch me up",
       "answer": "The billing cutover is set for Mar 31 [gmail:bfda57e5a3e21af0]. The v2 API will ship with OAuth only [linear:ACME-142@20260314T2200]. Q1 roadmap dates are now Mar 22 [slack:C02PROD:1772640000.222201]. A meeting is scheduled for Sun Mar 15 16:00 UTC [slack:C03GEN:1773172800.739474]. Pricing for new customers is $59/seat [linear:ACME-441@20260313T1900]. Globex SSO redirect loop plan is reopening ACME-431 [slack:C04INC:1773339300.924615]. The seed extension closing date cannot be before May 15, superseding the previous Apr 30 target [slack:C07FUND:1773421200.357681] [notion:d66e87731f6d486a58818da6ad1da108].",
       "correct": false,
-      "judge_reason": "ref: v2 auth OAuth only, billing Mar 31, pricing $59/$49, seed May 15, Taylor Brooks dead, Globex SSO loop | cand: Billing Mar 31, v2 OAuth only, pricing $59, seed May 15, Globex SSO loop reopening. Missing: Taylor Brooks offer status, existing customer pricing.",
+      "judge_reason": "ref: v2 auth OAuth only, billing Mar 31, pricing $59/$49, seed May 15, Taylor Brooks dead, Globex SSO loop | cand: Billing Mar 31, v2 OAuth only, pricing $59 new, Globex SSO loop, seed May 15",
       "found": true,
       "cited": [
         "gmail:bfda57e5a3e21af0",
@@ -981,7 +981,7 @@
       "question": "what's blocked",
       "answer": "12 blocked issues, 5 yours:\n- ACME-365 Rate limit tuning (yours, urgent) [linear:ACME-365@20260222T0500]\n- ACME-342 Add pagination (yours, high) [linear:ACME-342@20260225T0900]\n- ACME-349 Rate limit tuning (yours, high) [linear:ACME-349@20260307T0900]\n- ACME-352 Update dependency (yours, high) [linear:ACME-352@20260225T1100]\n- ACME-316 Billing webhook retry (yours, no priority) [linear:ACME-316@20260219T1200]\n- ACME-363 Rate limit tuning (owner Alex C. Morgan, urgent) [linear:ACME-363@20260220T1200]\n- ACME-311 Billing webhook retry (owner Omar Haddad, urgent) [linear:ACME-311@20260225T0900]\n- ACME-371 Fix flaky test (owner Daniel Kim, urgent) [linear:ACME-371@20260228T1900]\n- ACME-331 Update dependency (owner Sofia Reyes, urgent) [linear:ACME-331@20260302T0900]\n- ACME-325 Rate limit tuning (owner Marcus Webb, urgent) [linear:ACME-325@20260308T0500]\n- ACME-304 Fix flaky test (owner Sofia Reyes, urgent) [linear:ACME-304@20260314T2200]\n- ACME-328 Rate limit tuning (owner Hannah Park, high) [linear:ACME-328@20260219T1200]",
       "correct": false,
-      "judge_reason": "ref: Blocked issues: yours are ACME-316, ACME-342, ACME-349, ACME-352, ACME-365; ACME-433 blocked by ACME-420 | cand: Lists 12 blocked issues including the 5 yours (ACME-316, ACME-342, ACME-349, ACME-352, ACME-365) but includes ACME-363 instead of ACME-433 blocked by ACME-420",
+      "judge_reason": "ref: Blocked issues: yours are ACME-316, ACME-342, ACME-349, ACME-352, ACME-365; ACME-433 blocked by ACME-420 | cand: Lists 12 blocked issues including the 5 yours correctly, but adds 7 others not mentioned in reference",
       "found": true,
       "cited": [
         "linear:ACME-365@20260222T0500",
@@ -1093,7 +1093,7 @@
       "question": "when do we close the round",
       "answer": "Jordan states the round cannot close before May 15 due to partner calendar constraints [slack:C07FUND:1773421200.357681]. This updates the previous plan which targeted an April 30 close [notion:d66e87731f6d486a58818da6ad1da108]. The Seed extension plan is now stale because Jordan\u2019s update supersedes it [notion:d66e87731f6d486a58818da6ad1da108]. Omar previously noted Ledgerly wanted closure before signing anything over $50k, but that timeline has passed [slack:C07FUND:1773255600.389065]. Priya Nair owns the fundraising effort and is updating the plan accordingly [slack:C07FUND:1773421200.357681].",
       "correct": true,
-      "judge_reason": "ref: Round closes May 15, per Jordan at Northwind | cand: Round cannot close before May 15 due to partner calendar constraints per Jordan",
+      "judge_reason": "ref: Round closes May 15, per Jordan at Northwind | cand: Round cannot close before May 15 due to partner calendar constraints; updates previous April 30 plan",
       "found": true,
       "cited": [
         "slack:C07FUND:1773421200.357681",
@@ -1118,7 +1118,7 @@
       "question": "what's the deal with sso",
       "answer": "Globex users experienced SSO redirect loops starting March 3 [gmail:c15f3037c23a7d15]. Marcus Webb fixed the issue via PR #218, which was merged on March 10 [github:acme/api#218] [slack:C04INC:1773142200.224156]. However, the loop recurred for Globex Okta tenants on March 12 [linear:ACME-431@20260312T1800]. Alex Chen is currently reviewing a second fix in PR #231 to resolve this recurrence [github:acme/api#231]. Daniel Foster requires confirmation that a fix ships before March 20 for his rollout [gmail:bee95ff7ca51c987].",
       "correct": true,
-      "judge_reason": "ref: SSO redirect loop reported Mar 3, fixed Mar 10 (PR 218), recurred Mar 12 for Okta users, PR 231 awaiting review before Mar 20 rollout | cand: SSO loop Mar 3, fixed PR 218 Mar 10, recurred Mar 12 for Okta, PR 231 under review, fix needed before Mar 20 rollout",
+      "judge_reason": "ref: Globex SSO redirect loop: reported Mar 3, fixed Mar 10 (PR 218), recurred Mar 12 for Okta users. PR 231 awaiting review. Fix needed before Mar 20 rollout (Mar 23). | cand: SSO loop Mar 3, fixed PR 218 Mar 10, recurred Mar 12 for Okta. PR 231 under review. Fix needed before Mar 20 rollout.",
       "found": true,
       "cited": [
         "gmail:c15f3037c23a7d15",
@@ -1170,7 +1170,7 @@
       "question": "what did mei say",
       "answer": "I can't find that in the available data.",
       "correct": false,
-      "judge_reason": "abstained on an answerable question",
+      "judge_reason": "ref: Mei Tanaka asked about invoice INV-2207 showing 40 seats vs 35 bought | cand: Cannot find that in available data",
       "found": false,
       "cited": [],
       "cite_recall": 0.0,
@@ -1237,8 +1237,8 @@
       "category": "vague_person",
       "question": "who is jordan",
       "answer": "Jordan Pryce asked for cohort ARR before Tuesday's partner meeting to support term sheet discussions [gmail:75d73520ec4c68f3].",
-      "correct": false,
-      "judge_reason": "ref: Jordan Pryce is a partner at Northwind Ventures | cand: Jordan Pryce asked for cohort ARR before Tuesday's partner meeting",
+      "correct": true,
+      "judge_reason": "ref: Jordan Pryce is a partner at Northwind Ventures | cand: Jordan Pryce asked for cohort ARR before partner meeting",
       "found": true,
       "cited": [
         "gmail:75d73520ec4c68f3"
@@ -1261,7 +1261,7 @@
       "question": "how much runway do we have",
       "answer": "I can't find that in the available data.",
       "correct": true,
-      "judge_reason": "correctly abstained",
+      "judge_reason": "ref: Runway information not available; no cash, burn, or runway figures in sources | cand: Cannot find that in available data",
       "found": false,
       "cited": [],
       "cite_recall": 1.0,
@@ -1282,7 +1282,7 @@
       "question": "who's our CFO",
       "answer": "I can't find that in the available data.",
       "correct": true,
-      "judge_reason": "correctly abstained",
+      "judge_reason": "ref: CFO identity not available | cand: Cannot find CFO information in available data",
       "found": false,
       "cited": [],
       "cite_recall": 1.0,
