@@ -1,0 +1,15 @@
+{
+  "must_be_stale": [
+    "notion:d66e87731f6d486a58818da6ad1da108",
+    "notion:5b97d1fb3cdcf59ddcfe591d5807d0dc",
+    "linear:ACME-440@20260306T1500",
+    "notion:0f8a538c21e4ef3f1024c7d25666cd47",
+    "notion:0f72e0247be2673ff5388bb55ebd12b3",
+    "crm:deal:23a551d6fe",
+    "notion:4324f4a965bc64d11787c2369776502e"
+  ],
+  "must_not_be_stale": [
+    "notion:163647759184b558a347537639422466",
+    "linear:ACME-441@20260313T1900"
+  ]
+}

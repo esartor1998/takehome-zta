@@ -14,7 +14,7 @@ import json
 import re
 from datetime import timedelta
 
-from . import config, llm, store
+from . import config, llm, route, store
 
 RRF_K = 60            # standard rrf damping constant
 PULL_WEIGHTS = {'structured': 3.0, 'fts': 1.0, 'vector': 1.0, 'person': 1.0, 'window': 1.0}
@@ -98,8 +98,10 @@ def mentioned_people(conn, question):
 # ---- pulls ---------------------------------------------------------------
 
 def _terms(question):
+    # vague words (saying, going on, anything) say nothing about the topic
+
     words = re.findall(r"[A-Za-z0-9][\w'-]*", question)
-    return [w for w in words if w.lower() not in STOP and len(w) > 1]
+    return [w for w in words if w.lower() not in STOP and w.lower() not in route.FILLER and len(w) > 1]
 
 
 def pull_fts(conn, question, window=None):
@@ -159,6 +161,42 @@ def pull_person(conn, people, question):
         f"SELECT id FROM items WHERE state='current' AND ts <= ? AND author IN ({marks}) "
         'ORDER BY ts DESC LIMIT 20', [_iso(config.NOW), *people])
     return [r['id'] for r in rows]
+
+
+ACTIVITY_DAYS = 14        # how far back 'what is X saying' looks
+ACTIVITY_PER_PERSON = 6   # items per person, so an ambiguous name shows each candidate
+ACTIVITY_KINDS = ('email', 'message', 'comment', 'pr', 'doc', 'note')
+
+
+def pull_person_activity(conn, people, days=ACTIVITY_DAYS):
+    """Recent things written by a person or about them, newest first, one per
+    conversation. Several people (an ambiguous first name) are interleaved so
+    each gets a fair share before the cut"""
+    since = _iso(config.NOW - timedelta(days=days))
+    per_person = []
+    for pid in people:
+        row = conn.execute('SELECT name FROM people WHERE id=?', (pid,)).fetchone()
+        rows = conn.execute(
+            "SELECT id, thread_key, author, title, body, ts, novelty FROM items WHERE state='current' AND ts >= ? AND ts <= ? "
+            f"AND kind IN ({','.join('?' * len(ACTIVITY_KINDS))}) ORDER BY ts DESC", [since, _iso(config.NOW), *ACTIVITY_KINDS])
+        seen, picked = set(), []
+        for r in rows:
+            # a bare first name in text is not enough: everyone says 'daniel'. the
+            # author field or the full name has to agree
+            if r['author'] != pid and row['name'].lower() not in f"{r['title']} {r['body']}".lower():
+                continue
+            if r['thread_key'] in seen:
+                continue
+            seen.add(r['thread_key'])
+            picked.append(r)
+        # the most distinctive items, shown newest first. recency alone gave a
+        # list of template status mail and buried the one message about a deal
+        top = sorted(sorted(picked, key=lambda r: -r['novelty'])[:ACTIVITY_PER_PERSON], key=lambda r: r['ts'], reverse=True)
+        per_person.append([r['id'] for r in top])
+    out = []
+    for group in zip(*[p + [None] * (ACTIVITY_PER_PERSON - len(p)) for p in per_person]) if per_person else []:
+        out += [i for i in group if i]
+    return out
 
 
 def pull_named_events(conn, question):
@@ -289,20 +327,31 @@ def fuse(pulls):
     return sorted(scores, key=scores.get, reverse=True)
 
 
-def retrieve(conn, question, k=10):
+def retrieve(conn, question, k=10, plan=None):
     window = time_window(question)
     intents = detect_intents(question)
     people = mentioned_people(conn, question)
+    search_text = question
+    if plan:
+        # the plan already read the question: who is meant (every Daniel, when only a
+        # first name was given), which day, and which words stand for a family of words
+        people = set(plan.people) | ({config.FOUNDER_PERSON_ID} if plan.mine else set())
+        window = (plan.start, plan.end) if plan.start else window
+        search_text = question + ' ' + ' '.join(plan.expansions)
+        if plan.kind == 'blocked':
+            intents.add('blocked')
     extras = {}
     pulls = {
-        'fts': pull_fts(conn, question),
-        'vector': pull_vector(conn, question),
-        'window': pull_fts(conn, question, window) if window else [],
+        'fts': pull_fts(conn, search_text),
+        'vector': pull_vector(conn, search_text),
+        'window': pull_fts(conn, search_text, window) if window else [],
         'person': pull_person(conn, people - {config.FOUNDER_PERSON_ID}, question),
         'structured': pull_structured(conn, question, intents, window, people, extras),
     }
     named = pull_named_events(conn, question)
     pulls['structured'] = list(dict.fromkeys(named + pulls['structured']))
+    if plan and plan.kind == 'person':
+        pulls['structured'] = pull_person_activity(conn, [p for p in plan.people])
     ranked = fuse(pulls)
 
     # one slot per duplicate group. the canonical copy represents the group and
@@ -319,5 +368,5 @@ def retrieve(conn, question, k=10):
         # noise ('rerunning CI' for a meeting question), so we keep a short tail
         if len(chosen) >= (min(k, len(pulls['structured']) + (0 if 'blocked' in intents or named else 3)) if pulls['structured'] else k):
             break
-    return {'ids': chosen, 'decision_topics': extras.get('decision_topics', []), 'intents': sorted(intents), 'people': sorted(people),
+    return {'ids': chosen, 'plan_kind': plan.kind if plan else '', 'decision_topics': extras.get('decision_topics', []), 'intents': sorted(intents), 'people': sorted(people),
             'window': window, 'pulls': {n: len(v) for n, v in pulls.items()}}

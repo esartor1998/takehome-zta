@@ -4,11 +4,12 @@ The model cites with short numbers like [3]. We map them back to real item ids
 in code, because a 3B model copying a 16 character hex id or a slack ts will
 mangle it sometimes, and a dropped digit is a citation to nothing
 """
+import os
 import re
 import time
 from datetime import datetime
 
-from . import brief, config, llm, retrieve, store
+from . import brief, config, llm, retrieve, route, store
 
 BODY_CHARS = 450
 CANT_FIND = "I can't find that in the available data."
@@ -38,26 +39,43 @@ MODE_HINTS = {
     'cancel': 'Say whether the event is CANCELLED or CONFIRMED. Quote the calendar note for where '
               'or when it moved. Do not invent a reason.',
     'emails': 'List each email as: sender, subject, date. Give the meeting it relates to.',
+    'topic': 'Summarise in three to five sentences: what happened, what is still open, and anything marked '
+             'STALE or CANCELLED that someone might still be relying on.',
     'blocked': 'List each blocked issue as: identifier, title, owner.',
+    'person': 'Summarise what each person said or did recently, newest first, one line each, with the date. '
+              'Cover each person named in the note, separately.',
     'decisions': 'State the current decision first, then what it replaced and who changed it.',
 }
 
-# open questions with no single item as the answer. we answer these from the
+# open questions have no single item as the answer. they are answered from the
 # same verified facts the morning brief is built from, because retrieval over
 # raw items gave 'the PR for the billing migration was merged' (nothing in the
-# data says that) for 'what happened this week'
-DIGEST_INTENTS = (
-    ('followups', r'follow.?ups?|\bmissing\b|waiting on me|unanswered|owe a reply', {'ask'},
-     'Say which asks are still open and which already look handled, with the reason. If none '
-     'is open, say nothing is waiting on you.'),
-    ('customers', r'\bcustomers?\b', {'customer'},
-     'List each customer with how often it came up.'),
-    ('focus', r'\bfocus\b|priorit\w+|what should i (do|work)', None,
-     'Give up to 3 priorities, most urgent first, one line each. Skip items marked no action needed.'),
-    ('company', r'across the company|what happened|what.s going on|company', None,
-     'Summarise each item in one sentence, most important first.'),
-)
+# data says that) for 'what happened this week'. instructions say what a good
+# answer to each kind of question covers: a bare 'what should I know' makes a
+# 3B model refuse, and 'what is on today' needs a list in time order
+DIGESTS = {
+    'schedule': (None, 'List every event in time order with its time, who is in it and anything unusual '
+                       '(cancelled, tentative, all day, already happened, a different time zone). '
+                       'Say what is still to come. If a meeting has a prep note, include it.'),
+    'followups': ({'ask', 'promise'}, 'Two parts. First what people are waiting on you for, with the deadline and '
+                                      'whether it is overdue. Then what you promised and still have open. Mention '
+                                      'asks that are already handled in one short line. If nothing is open, say so.'),
+    'focus': (None, 'Give up to 3 priorities, most urgent first, one line each. Skip items marked no action needed.'),
+    'catchup': (None, 'Summarise the most important items in one sentence each, most important first. '
+                      'Group what changed, what is waiting on you, and what is at risk.'),
+    'customers': ({'customer'}, 'List each customer problem, how many times it was reported, over how many days, '
+                                'and whether a fix came back.'),
+}
 DIGEST_LIMIT = 8
+FOLLOWUP_LIMIT = 12
+SCHEDULE_LIMIT = 14
+
+# these answers are lists of facts the database already holds. a model adds
+# nothing to them and costs seconds, tokens and the occasional wrong line (a
+# cancelled meeting called 'superseded', an open ask listed as handled), so
+# they are rendered by code. FOUNDER_DIGEST=llm sends them through the model
+# anyway, which is how the benchmark compares models on the same facts
+CODE_DIGESTS = ('schedule', 'followups', 'customers')
 
 CITE_RE = re.compile(r'\[(\d+(?:\s*,\s*\d+)*)\]')
 
@@ -72,23 +90,51 @@ def render_item(conn, item, label, people_names):
     """One numbered context entry. Ids stay out of the text on purpose: the
     model quotes headers it can see, and the number is all it needs to cite"""
     row = store.row_to_item(item)
-    author = people_names.get(row['author'], 'unknown sender')
+    author = people_names.get(row['author'], row['meta'].get('from_name') or 'unknown sender')
     tags = []
-    if row['kind'] == 'event':
+    kind = row['kind']
+    if kind == 'event':
         tags.append(row['status'].upper())
         attendees = ', '.join(people_names.get(p, p) for p in row['people'])
-        head = (f"[{label}] calendar event '{row['title']}', {_when(row['start'])} to "
-                f"{_when(row['end'])}, attendees: {attendees}, organizer: {author}")
-    elif row['kind'] == 'email':
+        if 'all_day' in row['flags']:
+            when = f"all day {row['start'][:10]}"
+        else:
+            when = f"{_when(row['start'])} to {_when(row['end'])}"
+            zone, local = row['meta'].get('time_zone', ''), row['meta'].get('start_local', '')
+            if zone and zone != 'UTC' and 'T' in local:
+                when += f" ({local[11:16]} local time in {zone})"
+        head = f"[{label}] calendar event '{row['title']}', {when}, attendees: {attendees}, organizer: {author}"
+    elif kind == 'email':
         head = f"[{label}] email from {author}, {_when(row['ts'])}, subject: {row['title']}"
-    elif row['kind'] == 'message':
+        if 'forwarded' in row['flags']:
+            tags.append('forwarded message')
+    elif kind == 'message':
         head = f"[{label}] slack {row['title']} message from {author}, {_when(row['ts'])}"
+    elif kind == 'pr':
+        head = (f"[{label}] github pull request #{row['meta']['number']} in {row['meta']['repo']} "
+                f"({row['status']}) by {author}, updated {_when(row['ts'])}, title: {row['title']}")
+        if row['people']:
+            tags.append('review requested from ' + ', '.join(people_names.get(p, p) for p in row['people']))
+    elif kind == 'comment':
+        head = f"[{label}] github comment from {author}, {_when(row['ts'])}, on {row['title']}"
+    elif kind == 'doc':
+        head = f"[{label}] notion page '{row['title']}', last edited {_when(row['ts'])} by {author}"
+    elif kind == 'deal':
+        head = f"[{label}] crm deal '{row['title']}' ({row['status']}), last updated {_when(row['ts'])}, owner {author}"
+    elif kind == 'note':
+        head = f"[{label}] crm note, {_when(row['ts'])}, {row['title']}"
     else:
         head = (f"[{label}] linear issue {row['meta'].get('identifier')} ({row['status']}), "
                 f"owner {author}, updated {_when(row['ts'])}, title: {row['title']}")
 
     decision = conn.execute('SELECT * FROM decisions WHERE item_id=?', (row['id'],)).fetchone()
-    if decision:
+    stale = conn.execute('SELECT s.current_fact, n.ts, n.source FROM stale_records s '
+                         'JOIN items n ON n.id = s.newer_id WHERE s.item_id=?', (row['id'],)).fetchone()
+    if stale:
+        newer = f", for example: {stale['current_fact']}" if stale['current_fact'] else ''
+        tags.append(f"STALE: newer information from {stale['source']} on {stale['ts'][:10]} changes this{newer}. "
+                    'this record is NOT up to date')
+    elif decision:
         if decision['status'] == 'stale':
             tags.append('STALE: this record still states a value that was corrected later, '
                         'so it is NOT up to date')
@@ -101,10 +147,11 @@ def render_item(conn, item, label, people_names):
         tags.append('same update also posted in ' + ', '.join(
             f"{r['source']} {r['title']}" for r in siblings))
     if row['flags']:
-        tags.append('data issues: ' + ','.join(row['flags']))
+        tags.append('data issues: ' + ','.join(f for f in row['flags'] if f not in ('all_day', 'forwarded')))
+        tags = [t for t in tags if t != 'data issues: ']
     line = head + (f" ({'; '.join(tags)})" if tags else '')
     body = row['body'][:BODY_CHARS]
-    if row['kind'] == 'event' and body:
+    if kind == 'event' and body:
         body = f'calendar note: {body}'
     return f"{line}\n    {body}"
 
@@ -190,7 +237,8 @@ def decision_timelines(conn, topics, limit=2):
 
 
 def build_context(conn, ids, timelines=()):
-    names = {r['id']: r['name'] for r in conn.execute('SELECT id, name FROM people')}
+    names = {r['id']: (f"{r['name']} ({r['org']})" if r['org'] else r['name'])
+             for r in conn.execute('SELECT id, name, org FROM people')}
     labels, lines = {}, []
     for text, cite_id in timelines:
         number = len(labels) + 1
@@ -272,27 +320,56 @@ def verify(text, labels):
     return mapped, list(dict.fromkeys(cited)), ungrounded
 
 
-def digest_facts(conn, question):
-    """(intent, facts) when the question is an open one, else None"""
-    for name, pattern, cats, instruction in DIGEST_INTENTS:
-        if re.search(pattern, question, re.I):
-            facts = brief.collect_facts(conn)
-            if cats:
-                facts = [f for f in facts if f['cat'] in cats]
-            return name, facts[:DIGEST_LIMIT], instruction
-    return None
+def digest_facts(conn, plan, question):
+    """(kind, facts, instruction) when the plan calls for a digest, else None"""
+    kind = plan.kind
+    if re.search(r'\bcustomers?\b.*\b(issues?|problems?|repeat\w*|complain\w*)\b', question, re.I):
+        kind = 'customers'
+    if kind not in DIGESTS:
+        return None
+    cats, instruction = DIGESTS[kind]
+    if kind == 'schedule':
+        return kind, brief.schedule_facts(conn, plan.start, plan.end)[:SCHEDULE_LIMIT], instruction
+    facts = brief.collect_facts(conn)
+    if cats:
+        facts = [f for f in facts if f['cat'] in cats]
+    elif kind == 'catchup':
+        facts = [f for f in facts if f['cat'] != 'schedule']
+    if kind == 'followups':
+        # asks with a deadline first, then the rest. facts are already scored
+        facts = [f for f in facts if f['cat'] in ('ask', 'promise')]
+    return kind, facts[:FOLLOWUP_LIMIT if kind == 'followups' else DIGEST_LIMIT], instruction
+
+
+def ambiguity_note(conn, plan):
+    """A bare first name that fits several people. We answer for all of them and
+    say which is which, since guessing wrong is worse than a longer answer"""
+    parts = []
+    for alias, ids in plan.ambiguous.items():
+        who = ', '.join(
+            (lambda r: f"{r['name']} ({r['org'] or 'teammate'})")(
+                conn.execute('SELECT name, org FROM people WHERE id=?', (i,)).fetchone()) for i in ids)
+        parts.append(f"'{alias}' could mean {who}")
+    return 'Note: ' + '; '.join(parts) + '. Answer for each of them and label which is which.'
 
 
 def ask(conn, question, k=10):
     started = time.time()
-    digest = digest_facts(conn, question)
+    plan = route.plan(conn, question)
+    digest = digest_facts(conn, plan, question)
     if digest:
-        return ask_digest(conn, question, digest, started)
-    found = retrieve.retrieve(conn, question, k=k)
+        return ask_digest(conn, question, digest, started, plan)
+    found = retrieve.retrieve(conn, question, k=k, plan=plan)
     intents = list(found['intents'])
+    if plan.kind == 'person':
+        intents.append('person')
+    elif plan.kind == 'topic' and not plan.people:
+        intents.append('topic')
     if re.search(r'\bemails?\b', question, re.I) and 'meetings' in intents:
         intents.append('emails')
     hints = ' '.join(MODE_HINTS[i] for i in intents if i in MODE_HINTS)
+    if plan.ambiguous:
+        hints += ' ' + ambiguity_note(conn, plan)
     ids = expand_decision_context(conn, found['ids'], found['decision_topics'])
     if re.search(r'\bemails?\b', question, re.I):
         # a question about emails gets emails and the events they relate to,
@@ -316,8 +393,38 @@ def ask(conn, question, k=10):
     }
 
 
-def ask_digest(conn, question, digest, started):
+def render_digest(name, facts, plan_label=''):
+    """A digest as plain text with citations, no model involved"""
+    def cite(f):
+        return ''.join(f'[{i}]' for i in f['ids'][:2])
+
+    if name == 'schedule':
+        lines = [f"{plan_label}:"] + [f"- {f['text']} {cite(f)}" for f in facts]
+        return '\n'.join(lines)
+    if name == 'followups':
+        asks = [f for f in facts if f['cat'] == 'ask' and not f['handled']]
+        promises = [f for f in facts if f['cat'] == 'promise' and not f['handled']]
+        done = [f for f in facts if f['handled']]
+        lines = ['Waiting on you:'] + ([f"- {f['text']} {cite(f)}" for f in asks] or ['- nothing'])
+        lines += ['', 'You said you would:'] + ([f"- {f['text']} {cite(f)}" for f in promises] or ['- nothing'])
+        if done:
+            lines += ['', 'Already handled:'] + [f"- {f['text']} {cite(f)}" for f in done[:3]]
+        return '\n'.join(lines)
+    return '\n'.join(f"- {f['text']} {cite(f)}" for f in facts)
+
+
+def ask_digest(conn, question, digest, started, plan=None):
     name, facts, instruction = digest
+    if name in CODE_DIGESTS and os.environ.get('FOUNDER_DIGEST', 'code') == 'code' and facts:
+        label = (plan.day_label if plan and plan.day_label else 'today')
+        day = (plan.start if plan and plan.start else config.NOW)
+        text = render_digest(name, facts, f"{label.capitalize()} ({day.strftime('%A %b %-d')})")
+        cited = [i for f in facts for i in f['ids'][:2]]
+        return {'question': question, 'answer': text, 'cited': list(dict.fromkeys(cited)), 'found': True,
+                'cites_dropped': 0, 'cites_added': 0, 'ungrounded_sentences': [],
+                'retrieved': [i for f in facts for i in f['ids']], 'intents': [name], 'pulls': {'digest': len(facts)},
+                'prompt_tokens': 0, 'completion_tokens': 0, 'cost': 0.0, 'projected_cost': 0.0,
+                'seconds': time.time() - started}
     if not facts:
         return {'question': question, 'answer': 'Nothing needs your attention here.', 'cited': [],
                 'found': True, 'cites_dropped': 0, 'cites_added': 0, 'ungrounded_sentences': [],
@@ -329,7 +436,7 @@ def ask_digest(conn, question, digest, started):
         # cannot disagree about what matters today
         text, cited, result = brief.focus_section(facts)
         if result is None:
-            return ask_digest(conn, question, (name, [], instruction), started)
+            return ask_digest(conn, question, (name, [], instruction), started, plan)
         return {'question': question, 'answer': text, 'cited': cited, 'found': True,
                 'cites_dropped': 0, 'cites_added': 0, 'ungrounded_sentences': [],
                 'retrieved': [i for f in facts for i in f['ids']], 'intents': [name],

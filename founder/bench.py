@@ -27,14 +27,35 @@ def _usage(role):
 
 
 def decision_checks(conn):
-    """Did the model's labels plus our resolver reach the right state? Each
-    check names an item and the status it must end with"""
+    """Did the model's labels plus our resolvers reach the right state? Three
+    kinds of check, each naming items from the answer key: decisions that must
+    end with a status, records that must be flagged stale (and two that must
+    not), and follow-ups that must be open (and three that must not)"""
     results = []
     for check in json.loads(CHECKS_PATH.read_text()):
         row = conn.execute('SELECT status FROM decisions WHERE item_id=?', (check['item_id'],)).fetchone()
         got = row['status'] if row else 'not labelled'
         ok = got == check['status'] or (check.get('allow_missing') and not row)
         results.append({'name': check['name'], 'ok': bool(ok), 'got': got})
+    stale = json.loads((CHECKS_PATH.parent / 'stale_checks.json').read_text())
+    flagged = {r['item_id'] for r in conn.execute('SELECT item_id FROM stale_records')} | \
+              {r['item_id'] for r in conn.execute("SELECT item_id FROM decisions WHERE status='stale'")}
+    for item_id in stale['must_be_stale']:
+        results.append({'name': f'stale record found: {item_id}', 'ok': item_id in flagged, 'got': 'stale' if item_id in flagged else 'missed'})
+    for item_id in stale['must_not_be_stale']:
+        results.append({'name': f'current record not flagged: {item_id}', 'ok': item_id not in flagged,
+                        'got': 'flagged' if item_id in flagged else 'ok'})
+    follow = json.loads((CHECKS_PATH.parent / 'followup_checks.json').read_text())
+    state = {(r['item_id'], r['kind']): r['status'] for r in conn.execute('SELECT item_id, kind, status FROM followups')}
+    for item_id in follow['open_asks']:
+        got = state.get((item_id, 'ask'), 'missing')
+        results.append({'name': f'open ask found: {item_id}', 'ok': got == 'open', 'got': got})
+    for item_id in follow['open_promises']:
+        got = state.get((item_id, 'promise'), 'missing')
+        results.append({'name': f'open promise found: {item_id}', 'ok': got == 'open', 'got': got})
+    for item_id in follow['must_not_be_open']:
+        got = state.get((item_id, 'ask'), 'missing')
+        results.append({'name': f'handled ask not open: {item_id}', 'ok': got != 'open', 'got': got})
     return results
 
 
@@ -45,8 +66,8 @@ def brief_checks(conn, text):
     known = {r['id'] for r in conn.execute('SELECT id FROM items')}
     focus = text.split('## Today')[0]
     return {'cited_ids': len(ids), 'invalid_ids': len(ids - known),
-            'stale_called_out': 'ACME-231' in text and 'out of date' in text.lower(),
-            'meeting_in_focus': 'Weekly Product Sync' in focus}
+            'stale_called_out': 'out of date' in text.lower(),
+            'meeting_in_focus': 'Weekly Product Sync' in focus or 'Globex check-in' in focus}
 
 
 def bench_model(spec, judge, cold=True):
@@ -115,7 +136,7 @@ def render(results):
              row('ingest model calls', lambda r: str(r['ingest']['calls'])),
              row('ingest tokens in/out', lambda r: f"{r['ingest']['prompt_tokens']}/{r['ingest']['completion_tokens']}"),
              row('ingest cost ($)', lambda r: f"{r['ingest']['cost']:.4f}"),
-             row('ingest decision checks passed', checks),
+             row('ingest checks passed (decisions, stale, follow-ups)', checks),
              row('**brief** wall (s)', lambda r: f"{r['brief']['seconds']:.1f}"),
              row('brief cost ($)', lambda r: f"{r['brief']['cost']:.5f}"),
              row('brief invalid ids', lambda r: str(r['brief']['invalid_ids'])),

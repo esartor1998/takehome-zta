@@ -4,7 +4,9 @@ import subprocess
 import sys
 import time
 
-from . import config, dedupe, extract, llm, stale, store
+import numpy as np
+
+from . import config, dedupe, extract, followups, llm, stale, store
 from .identity import IdentityResolver
 from .normalize import normalize_all
 
@@ -37,6 +39,25 @@ def embed_text(item, ident):
     return f"{head}\n{item['body']}".strip()
 
 
+def novelty_scores(items, plain):
+    """How unlike the rest of the corpus each item is: one minus its mean
+    similarity to its three nearest neighbours in other conversations. Template
+    mail ('Quick update on this, X owns the next step') has near-identical
+    neighbours and scores close to zero. a bespoke message about a deal has none.
+    It decides which of a person's fifty messages are worth a line when someone asks
+    what they have been saying"""
+    ids = [i['id'] for i in items]
+    matrix = np.array([plain[i] for i in ids], dtype=np.float32)
+    matrix /= np.maximum(np.linalg.norm(matrix, axis=1, keepdims=True), 1e-9)
+    sims = matrix @ matrix.T
+    threads = np.array([i['thread_key'] for i in items])
+    out = {}
+    for n, item in enumerate(items):
+        row = np.where(threads == item['thread_key'], -1.0, sims[n])
+        out[item['id']] = float(1.0 - np.sort(row)[-3:].mean())
+    return out
+
+
 def run(skip_decisions=False):
     started = time.time()
     ensure_raw_data()
@@ -66,24 +87,31 @@ def run(skip_decisions=False):
         for member in members:
             by_id[member]['topic'] = topic_id
 
-    decisions, stale_rows = [], []
+    # header-free vectors for comparing items with each other. the retrieval
+    # vectors start with 'Email from X on date', which dominates short texts
+    plain = dict(zip((i['id'] for i in items),
+                     llm.embed([f"{i['title']}. {i['body']}"[:600] for i in items], kind='query')))
+    for item_id, value in novelty_scores(items, plain).items():
+        by_id[item_id]['novelty'] = value
+    decisions, stale_rows, follow_rows = [], [], []
+    pool = extract.scoring_pool(items)
+    scores = extract.gate_scores(pool, vectors)
+    for item_id, value in scores.items():
+        by_id[item_id]['gate'] = value
     if not skip_decisions:
-        pool = extract.scoring_pool(items)
-        scores = extract.gate_scores(pool, vectors)
         entities = extract.entity_map(items, ident)
-        # header-free vectors for comparing items with each other. the retrieval
-        # vectors start with 'Email from X on date', which dominates short texts
-        plain = dict(zip((i['id'] for i in items),
-                         llm.embed([f"{i['title']}. {i['body']}"[:600] for i in items], kind='query')))
         decisions = extract.extract_decisions(items, topics, ident, vectors, scores, entities, plain)
         stale_rows = stale.find_stale(items, plain, scores, entities)
         print(f'{len(stale_rows)} records still state an outdated plan')
+        follow_rows = followups.find_followups(items, ident)
+        print(f'{len(follow_rows)} follow-ups ({sum(r["status"] == "open" for r in follow_rows)} open)')
 
     conn = store.reset()
     store.write_items(conn, items, ident.people)
     conn.executemany('INSERT INTO links VALUES (?,?,?)', links)
     extract.write_decisions(conn, decisions)
     stale.write_stale(conn, stale_rows)
+    followups.write_followups(conn, follow_rows)
     conn.commit()
     store.write_vectors(store.reset_vectors(), items, vectors)
 

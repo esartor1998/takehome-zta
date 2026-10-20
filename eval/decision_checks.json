@@ -1,10 +1,41 @@
 [
-  {"name": "auth reversal resolved to the latest state",
-   "item_id": "linear:ACME-142@20260314T2200", "status": "current"},
-  {"name": "middle reversal (OAuth plus API keys) superseded",
-   "item_id": "gmail:10db167a8a1afba8", "status": "superseded", "allow_missing": true},
-  {"name": "stale linear record flagged although edited after the correction",
-   "item_id": "linear:ACME-231@20260304T1800", "status": "stale"},
-  {"name": "corrected ship date is current",
-   "item_id": "gmail:69d12ca0960f4a7d", "status": "current", "allow_missing": true}
+  {
+    "name": "auth reversal resolved to the latest state",
+    "item_id": "linear:ACME-142@20260314T2200",
+    "status": "current"
+  },
+  {
+    "name": "middle reversal (OAuth plus API keys) superseded",
+    "item_id": "gmail:10db167a8a1afba8",
+    "status": "superseded",
+    "allow_missing": true
+  },
+  {
+    "name": "stale linear record flagged although edited after the correction",
+    "item_id": "linear:ACME-231@20260304T1800",
+    "status": "stale"
+  },
+  {
+    "name": "corrected ship date is current",
+    "item_id": "gmail:69d12ca0960f4a7d",
+    "status": "current",
+    "allow_missing": true
+  },
+  {
+    "name": "pricing: page-live email is current",
+    "item_id": "gmail:7d0d75121cdeaac6",
+    "status": "current",
+    "allow_missing": true
+  },
+  {
+    "name": "billing: cutover email is current",
+    "item_id": "gmail:bfda57e5a3e21af0",
+    "status": "current",
+    "allow_missing": true
+  },
+  {
+    "name": "hiring: candidate gone is current",
+    "item_id": "gmail:e98c5b9d26b114a1",
+    "status": "current"
+  }
 ]

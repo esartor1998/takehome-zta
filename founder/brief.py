@@ -3,18 +3,30 @@ the model only picks and phrases the top focus items.
 
 Why not let the model read everything and 'write a brief': a 3B model skims,
 misses the one stale record, and its output is not testable. Here every
-section is a query we can assert on, and the model is limited to ranking a
-short list of facts we already verified"""
+section is a query we can assert on, and the model is limited to phrasing a
+short list of facts we already verified. The same facts answer the open
+questions in answer.py ('anything urgent', 'what am I missing'), so the brief
+and the question path cannot disagree about what matters"""
 import re
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from . import answer, config, llm, store
 
 WINDOW_DAYS = 7           # 'recent' for decisions and customer issues
-ASK_WINDOW_DAYS = 14      # how far back an unanswered ask still counts
+ISSUE_WINDOW_DAYS = 14    # how far back repeated customer reports are counted
 CUSTOMERS = ('Globex', 'Initech', 'Hooli', 'Umbrella', 'Stark', 'Wayne')
-CUSTOMER_ISSUE_RE = re.compile(r'\b(reported|flake|escalat\w+|issue|bug|outage)\b', re.I)
-ASK_RE = re.compile(r'\b(please|can you|could you|need you)\b|\?', re.I)
+FOCUS_COUNT = 3
+SOON_DAYS = 2             # a deadline this close raises an ask's score
+
+# what kind of problem a message describes, by its own words. two reports are
+# the same issue only if they have the same company and the same kind
+ISSUE_TYPES = (
+    ('timeout', re.compile(r'time[ds]? ?out|504|too slow', re.I)),
+    ('login loop', re.compile(r'redirect loop|login loop|loops?\b|stuck in a redirect', re.I)),
+    ('invoice', re.compile(r'invoice|seat count|billing error', re.I)),
+    ('flake', re.compile(r'flake|flaky', re.I)),
+    ('outage', re.compile(r'outage|down for|incident', re.I)),
+)
 
 FOCUS_SYSTEM = (
     f"You write the top of a morning brief for the founder, Alex Chen. Time: "
@@ -24,20 +36,25 @@ FOCUS_SYSTEM = (
     'with its own fact number, like [2]. Use only the words and numbers in the fact. '
     'Do not combine facts.')
 
+PRIORITY_NAMES = {0: 'no priority', 1: 'urgent', 2: 'high', 3: 'medium', 4: 'low'}
+
 
 def _iso(dt):
     return config.iso(dt)
 
 
+def _parse(text):
+    return datetime.fromisoformat(text.replace('Z', '+00:00'))
+
+
 def _names(conn):
-    return {r['id']: r['name'] for r in conn.execute('SELECT id, name FROM people')}
+    """Display names, with the company for outsiders: 'Daniel Foster (Globex)'"""
+    return {r['id']: (f"{r['name']} ({r['org']})" if r['org'] else r['name'])
+            for r in conn.execute('SELECT id, name, org FROM people')}
 
 
 def _hhmm(text):
     return text[11:16]
-
-
-PRIORITY_NAMES = {0: 'no priority', 1: 'urgent', 2: 'high', 3: 'medium', 4: 'low'}
 
 
 def _rank(item):
@@ -49,46 +66,117 @@ def _clean_title(item):
     return re.sub(r'\s*\(ACME-\d+\)$', '', item['title'])
 
 
-def todays_schedule(conn, names):
-    day = config.NOW.replace(hour=0, minute=0, second=0)
-    rows = conn.execute(
-        "SELECT * FROM items WHERE kind='event' AND start >= ? AND start < ? ORDER BY start",
-        (_iso(day), _iso(day + timedelta(days=1))))
+# ---- the calendar ------------------------------------------------------------
+
+def day_events(conn, names, start, end):
+    """The founder's events between start and end in every state, with what a
+    person needs to know about each: done or still to come, cancelled,
+    tentative, all-day, a time zone other than UTC, outside guests"""
     out = []
-    for row in rows:
+    for row in conn.execute("SELECT * FROM items WHERE kind='event' AND start >= ? AND start < ? ORDER BY start",
+                            (_iso(start), _iso(end))):
         item = store.row_to_item(row)
-        if config.FOUNDER_PERSON_ID not in item['people'] or item['status'] == 'cancelled':
+        if config.FOUNDER_PERSON_ID not in item['people']:
             continue
-        upcoming = item['start'] >= _iso(config.NOW)
+        flags = []
+        if item['status'] == 'cancelled':
+            flags.append('CANCELLED')
+        elif item['status'] == 'tentative':
+            flags.append('tentative')
+        if 'all_day' in item['flags']:
+            flags.append('all day')
         response = item['meta']['responses'].get(config.FOUNDER_PERSON_ID, '')
-        notes = []
-        if item['body']:
-            notes.append(item['body'][0].lower() + item['body'][1:])
-        if response in ('needsAction', 'declined'):
-            notes.append('you have not accepted' if response == 'needsAction' else 'you declined')
+        if response == 'needsAction' and item['status'] == 'confirmed':
+            flags.append('you have not accepted')
+        elif response == 'declined':
+            flags.append('you declined')
+        zone = item['meta'].get('time_zone', '')
+        local = item['meta'].get('start_local', '')
+        if zone and zone != 'UTC' and 'T' in local:
+            flags.append(f'{local[11:16]} {zone.split("/")[-1].replace("_", " ")} time')
         if 'end_before_start_assumed_1h' in item['flags']:
-            notes.append('end time in the calendar data is invalid, assumed 1h')
-        out.append({'item': item, 'upcoming': upcoming, 'notes': notes,
-                    'attendees': [names[p] for p in item['people'] if p != config.FOUNDER_PERSON_ID]})
+            flags.append('end time invalid, assumed 1h')
+        past = item['end'] <= _iso(config.NOW) and 'all_day' not in item['flags']
+        started = item['start'] <= _iso(config.NOW) < item['end']
+        out.append({'item': item, 'flags': flags, 'past': past, 'started': started,
+                    'upcoming': not past and not started and item['status'] != 'cancelled',
+                    'attendees': [names[p] for p in item['people'] if p != config.FOUNDER_PERSON_ID],
+                    'external': [p for p in item['people'] if names[p].endswith(')')]})
     return out
 
 
+def event_line(e):
+    item = e['item']
+    when = 'all day' if 'all day' in e['flags'] else f"{_hhmm(item['start'])}-{_hhmm(item['end'])} UTC"
+    notes = [f for f in e['flags'] if f != 'all day']
+    if e['past']:
+        notes.append('already happened')
+    elif e['started']:
+        notes.append('in progress')
+    if item['body']:
+        notes.append(item['body'][0].lower() + item['body'][1:])
+    guests = f" with {', '.join(e['attendees'])}" if e['attendees'] else ''
+    return f"{when} {item['title']}{guests}" + (f" ({'; '.join(notes)})" if notes else '')
+
+
+def meeting_prep(conn, event, names):
+    """What to have in your head before a meeting with outsiders: their open
+    asks of you, and customer issues for their company that are not closed"""
+    notes, ids = [], []
+    for pid in event['external']:
+        for row in conn.execute("SELECT item_id, what FROM followups WHERE who=? AND kind='ask' AND status='open'",
+                                (pid,)):
+            notes.append(f"{names[pid]} is waiting on you: {row['what']}")
+            ids.append(row['item_id'])
+        org = conn.execute('SELECT org FROM people WHERE id=?', (pid,)).fetchone()['org']
+        if org:
+            for row in conn.execute(
+                    "SELECT id, title, status FROM items WHERE source='linear' AND state='current' "
+                    "AND status IN ('Reopened','Blocked','In Progress') AND (title LIKE ? OR body LIKE ?) "
+                    "ORDER BY ts DESC LIMIT 2", (f'%{org}%', f'%{org}%')):
+                notes.append(f"{_clean_title({'title': row['title']})} is {row['status']}")
+                ids.append(row['id'])
+    return notes, ids
+
+
+# ---- changes of plan and stale records ----------------------------------------
+
 def recent_decisions(conn):
-    """Topics whose plan changed this week, with what replaced what, plus any
-    record that still carries a retracted value"""
+    """Topics whose plan changed this week, with what replaced what"""
     since = _iso(config.NOW - timedelta(days=WINDOW_DAYS + 7))
     topics = [r['topic'] for r in conn.execute(
         "SELECT topic FROM decisions WHERE kind IN ('reversal','correction') AND ts >= ? "
         'GROUP BY topic', (since,))]
     out = []
     for topic in topics:
-        rows = [dict(r) for r in conn.execute(
-            'SELECT * FROM decisions WHERE topic=? ORDER BY ts', (topic,))]
+        rows = [dict(r) for r in conn.execute('SELECT * FROM decisions WHERE topic=? ORDER BY ts', (topic,))]
         current = [r for r in rows if r['status'] == 'current']
         if not current:
             continue
-        out.append({'label': store.topic_label(conn, topic), 'current': current[-1], 'history': [r for r in rows if r['status'] == 'superseded'],
-                    'stale': [r for r in rows if r['status'] == 'stale']})
+        out.append({'label': store.topic_label(conn, topic), 'current': current[-1],
+                    'history': [r for r in rows if r['status'] == 'superseded']})
+    return out
+
+
+def stale_records(conn):
+    """Records that still state an old plan, from both detectors: a value that
+    was explicitly retracted, and a newer item that changes a date or price"""
+    out, seen = [], set()
+    for r in conn.execute(
+            'SELECT s.item_id, s.newer_id, s.current_fact, i.title, i.source, i.body, n.source AS nsource '
+            'FROM stale_records s JOIN items i ON i.id=s.item_id JOIN items n ON n.id=s.newer_id '
+            'ORDER BY i.ts DESC'):
+        seen.add(r['item_id'])
+        out.append({'item_id': r['item_id'], 'title': r['title'], 'source': r['source'],
+                    'fact': r['current_fact'], 'newer_id': r['newer_id'], 'says': r['body'].replace('\n', ' ')[:80]})
+    for r in conn.execute("SELECT d.item_id, d.value, d.why, i.title, i.source FROM decisions d "
+                          "JOIN items i ON i.id=d.item_id WHERE d.status='stale'"):
+        if r['item_id'] in seen:
+            continue
+        newer = re.search(r'(?:in|by) ([a-z]+:\S+)\s*$', r['why'])
+        out.append({'item_id': r['item_id'], 'title': re.sub(r'\s*\(ACME-\d+\)$', '', r['title']),
+                    'source': r['source'], 'fact': r['why'], 'newer_id': newer.group(1) if newer else '',
+                    'says': r['value'][:80]})
     return out
 
 
@@ -99,139 +187,138 @@ def blocked_for_founder(conn):
     return sorted(rows, key=_rank)
 
 
-def unanswered_asks(conn):
-    """Inbound requests to the founder with no reply from them in the thread,
-    each checked against evidence that it was already handled"""
-    since = _iso(config.NOW - timedelta(days=ASK_WINDOW_DAYS))
-    rows = conn.execute(
-        "SELECT * FROM items WHERE kind='email' AND state='current' AND ts >= ? AND ts <= ? "
-        'AND author != ? ORDER BY ts DESC', (since, _iso(config.NOW), config.FOUNDER_PERSON_ID))
-    out = []
-    for row in rows:
+# ---- follow-ups ----------------------------------------------------------------
+
+def followup_rows(conn):
+    return [dict(r) for r in conn.execute(
+        'SELECT f.*, p.name AS who_name, i.title, i.source FROM followups f JOIN items i ON i.id=f.item_id '
+        'LEFT JOIN people p ON p.id=f.who ORDER BY f.ts DESC')]
+
+
+def _due_bonus(row):
+    if not row['due']:
+        return 0
+    today = config.NOW.strftime('%Y-%m-%d')
+    if row['due'] < today:
+        return 15
+    return 10 if row['due'] <= (config.NOW + timedelta(days=SOON_DAYS)).strftime('%Y-%m-%d') else 0
+
+
+def followup_text(row, names):
+    """One line for a follow-up, with who, what and when it is due"""
+    due = f", due {row['due']}" if row['due'] else ''
+    overdue = ' (overdue)' if row['due'] and row['due'] < config.NOW.strftime('%Y-%m-%d') and row['status'] == 'open' else ''
+    if row['kind'] == 'promise':
+        whom = ', '.join(names.get(p, p) for p in row['whom'].split(',') if p) or 'someone'
+        return f"You promised {whom}: {row['what']}{due}{overdue}, and it is still open"
+    who = names.get(row['who'], 'someone')
+    state = {'open': 'nobody has handled it', 'replied': 'already answered', 'handled': 'already handled'}[row['status']]
+    return f"{who} asked you: {row['what']}{due}{overdue} ({state})"
+
+
+# ---- customers -----------------------------------------------------------------
+
+def recurring_customer_issues(conn, names):
+    """The same kind of problem reported again by or about the same company.
+    Evidence is spread across tools (an email, a slack thread, an issue, a PR),
+    so we count distinct days, distinct tools and reports written by the
+    customer, not raw mentions: a template that repeats a customer name ten
+    times in one tool is not a recurring issue"""
+    since = _iso(config.NOW - timedelta(days=ISSUE_WINDOW_DAYS))
+    orgs = {r['org']: r['id'] for r in conn.execute("SELECT org, id FROM people WHERE org != '' AND external=1")}
+    candidates = {org: org for org in orgs} | {c: c for c in CUSTOMERS}
+    clusters = {}
+    for row in conn.execute("SELECT * FROM items WHERE state='current' AND ts >= ? AND ts <= ? AND kind IN "
+                            "('email','message','issue','pr','comment')", (since, _iso(config.NOW))):
         item = store.row_to_item(row)
-        if config.FOUNDER_PERSON_ID not in item['people'] or not ASK_RE.search(item['body']):
-            continue
-        replied = conn.execute(
-            'SELECT 1 FROM items WHERE thread_key=? AND author=? AND ts > ?',
-            (item['thread_key'], config.FOUNDER_PERSON_ID, item['ts'])).fetchone()
-        if replied:
-            continue
-        out.append({'item': item, 'handled_by': _handled_by(conn, item)})
-    return out
-
-
-def _handled_by(conn, item):
-    """Cheap evidence that an ask was done without a reply. an issue it names
-    moved to Done after the ask, or it asked to decline an invite that is now
-    cancelled"""
-    for ref in set(re.findall(r'\bACME-\d+\b', item['body'])):
-        done = conn.execute(
-            "SELECT id FROM items WHERE source='linear' AND state='current' "
-            "AND json_extract(meta,'$.identifier')=? AND status='Done' AND ts > ?",
-            (ref, item['ts'])).fetchone()
-        if done:
-            return done['id']
-    match = re.search(r'decline the old invite', item['body'], re.I)
-    if match:
-        cancelled = conn.execute(
-            "SELECT id FROM items WHERE kind='event' AND status='cancelled' AND ? LIKE '%' || title || '%'",
-            (item['title'],)).fetchone()
-        if cancelled:
-            return cancelled['id']
-    return None
-
-
-def repeated_customer_issues(conn):
-    since = _iso(config.NOW - timedelta(days=WINDOW_DAYS))
+        text = f"{item['title']} {item['body']}"
+        for org in candidates:
+            if not re.search(rf'\b{org}\b', text, re.I) and not (
+                    item['author'] and names.get(item['author'], '').endswith(f'({org})')):
+                continue
+            for label, pattern in ISSUE_TYPES:
+                if pattern.search(text):
+                    clusters.setdefault((org, label), []).append(item)
     out = []
-    for customer in CUSTOMERS:
-        rows = [store.row_to_item(r) for r in conn.execute(
-            "SELECT * FROM items WHERE kind IN ('email','message') AND state='current' "
-            'AND ts >= ? AND ts <= ? AND (body LIKE ? OR title LIKE ?)',
-            (since, _iso(config.NOW), f'%{customer}%', f'%{customer}%'))]
-        issues = [r for r in rows if CUSTOMER_ISSUE_RE.search(r['body'] + ' ' + r['title'])]
-        if len(issues) >= 2:
-            out.append({'customer': customer, 'items': issues})
-    return sorted(out, key=lambda c: -len(c['items']))
+    for (org, label), items in clusters.items():
+        days = {i['ts'][:10] for i in items}
+        sources = {i['source'] for i in items}
+        outside = [i for i in items if i['author'] and names.get(i['author'], '').endswith(')')]
+        reopened = any(i['source'] == 'linear' and i['status'] == 'Reopened' for i in items)
+        if len(days) < 2 and not reopened:
+            continue
+        score = 2 * len(days) + 3 * len(sources) + 3 * len(outside) + (10 if reopened else 0)
+        out.append({'customer': org, 'label': label, 'items': items, 'days': len(days), 'sources': sorted(sources),
+                    'reopened': reopened, 'outside': len(outside), 'score': score})
+    return sorted(out, key=lambda c: -c['score'])[:4]
 
 
-def meeting_changes(conn, names):
-    """Cancelled or moved meetings this week that involve the founder, so the
-    'what happened this week' digest sees them without a model reading the
-    calendar"""
-    since = _iso(config.WEEK_START)
-    out = []
-    for row in conn.execute(
-            "SELECT * FROM items WHERE kind='event' AND start >= ? AND start < ? ORDER BY start",
-            (since, _iso(config.NOW + timedelta(days=1)))):
-        item = store.row_to_item(row)
-        text = f"{item['title']} {item['body']}".lower()
-        if config.FOUNDER_PERSON_ID in item['people'] and (
-                item['status'] == 'cancelled' or re.search(r'resched|moved', text)):
-            out.append(item)
-    return out
+# ---- facts -----------------------------------------------------------------------
 
-
-def build_facts(conn, names, schedule, decisions, blocked, asks, customers, changes=()):
+def build_facts(conn, names):
     """Scored facts as dicts: score, text, ids, cat, handled. The score is what
     makes this a brief and not a dump. Rough order: a meeting soon, a record
-    you must fix, an ask nobody handled, a changed plan, your blocked work,
-    repeating customers. The same facts feed the question path for open
-    questions like 'what should I focus on', so ask and brief cannot disagree"""
+    you must fix, an overdue ask or promise, a changed plan, your blocked work,
+    repeating customers. Handled items stay in with low scores so a question
+    like 'what am I missing' can say they were checked"""
     facts = []
 
     def add(score, text, ids, cat, handled=False):
-        facts.append({'score': score, 'text': text, 'ids': ids, 'cat': cat, 'handled': handled})
+        facts.append({'score': score, 'text': text, 'ids': [i for i in ids if i], 'cat': cat, 'handled': handled})
 
-    for e in schedule:
+    today = config.NOW.replace(hour=0, minute=0, second=0, microsecond=0)
+    for e in day_events(conn, names, today, today + timedelta(days=1)):
         item = e['item']
         if e['upcoming']:
             hours = (_parse(item['start']) - config.NOW).total_seconds() / 3600
-            note = f" ({'; '.join(e['notes'])})" if e['notes'] else ''
-            add(100 - hours, f"Meeting today {_hhmm(item['start'])} UTC: {item['title']} with "
-                f"{', '.join(e['attendees'])}{note}", [item['id']], 'meeting')
-    for item in changes:
-        state = 'is CANCELLED' if item['status'] == 'cancelled' else 'was moved'
-        add(20, f"Meeting change: {item['title']} on {item['start'][:10]} {state}"
-            + (f" (calendar note: {item['body']})" if item['body'] else ''), [item['id']], 'meeting_change')
-    for d in decisions:
+            notes, ids = meeting_prep(conn, e, names)
+            prep = f". Before it: {'; '.join(notes)}" if notes else ''
+            add(100 - hours + (10 if notes else 0), f"Meeting today: {event_line(e)}{prep}", [item['id']] + ids, 'meeting')
+        else:
+            add(5, f"Today, earlier or not happening: {event_line(e)}", [item['id']], 'schedule', handled=True)
+    for r in stale_records(conn):
+        fact = f", but the newer information says: {r['fact']}" if r['fact'] else ''
+        add(90, f"{r['title']} ({r['source']}) still says '{r['says']}'{fact}. It is out of date and needs updating",
+            [r['item_id'], r['newer_id']], 'stale')
+    for d in recent_decisions(conn):
         text = f"{d['label']}: current plan is '{d['current']['value']}'"
         if d['history']:
             text += f", replacing '{d['history'][-1]['value']}'"
-        ids = [d['current']['item_id']]
-        # a changed plan with every record already updated is news, not a task
-        score = 25
-        text += '. Records already reflect this, no action needed'
-        for stale in d['stale']:
-            text += (f". The record {stale['item_id'].split('@')[0].split(':')[1]} still says "
-                     f"'{stale['value']}' and must be updated")
-            ids.append(stale['item_id'])
-            score = 90
-        add(score, text, ids, 'change', handled=score < 90)
-    for a in asks:
-        sender = names.get(a['item']['author'], 'someone')
-        body = a['item']['body'][:100].replace('\n', ' ')
-        if a['handled_by']:
-            add(10, f"{sender} asked you: '{body}'. It looks already handled, no action needed",
-                [a['item']['id']], 'ask', handled=True)
-        else:
-            add(80, f"{sender} asked you and nobody has handled it: '{body}'", [a['item']['id']], 'ask')
-    for item in blocked:
-        add(50 - _rank(item), f"Blocked, owned by you: {item['meta']['identifier']} "
-            f"{_clean_title(item)}", [item['id']], 'blocked')
-    for c in customers:
-        add(30 + len(c['items']), f"{c['customer']} issue mentioned {len(c['items'])} times "
-            f"in {WINDOW_DAYS} days", [i['id'] for i in c['items']][:3], 'customer')
+        add(25, text + '. Records already reflect this, no action needed', [d['current']['item_id']], 'change', handled=True)
+    for row in followup_rows(conn):
+        done = row['status'] != 'open'
+        base = 80 if row['kind'] == 'ask' else 75
+        add(5 if done else base + _due_bonus(row), followup_text(row, names), [row['item_id'], row['evidence']],
+            'ask' if row['kind'] == 'ask' else 'promise', handled=done)
+    for item in blocked_for_founder(conn):
+        add(50 - _rank(item), f"Blocked, owned by you: {item['meta']['identifier']} {_clean_title(item)}", [item['id']], 'blocked')
+    for c in recurring_customer_issues(conn, names):
+        ids = [i['id'] for i in sorted(c['items'], key=lambda i: i['ts'])][-3:]
+        recurred = ', and a fix that was marked done came back' if c['reopened'] else ''
+        add(30 + c['score'], f"{c['customer']} {c['label']} reported again: {len(c['items'])} reports on {c['days']} days "
+            f"across {', '.join(c['sources'])}{recurred}", ids, 'customer')
     return sorted(facts, key=lambda f: -f['score'])
 
 
-def _parse(text):
-    from datetime import datetime
-    return datetime.fromisoformat(text.replace('Z', '+00:00'))
+def collect_facts(conn):
+    """All scored facts, without the narrative. Used by the question path"""
+    return build_facts(conn, _names(conn))
 
 
-FOCUS_COUNT = 3
+def schedule_facts(conn, start, end):
+    """One fact per calendar event in the window, in time order"""
+    names = _names(conn)
+    out = []
+    for e in day_events(conn, names, start, end):
+        item = e['item']
+        notes, ids = (meeting_prep(conn, e, names) if e['upcoming'] else ([], []))
+        prep = f". Before it: {'; '.join(notes)}" if notes else ''
+        out.append({'score': 0, 'text': event_line(e) + prep, 'ids': [item['id']] + ids, 'cat': 'schedule',
+                    'handled': False})
+    return out
 
+
+# ---- narrative --------------------------------------------------------------------
 
 def focus_section(facts):
     """Top facts by score, phrased by the model as action lines. We hand it
@@ -258,69 +345,69 @@ def focus_section(facts):
     return answer.CITE_RE.sub(swap, '\n'.join(lines) or result['text'].strip()), cited, result
 
 
-def collect_facts(conn):
-    """All scored facts, without the narrative. Used by the question path"""
-    names = _names(conn)
-    return build_facts(conn, names, todays_schedule(conn, names), recent_decisions(conn),
-                       blocked_for_founder(conn), unanswered_asks(conn),
-                       repeated_customer_issues(conn), meeting_changes(conn, names))
-
-
 def generate(conn):
     names = _names(conn)
-    schedule = todays_schedule(conn, names)
-    decisions = recent_decisions(conn)
-    blocked = blocked_for_founder(conn)
-    asks = unanswered_asks(conn)
-    customers = repeated_customer_issues(conn)
-    facts = build_facts(conn, names, schedule, decisions, blocked, asks, customers,
-                        meeting_changes(conn, names))
+    facts = build_facts(conn, names)
     focus, cited, llm_result = focus_section(facts)
+    today = config.NOW.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    lines = [f"# Morning brief, {config.NOW.strftime('%A %B %d, %Y')}",
-             f"as of {config.NOW.strftime('%H:%M')} UTC", '']
+    lines = [f"# Morning brief, {config.NOW.strftime('%A %B %d, %Y')}", f"as of {config.NOW.strftime('%H:%M')} UTC", '']
     if focus:
         lines += ['## Focus today', focus, '']
 
     lines += ['## Today']
-    if not schedule:
+    events = day_events(conn, names, today, today + timedelta(days=1))
+    if not events:
         lines.append('- nothing on your calendar')
-    for e in schedule:
-        item = e['item']
-        past = '' if e['upcoming'] else ' (already started)'
-        note = f" - {'; '.join(e['notes'])}" if e['notes'] else ''
-        lines.append(f"- {_hhmm(item['start'])}-{_hhmm(item['end'])} UTC {item['title']} with "
-                     f"{', '.join(e['attendees'])}{past}{note} [{item['id']}]")
+    for e in events:
+        notes, ids = meeting_prep(conn, e, names) if e['upcoming'] else ([], [])
+        lines.append(f"- {event_line(e)} [{e['item']['id']}]")
+        for note, item_id in zip(notes, ids):
+            lines.append(f"  - prep: {note} [{item_id}]")
 
+    stale = stale_records(conn)
+    changes = recent_decisions(conn)
     lines += ['', '## Plans that changed']
-    if not decisions:
+    if not changes and not stale:
         lines.append('- none this week')
-    for d in decisions:
+    for d in changes:
         cur = d['current']
         line = f"- {d['label']}: {cur['value']} (as of {cur['ts'][:10]}) [{cur['item_id']}]"
         if d['history']:
             line += f"; replaced '{d['history'][-1]['value']}' [{d['history'][-1]['item_id']}]"
         lines.append(line)
-        for stale in d['stale']:
-            lines.append(f"  - out of date: {stale['item_id'].split('@')[0].split(':')[1]} still says "
-                         f"'{stale['value']}', update it [{stale['item_id']}]")
+    for r in stale:
+        fact = f", newer says: {r['fact']}" if r['fact'] else ''
+        lines.append(f"  - out of date: {r['title']} ({r['source']}) still says '{r['says']}'{fact}, update it "
+                     f"[{r['item_id']}]" + (f" [{r['newer_id']}]" if r['newer_id'] else ''))
 
+    rows = followup_rows(conn)
+    open_asks = [r for r in rows if r['kind'] == 'ask' and r['status'] == 'open']
+    promises = [r for r in rows if r['kind'] == 'promise' and r['status'] == 'open']
+    closed = [r for r in rows if r['kind'] == 'ask' and r['status'] != 'open']
+    lines += ['', '## Waiting on you']
+    lines += [f"- {followup_text(r, names)} [{r['item_id']}]" for r in sorted(open_asks, key=lambda r: (-_due_bonus(r), r['ts']))] \
+        or ['- nothing waiting on you']
+    lines += ['', '## You said you would']
+    lines += [f"- {followup_text(r, names)} [{r['item_id']}]" for r in promises] or ['- no open promises']
+    if closed:
+        lines += ['', '## Asked, already handled']
+        lines += [f"- {followup_text(r, names)} [{r['item_id']}]" + (f" [{r['evidence']}]" if r['evidence'] else '')
+                  for r in closed[:4]]
+
+    blocked = blocked_for_founder(conn)
     lines += ['', '## Blocked on you']
-    lines += [f"- {i['meta']['identifier']} {_clean_title(i)}, {PRIORITY_NAMES.get(i['meta']['priority'], 'no priority')} [{i['id']}]" for i in blocked] or ['- nothing']
+    lines += [f"- {i['meta']['identifier']} {_clean_title(i)}, {PRIORITY_NAMES.get(i['meta']['priority'], 'no priority')} "
+              f"[{i['id']}]" for i in blocked] or ['- nothing']
 
-    lines += ['', '## Follow-ups']
-    if not asks:
-        lines.append('- nothing waiting on you')
-    for a in asks:
-        sender = names.get(a['item']['author'], 'someone')
-        tail = (f" - looks handled [{a['handled_by']}]" if a['handled_by'] else ' - no reply yet')
-        lines.append(f"- {sender}: {a['item']['body'][:90].replace(chr(10), ' ')}{tail} [{a['item']['id']}]")
-
+    customers = recurring_customer_issues(conn, names)
     if customers:
         lines += ['', '## Customer issues repeating']
         for c in customers:
-            lines.append(f"- {c['customer']}: {len(c['items'])} mentions this week "
-                         + ' '.join(f"[{i['id']}]" for i in c['items'][:3]))
+            ids = ' '.join(f"[{i['id']}]" for i in sorted(c['items'], key=lambda i: i['ts'])[-3:])
+            recurred = ' A fix marked done came back.' if c['reopened'] else ''
+            lines.append(f"- {c['customer']}, {c['label']}: {len(c['items'])} reports on {c['days']} days across "
+                         f"{', '.join(c['sources'])}.{recurred} {ids}")
 
     return {'text': '\n'.join(lines) + '\n', 'facts': facts, 'focus_cited': cited,
             'seconds': llm_result['seconds'] if llm_result else 0,

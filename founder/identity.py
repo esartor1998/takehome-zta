@@ -23,7 +23,7 @@ SIGNATURE_RE = re.compile(r'(?:^|\s)(?:--|—|-)\s*([A-Z][a-z]+)\s*$')
 # short forms people use for each other in chat. we match these in questions
 # and message text, never when merging identities
 NICKNAMES = {
-    'daniel': ('dan', 'danny', 'dk'), 'rebecca': ('becky', 'bec'),
+    'daniel': ('dan', 'danny'), 'rebecca': ('becky', 'bec'),
     'priya': ('pri',), 'marcus': ('marc',), 'sofia': ('sof',), 'hannah': ('han',),
 }
 
@@ -46,6 +46,7 @@ class Person:
     notion_id: str = ''
     org: str = ''
     title: str = ''
+    role: str = ''           # customer, investor, candidate and so on, for outsiders
     external: bool = False
 
     @property
@@ -154,7 +155,8 @@ class IdentityResolver:
             pid = contact['id']
             self.people[pid] = Person(
                 id=pid, name=f"{props['firstname']} {props['lastname']}", work_email=props['email'].lower(),
-                org=props.get('company', ''), title=props.get('jobtitle', ''), external=True)
+                org=props.get('company', ''), title=props.get('jobtitle', ''), role=props.get('hs_lead_status', ''),
+                external=True)
             self._add_email(pid, props['email'])
 
     def _company_domain(self):

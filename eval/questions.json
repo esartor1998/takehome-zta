@@ -170,16 +170,26 @@
     "id": "q12",
     "category": "unanswerable",
     "question": "Summarize investor-related activity this week.",
-    "reference": "Not available. There are no investor emails, messages, meetings or issues in any source.",
-    "answerable": false,
-    "expected_ids": [],
+    "reference": "Jordan Pryce (Northwind Ventures) followed up on Mar 13 asking for cohort ARR before the Tuesday Mar 17 partner meeting. Caroline Ades (Blue Harbor Capital) asked on Mar 12 about data room access. On Mar 13 Priya said Northwind cannot close before May 15.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:75d73520ec4c68f3"
+      ],
+      [
+        "gmail:012ce504e5a045e9"
+      ],
+      [
+        "slack:C07FUND:1773421200.357681"
+      ]
+    ],
     "forbidden_ids": []
   },
   {
     "id": "q13",
     "category": "decisions",
     "question": "What decisions were made recently?",
-    "reference": "The v2 API auth decision went back to OAuth only on Mar 14. The Q1 ship date was corrected to Mar 22. The Weekly Product Sync moved to Sunday Mar 15 at 16:00 UTC.",
+    "reference": "Recent decisions: the v2 API auth went back to OAuth only (Mar 14), the Q1 ship date was corrected to Mar 22, pricing is $59 for new customers and $49 for existing (Mar 11), the billing cutover moved to Mar 31, the seed close moved to May 15, and the Taylor Brooks offer is no longer going ahead.",
     "answerable": true,
     "expected_ids": [
       [
@@ -192,9 +202,16 @@
         "slack:C02PROD:1772640000.222201"
       ],
       [
-        "gmail:ff9c102bbfa27a06",
-        "slack:C03GEN:1773172800.739474",
-        "calendar:2ded3454537257a5518fa9905e"
+        "gmail:7d0d75121cdeaac6",
+        "notion:163647759184b558a347537639422466",
+        "linear:ACME-441@20260313T1900"
+      ],
+      [
+        "gmail:bfda57e5a3e21af0",
+        "slack:C01ENG:1773331200.609253"
+      ],
+      [
+        "slack:C07FUND:1773421200.357681"
       ]
     ],
     "forbidden_ids": []
@@ -238,16 +255,18 @@
     "id": "q16",
     "category": "daily_priorities",
     "question": "What should I focus on today?",
-    "reference": "The Weekly Product Sync at 16:00 UTC today, and updating the Linear issue ACME-231 so it says the ship date is Mar 22.",
+    "reference": "Priorities today include the Globex check-in at 17:30 UTC where Daniel Foster is waiting on confirmation that the SSO fix ships before Mar 20, the cohort ARR owed to Jordan Pryce before the Tuesday partner meeting, and stale records that still state old plans.",
     "answerable": true,
     "expected_ids": [
       [
+        "calendar:bbeda5b103cb82876dd4651501",
+        "gmail:bee95ff7ca51c987",
         "calendar:2ded3454537257a5518fa9905e"
       ],
       [
-        "linear:ACME-231@20260304T1800",
-        "slack:C02PROD:1772640000.222201",
-        "gmail:69d12ca0960f4a7d"
+        "gmail:75d73520ec4c68f3",
+        "slack:C07FUND:1773419400.449808",
+        "gmail:ccd9c787ded3995d"
       ]
     ],
     "forbidden_ids": []
@@ -256,16 +275,29 @@
     "id": "q17",
     "category": "followups",
     "question": "What follow-ups am I missing?",
-    "reference": "None are outstanding. Rebecca Liu asked you to update ACME-142, which is already Done, and Hannah Park asked you to decline the old Weekly Product Sync invite, which is already cancelled.",
+    "reference": "Open asks: Priya Nair wants cohort ARR for Northwind and approval of the Blue Harbor data room request, Jordan Pryce wants cohort ARR before Tuesday, Caroline Ades wants data room access, Daniel Foster wants confirmation of the SSO fix before Mar 20, Marcus Webb and Omar Haddad each want a PR review. Open promises: cohort ARR to Jordan Pryce and data room access to Caroline Ades, both overdue.",
     "answerable": true,
     "expected_ids": [
       [
-        "gmail:ceece9b31878fe40",
-        "linear:ACME-142@20260314T2200"
+        "slack:C07FUND:1773419400.449808"
       ],
       [
-        "gmail:ff9c102bbfa27a06",
-        "calendar:7d2712a17add94eb1a82e92b23"
+        "slack:C07FUND:1773500400.415602"
+      ],
+      [
+        "gmail:75d73520ec4c68f3"
+      ],
+      [
+        "gmail:012ce504e5a045e9"
+      ],
+      [
+        "gmail:bee95ff7ca51c987"
+      ],
+      [
+        "github:acme/api#231"
+      ],
+      [
+        "github:acme/billing#230"
       ]
     ],
     "forbidden_ids": []
@@ -274,13 +306,438 @@
     "id": "q18",
     "category": "meeting_prep",
     "question": "Which emails relate to upcoming meetings?",
-    "reference": "Hannah Park's email 'Weekly Product Sync moved' (Mar 10), about the Weekly Product Sync on Sunday Mar 15 at 16:00 UTC.",
+    "reference": "Hannah Park's email 'Weekly Product Sync moved' (Mar 10), and Jordan Pryce's emails about the Tuesday Mar 17 partner update.",
     "answerable": true,
     "expected_ids": [
       [
         "gmail:ff9c102bbfa27a06"
+      ],
+      [
+        "gmail:6dff2b861992469a",
+        "gmail:75d73520ec4c68f3"
       ]
     ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v01",
+    "category": "vague_schedule",
+    "question": "what's on today",
+    "reference": "Today (Sunday Mar 15): all-day Offsite travel; 09:30 Standup (done); 11:00 Investor update prep (done); 15:00 1:1 Marcus is CANCELLED; 16:00 UTC Weekly Product Sync (moved from Friday); 17:30 UTC Globex check-in with Daniel Foster (10:30 PDT); 19:00 Board prep (tentative).",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "calendar:f99876efd6449d8ae5bf15d181"
+      ],
+      [
+        "calendar:c5457a3e77f0e609f8407d2ecf"
+      ],
+      [
+        "calendar:cb4d6cb65474560e2b3602e163"
+      ],
+      [
+        "calendar:0b466c05a14a1a7932b277708b"
+      ],
+      [
+        "calendar:2ded3454537257a5518fa9905e"
+      ],
+      [
+        "calendar:bbeda5b103cb82876dd4651501"
+      ],
+      [
+        "calendar:de4afcd47267780be961f09a4f"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v02",
+    "category": "vague_schedule",
+    "question": "what do i have on the calendar today?",
+    "reference": "Today (Sunday Mar 15): all-day Offsite travel; 09:30 Standup (done); 11:00 Investor update prep (done); 15:00 1:1 Marcus is CANCELLED; 16:00 UTC Weekly Product Sync (moved from Friday); 17:30 UTC Globex check-in with Daniel Foster (10:30 PDT); 19:00 Board prep (tentative).",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "calendar:2ded3454537257a5518fa9905e"
+      ],
+      [
+        "calendar:bbeda5b103cb82876dd4651501"
+      ],
+      [
+        "calendar:0b466c05a14a1a7932b277708b"
+      ],
+      [
+        "calendar:de4afcd47267780be961f09a4f"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v03",
+    "category": "vague_schedule",
+    "question": "tomorrow?",
+    "reference": "Tomorrow (Monday Mar 16): 14:00 UTC Sprint Planning (you have not accepted) and 16:00 Customer escalations review (London).",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "calendar:5c545e66becd5507a0709683f4"
+      ],
+      [
+        "calendar:94d8a5fa7f930cba2bb0bba41f"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v04",
+    "category": "vague_person",
+    "question": "what is daniel saying",
+    "reference": "There are two Daniels. Daniel Kim (teammate) asked Priya to push the billing migration a week and was out of office Mar 10 to 14. Daniel Foster (Globex) says the SSO login loops are back and asks for confirmation of a fix before Mar 20.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:c1abbf680fedaacd",
+        "slack:C01ENG:1773248400.000100",
+        "gmail:469b8c07901db7d8"
+      ],
+      [
+        "gmail:bee95ff7ca51c987"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v05",
+    "category": "vague_person",
+    "question": "what's dk up to",
+    "reference": "Daniel Kim asked Priya to push the billing migration a week, and was out of office Mar 10 to 14.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:c1abbf680fedaacd",
+        "slack:C01ENG:1773248400.000100",
+        "gmail:469b8c07901db7d8"
+      ]
+    ],
+    "forbidden_ids": [
+      "gmail:bee95ff7ca51c987"
+    ]
+  },
+  {
+    "id": "v06",
+    "category": "vague_person",
+    "question": "anything from investors?",
+    "reference": "Jordan Pryce (Northwind Ventures) asked on Mar 13 for cohort ARR before the Tuesday Mar 17 partner meeting. Caroline Ades (Blue Harbor Capital) asked on Mar 12 about data room access.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:75d73520ec4c68f3",
+        "gmail:6dff2b861992469a"
+      ],
+      [
+        "gmail:012ce504e5a045e9",
+        "gmail:e1c3f7da79a69dcf"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v07",
+    "category": "vague_followups",
+    "question": "who's waiting on me",
+    "reference": "Waiting on you: Priya Nair (cohort ARR for Northwind; approve the Blue Harbor data room request), Jordan Pryce (cohort ARR before Tuesday), Caroline Ades (data room access), Daniel Foster (confirm the SSO fix before Mar 20), Marcus Webb (review PR 231), Omar Haddad (review PR 230).",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "slack:C07FUND:1773419400.449808"
+      ],
+      [
+        "slack:C07FUND:1773500400.415602"
+      ],
+      [
+        "gmail:75d73520ec4c68f3"
+      ],
+      [
+        "gmail:012ce504e5a045e9"
+      ],
+      [
+        "gmail:bee95ff7ca51c987"
+      ],
+      [
+        "github:acme/api#231"
+      ],
+      [
+        "github:acme/billing#230"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v08",
+    "category": "vague_followups",
+    "question": "what did i promise people",
+    "reference": "You promised Jordan Pryce the cohort ARR (said early next week, overdue since Mar 9) and Caroline Ades data room access by Mar 10 (overdue).",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:ccd9c787ded3995d"
+      ],
+      [
+        "gmail:3794ed2c45e9c301"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v09",
+    "category": "vague_focus",
+    "question": "anything urgent",
+    "reference": "Urgent: the Globex check-in at 17:30 UTC today, where Daniel Foster is waiting for confirmation that the SSO fix ships before Mar 20; the cohort ARR owed to Northwind before the Tuesday partner meeting; records that still state old plans.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "calendar:bbeda5b103cb82876dd4651501",
+        "gmail:bee95ff7ca51c987",
+        "calendar:2ded3454537257a5518fa9905e"
+      ],
+      [
+        "gmail:75d73520ec4c68f3",
+        "gmail:ccd9c787ded3995d",
+        "slack:C07FUND:1773419400.449808"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v10",
+    "category": "vague_catchup",
+    "question": "catch me up",
+    "reference": "This week: the v2 auth decision went back to OAuth only, the billing cutover moved to Mar 31, pricing is $59 for new customers and $49 for existing, the seed close moved to May 15, the Taylor Brooks offer is dead, and the Globex SSO loop recurred.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:ceece9b31878fe40",
+        "slack:C01ENG:1773522000.994933",
+        "linear:ACME-142@20260314T2200"
+      ],
+      [
+        "gmail:bfda57e5a3e21af0",
+        "slack:C01ENG:1773331200.609253"
+      ],
+      [
+        "slack:C07FUND:1773421200.357681"
+      ],
+      [
+        "linear:ACME-431@20260312T1800",
+        "gmail:bee95ff7ca51c987"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v11",
+    "category": "vague_tasks",
+    "question": "what's blocked",
+    "reference": "Blocked and owned by you: ACME-316, ACME-342, ACME-349, ACME-352 and ACME-365. Elsewhere on the team, ACME-433 Hooli export timeout is blocked by infra change ACME-420.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "linear:ACME-316@20260219T1200"
+      ],
+      [
+        "linear:ACME-342@20260225T0900"
+      ],
+      [
+        "linear:ACME-349@20260307T0900"
+      ],
+      [
+        "linear:ACME-352@20260225T1100"
+      ],
+      [
+        "linear:ACME-365@20260222T0500"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v12",
+    "category": "vague_topic",
+    "question": "how's billing going",
+    "reference": "The billing cutover moved to Mar 31 (the Notion plan still says Mar 24 and is out of date). Daniel Kim asked to push the migration a week and was out until Mar 16. The webhook retry PR 230 is waiting on your review.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:bfda57e5a3e21af0",
+        "slack:C01ENG:1773331200.609253"
+      ],
+      [
+        "gmail:c1abbf680fedaacd",
+        "slack:C01ENG:1773248400.000100"
+      ],
+      [
+        "github:acme/billing#230"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v13",
+    "category": "vague_topic",
+    "question": "pricing?",
+    "reference": "Pricing is $59 per seat for new customers and $49 for existing customers (decided Mar 11). The Notion page Pricing v3 and Linear ACME-440 still say $49 for everyone and are out of date.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:7d0d75121cdeaac6",
+        "notion:163647759184b558a347537639422466",
+        "linear:ACME-441@20260313T1900"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v14",
+    "category": "vague_topic",
+    "question": "did we hire taylor",
+    "reference": "No. An offer of $165k was approved on Mar 3, put on hold on Mar 10 for the budget freeze, and on Mar 13 Taylor accepted another offer. The Notion hiring page still says the offer is out.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:e98c5b9d26b114a1"
+      ],
+      [
+        "gmail:07c7430cafafc2e3",
+        "slack:C08HIRE:1773156600.279355",
+        "gmail:681e9cabc5b3cb1f"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v15",
+    "category": "vague_topic",
+    "question": "when do we close the round",
+    "reference": "May 15, per Jordan at Northwind (Slack, Mar 13). The Notion plan says Apr 30 and the Northwind CRM deal says Mar 31, both out of date.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "slack:C07FUND:1773421200.357681"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v16",
+    "category": "vague_topic",
+    "question": "what's the deal with sso",
+    "reference": "Globex SSO redirect loop (ACME-431): reported Mar 3, fixed Mar 10 in PR 218, came back Mar 12 for Okta users and ACME-431 was reopened. PR 231 is open and waiting for your review. Daniel Foster wants confirmation of the fix before Mar 20 (their rollout is Mar 23).",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "linear:ACME-431@20260312T1800"
+      ],
+      [
+        "github:acme/api#231"
+      ],
+      [
+        "gmail:bee95ff7ca51c987"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v17",
+    "category": "vague_topic",
+    "question": "what's hooli saying",
+    "reference": "Sam Okafor at Hooli says the nightly export timed out again, the second time this month. ACME-433 tracks it and is blocked by infra change ACME-420.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:805093022b56ece6",
+        "gmail:93c4a504d87495b9"
+      ],
+      [
+        "linear:ACME-433@20260311T1500"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v18",
+    "category": "vague_person",
+    "question": "what did mei say",
+    "reference": "Mei Tanaka (Initech) asked about invoice INV-2207, which shows 40 seats where they bought 35. Alex confirmed it should be 35 and promised a credit note.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:b3e0be40fd6f1fea",
+        "gmail:19d8c431017747e4"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v19",
+    "category": "vague_stale",
+    "question": "is ACME-440 up to date",
+    "reference": "No. ACME-440 still says $49 per seat for everyone, but pricing is now $59 for new customers and $49 for existing (ACME-441 is done).",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "linear:ACME-440@20260306T1500"
+      ],
+      [
+        "linear:ACME-441@20260313T1900",
+        "gmail:7d0d75121cdeaac6",
+        "notion:163647759184b558a347537639422466"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v20",
+    "category": "vague_schedule",
+    "question": "any meetings with investors coming up",
+    "reference": "Yes: the Northwind Ventures partner update on Tuesday Mar 17 at 15:00 UTC (11:00 New York) with Jordan Pryce and Priya.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "calendar:e252dcf3e06e42f839b9cd47db"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v21",
+    "category": "vague_person",
+    "question": "who is jordan",
+    "reference": "Jordan Pryce is a partner at Northwind Ventures, the lead candidate for the seed extension.",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "crm:deal:23a551d6fe",
+        "gmail:6dff2b861992469a",
+        "gmail:75d73520ec4c68f3"
+      ]
+    ],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v22",
+    "category": "unanswerable",
+    "question": "how much runway do we have",
+    "reference": "Not available. There is no cash, burn or runway figure in any source, only fundraising targets.",
+    "answerable": false,
+    "expected_ids": [],
+    "forbidden_ids": []
+  },
+  {
+    "id": "v23",
+    "category": "unanswerable",
+    "question": "who's our CFO",
+    "reference": "Not available. No source says who the CFO is.",
+    "answerable": false,
+    "expected_ids": [],
     "forbidden_ids": []
   }
 ]

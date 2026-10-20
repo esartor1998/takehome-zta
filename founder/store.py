@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS items (
     title TEXT, body TEXT, quoted TEXT, author TEXT, author_how TEXT,
     people TEXT, status TEXT, start TEXT, end TEXT, flags TEXT, meta TEXT,
     state TEXT DEFAULT 'current', superseded_by TEXT, dup_group TEXT,
-    topic TEXT, embed_text TEXT
+    topic TEXT, embed_text TEXT, novelty REAL DEFAULT 0, gate REAL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS items_ts ON items(ts);
 CREATE INDEX IF NOT EXISTS items_topic ON items(topic);
@@ -28,7 +28,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS items_fts USING fts5(
 );
 CREATE TABLE IF NOT EXISTS people (
     id TEXT PRIMARY KEY, name TEXT, emails TEXT, slack_handle TEXT, linear_name TEXT,
-    org TEXT, external INTEGER, aliases TEXT
+    org TEXT, external INTEGER, aliases TEXT, role TEXT
 );
 CREATE TABLE IF NOT EXISTS links (a TEXT, b TEXT, reason TEXT);
 CREATE TABLE IF NOT EXISTS stale_records (
@@ -91,10 +91,10 @@ def row_to_item(row):
 
 def write_items(conn, items, people):
     for person in people.values():
-        conn.execute('INSERT OR REPLACE INTO people VALUES (?,?,?,?,?,?,?,?)',
+        conn.execute('INSERT OR REPLACE INTO people VALUES (?,?,?,?,?,?,?,?,?)',
                      (person.id, person.name, json.dumps(sorted(person.emails)),
                       person.slack_handle, person.linear_name, person.org, int(person.external),
-                      json.dumps(sorted(person.aliases()))))
+                      json.dumps(sorted(person.aliases())), person.role))
     for item in items:
         row = dict(item)
         for key in JSON_FIELDS:
@@ -103,9 +103,11 @@ def write_items(conn, items, people):
         row.setdefault('superseded_by', None)
         row.setdefault('dup_group', None)
         row.setdefault('topic', None)
+        row.setdefault('novelty', 0.0)
+        row.setdefault('gate', 0.0)
         cols = ['id', 'source', 'kind', 'thread_key', 'ts', 'title', 'body', 'quoted',
                 'author', 'author_how', 'people', 'status', 'start', 'end', 'flags', 'meta',
-                'state', 'superseded_by', 'dup_group', 'topic', 'embed_text']
+                'state', 'superseded_by', 'dup_group', 'topic', 'embed_text', 'novelty', 'gate']
         conn.execute(f"INSERT INTO items ({','.join(cols)}) VALUES ({','.join('?' * len(cols))})",
                      [row[c] for c in cols])
         names = ' '.join(people[p].name for p in [item['author']] + item['people']

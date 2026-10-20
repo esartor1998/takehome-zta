@@ -1,0 +1,20 @@
+{
+  "open_asks": [
+    "slack:C07FUND:1773419400.449808",
+    "slack:C07FUND:1773500400.415602",
+    "gmail:75d73520ec4c68f3",
+    "gmail:012ce504e5a045e9",
+    "gmail:bee95ff7ca51c987",
+    "github:acme/api#231",
+    "github:acme/billing#230"
+  ],
+  "open_promises": [
+    "gmail:ccd9c787ded3995d",
+    "gmail:3794ed2c45e9c301"
+  ],
+  "must_not_be_open": [
+    "gmail:ceece9b31878fe40",
+    "gmail:ff9c102bbfa27a06",
+    "gmail:19d8c431017747e4"
+  ]
+}
