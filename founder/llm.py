@@ -6,7 +6,7 @@ line in PROVIDERS. Nothing outside this file knows which provider answered.
 
 Embeddings stay on local ollama on purpose: the vector index is built once and
 should not change when the chat model does. Swapping the embedding model means
-re-ingesting, since vectors from two models are not comparable.
+re-ingesting, since vectors from two models are not comparable
 """
 import hashlib
 import json

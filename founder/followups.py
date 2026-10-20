@@ -11,7 +11,7 @@ The model reads the candidate sentence and pulls out what was asked and the
 deadline in the sender's words. Everything that decides whether a follow-up is
 open is plain code: replies in the same thread, a later state on an issue the
 message names, a PR that merged, and deadlines parsed against the message's own
-date, so 'by Friday' sent on a Friday means that day.
+date, so 'by Friday' sent on a Friday means that day
 """
 import re
 from datetime import datetime, timedelta, timezone
@@ -147,7 +147,7 @@ def find_followups(items, ident):
         later = [m for m in by_thread[item['thread_key']] if m['ts'] > item['ts'] and m['author'] not in (None, item['author'])]
         later_mine = [m for m in later if m['author'] == founder]
         # a teammate answering a thread the founder was copied on closes the ask
-        # as well: it was answered, just not by the founder
+        # as well: it was answered, by someone other than the founder
         later_team = [m for m in later if not ident.people[m['author']].external] if item['kind'] == 'email' else []
         evidence = (later_mine or later_team)[0]['id'] if (later_mine or later_team) else (handled_by(item) or '')
         status = 'replied' if (later_mine or later_team) else ('handled' if evidence else 'open')

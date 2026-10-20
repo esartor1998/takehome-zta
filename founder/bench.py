@@ -7,7 +7,7 @@ Tasks, each timed and costed on its own:
   ask     every eval question, judged by one fixed model so scores compare
 
 The judge is held constant across models. Grading each model with itself
-would make its score depend on its own blind spots.
+would make its score depend on its own blind spots
 """
 import json
 import re

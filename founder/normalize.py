@@ -186,7 +186,7 @@ def slack_items(raw_dir, ident):
             # generator draws reply times independently of the parent. a reply
             # cannot precede its parent, so we flag it instead of trusting ts
             flags.append('reply_before_parent')
-        # '<@U01ALEXCHEN>' is unreadable to the model and to full text search.
+        # '<@U01ALEXCHEN>' is unreadable to the model and to full text search
         # we replace it with the name so 'asked Alex' and the mention agree
         text = MENTION_RE.sub(lambda m: '@' + ident.name(ident.from_slack(m.group(1)) or m.group(1)),
                               row['text'])
@@ -321,7 +321,7 @@ def normalize_all(raw_dir, ident):
     now = _iso(config.NOW)
     for item in items:
         # filler timestamps run up to 23h past the fixed clock. an item from
-        # the future cannot exist yet, so we quarantine it rather than let it
+        # the future cannot exist yet, so we quarantine it instead of letting it
         # show up as 'latest'. events are the exception: scheduled ones are
         # supposed to be in the future
         if item['kind'] != 'event' and item['ts'] > now:

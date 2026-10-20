@@ -510,6 +510,10 @@ Shape follows `conversations.history`: `type`, `user` (a `U…` ID, not handle),
 
 ### Linear
 Shape follows the GraphQL `issue` query: `id`, `identifier`, `title`, `description`, `state { name }`, `assignee { id name }`, `priority`, `createdAt`, `updatedAt`, `labels { nodes { name } }` [citation:16]. **Important:** a single GraphQL query returns one current state. This dataset emits multiple records with the same `identifier` to simulate an **audit/snapshot export** (e.g., webhook history or repeated polling). Document this in your README; a production adapter would dedupe by `identifier` and keep the record with max `updatedAt`.
+
+
+### GitHub, Notion, CRM (second layer, synthetic_data_expansion.py)
+GitHub rows follow the REST pulls shape (`number`, `title`, `state`, `merged_at`, `requested_reviewers`, `user.login`) with PR comments as separate rows. Notion rows follow the pages shape (`properties.title`, `last_edited_time`, `last_edited_by`) with the page text flattened to blocks. CRM rows follow the HubSpot deals shape (`properties.dealname`, `dealstage`, `closedate`, `hs_lastmodifieddate`, contact associations) with notes as separate rows and contacts in `crm_contacts.json`. Gmail rows in this layer add multipart and html-only payloads, Cc headers, forwards, outlook-style quotes and bulk-mail headers. Calendar rows add other timezones, all-day dates, tentative status and outside attendees.
 """)
 
 counts = {"gmail":len(gmail_raw),"calendar":len(cal_raw),"slack":len(slack_raw),"linear":len(linear_raw),

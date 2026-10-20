@@ -209,7 +209,7 @@ class IdentityResolver:
         if automated or AUTOMATED_LOCAL_RE.match(local):
             return None, 'automated'
         # an unknown mailbox on our own domain is a role address (eng-team@),
-        # not a person, and the signature inside it is who actually wrote
+        # not a person, and the signature inside it is who wrote
         if email.endswith('@' + self.company_domain):
             self.shared_inboxes.add(email)
             return None, 'shared_inbox'

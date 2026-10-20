@@ -157,8 +157,12 @@ def recent_decisions(conn):
         current = [r for r in rows if r['status'] == 'current']
         if not current:
             continue
+        norm = lambda text: re.sub(r'\W+', ' ', text.lower()).strip()
+        # what it replaced has to differ from what it is now. the same value posted
+        # in slack and in email is one decision, not 'Mar 31 replacing Mar 31'
         out.append({'label': store.topic_label(conn, topic), 'current': current[-1],
-                    'history': [r for r in rows if r['status'] == 'superseded']})
+                    'history': [r for r in rows if r['status'] == 'superseded'
+                                and norm(r['value']) != norm(current[-1]['value'])]})
     return out
 
 
@@ -250,6 +254,11 @@ def recurring_customer_issues(conn, names):
         outside = [i for i in items if i['author'] and names.get(i['author'], '').endswith(')')]
         reopened = any(i['source'] == 'linear' and i['status'] == 'Reopened' for i in items)
         if len(days) < 2 and not reopened:
+            continue
+        # template mail from teammates repeats customer names all day. a real
+        # recurring problem is reported by the customer, or shows up in more than
+        # one tool (an email, an issue, a thread)
+        if len(sources) < 2 and len(outside) < 2:
             continue
         score = 2 * len(days) + 3 * len(sources) + 3 * len(outside) + (10 if reopened else 0)
         out.append({'customer': org, 'label': label, 'items': items, 'days': len(days), 'sources': sorted(sources),

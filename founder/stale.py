@@ -17,7 +17,7 @@ and ask the model one narrow question, is this record now out of date.
 The filter does the real work. A 3B model asked 'is this record outdated' says
 yes to nearly everything, so it flagged 60 routine issues. Asked 'is this about
 the same subject' it is useful, and the concrete-value test, which is plain
-code, decides whether the two actually disagree
+code, decides whether the two disagree
 """
 import re
 
@@ -74,6 +74,9 @@ GENERIC = frozenset('this that with from have will they them their there were be
                     'just like some more most very much many make made need needs please thanks '
                     'thank hello team update notes draft heads attendees owner action'.split())
 MIN_SHARED_WORDS = 2
+# notes of a meeting that happened are history, not a record of current state, so a
+# later change does not make them wrong. they were being flagged as stale
+HISTORICAL_RE = re.compile(r'meeting notes|notes[: ]|minutes|postmortem|retro(?:spective)?\b', re.I)
 
 
 def shared_words(a, b):
@@ -95,7 +98,7 @@ def find_stale(items, vectors, scores, entities):
     from datetime import datetime, timedelta
     by_id = {i['id']: i for i in items}
     live = [i for i in items if i['state'] == 'current']
-    records = [i for i in live if i['kind'] in RECORD_KINDS]
+    records = [i for i in live if i['kind'] in RECORD_KINDS and not HISTORICAL_RE.search(i['title'])]
     out = []
     for rec in records:
         floor = datetime.fromisoformat(rec['ts'].replace('Z', '+00:00')) + timedelta(hours=MIN_GAP_HOURS)
@@ -131,9 +134,23 @@ def find_stale(items, vectors, scores, entities):
         if not 1 <= k <= len(newer):
             k = 1     # the closest item by similarity
         out.append({'item_id': rec['id'], 'newer_id': newer[k - 1]['id'],
-                    'current_fact': parsed.get('current_fact', '').strip() or newer[k - 1]['body'].split('\n')[0][:100],
+                    'current_fact': _fact_sentence(newer[k - 1], rec, parsed.get('current_fact', '')),
                     'why': f"newer {newer[k - 1]['source']} item from {newer[k - 1]['ts'][:10]} changes this"})
     return out
+
+
+def _fact_sentence(newer, rec, said):
+    """What the newer item says that the record does not: the model's phrase if it
+    is a copy, else the sentence holding the value the record lacks"""
+    text = f"{newer['title']}. {newer['body']}"
+    said = said.strip()
+    if said and re.sub(r'\W+', ' ', said.lower()) in re.sub(r'\W+', ' ', text.lower()):
+        return said
+    missing = concrete_values(text) - concrete_values(f"{rec['title']}. {rec['body']}")
+    for sentence in re.split(r'(?<=[.!?])\s+|\n', newer['body']):
+        if missing & concrete_values(sentence):
+            return sentence.strip()[:140]
+    return newer['body'].split('\n')[0][:140]
 
 
 def write_stale(conn, rows):

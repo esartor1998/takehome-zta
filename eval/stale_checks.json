@@ -10,6 +10,7 @@
   ],
   "must_not_be_stale": [
     "notion:163647759184b558a347537639422466",
-    "linear:ACME-441@20260313T1900"
+    "linear:ACME-441@20260313T1900",
+    "notion:4bae63a7e71c19eae755005daf03a5cf"
   ]
 }

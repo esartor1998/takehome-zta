@@ -19,7 +19,7 @@ model is narrow: does an old record still say what the current decision says.
                  no 'who and when' header: with the header, same-topic and
                  cross-topic pairs overlapped completely (0.68 to 0.92 against
                  0.58 to 0.73), without it they nearly separate. groups are
-                 built around anchors, items that clearly are a change of plan,
+                 built around anchors, items that are plainly a change of plan,
                  because clustering every candidate chained all of them into one
   4. validate    values must be copied from the text, rules override the kind
                  when the wording is unambiguous ('reverting', 'corrected')
@@ -39,7 +39,7 @@ HINT_RE = re.compile(
     r'\b(decision|decided|reversing|reverting|reopening|new plan|correction|corrected|'
     r'confirmed:|rescheduled|moving .{0,40} from|\(was )', re.I)
 
-# what a change of plan sounds like, in the words people actually use. the gate
+# what a change of plan sounds like, in the words people use. the gate
 # takes the items most similar to any of these. wording here is deliberately
 # generic: tuning it to the planted cases would make the recall number meaningless
 PROTOTYPES = (
@@ -109,6 +109,20 @@ RULE_KINDS = (
     (re.compile(_START + r'(correction|corrected)\b', re.I), 'correction'),
     (re.compile(_START + r'decision\b', re.I), 'decision'),
 )
+
+
+def _decision_sentence(body):
+    """The sentence of a body that carries the decision: one that says decision
+    or has a date, price or number in it. Falling back to the first line gave
+    'Attendees: Hannah, Sofia' as the value of a meeting-notes decision"""
+    sentences = [x.strip() for x in re.split(r'(?<=[.!?])\s+|\n', body) if x.strip()]
+    for sentence in sentences:
+        if re.search(r'\bdecision\b', sentence, re.I):
+            return sentence[:160]
+    for sentence in sentences:
+        if re.search(r'\$\d|\b\d{1,2}\b|\b(?:jan|feb|mar|apr|may|jun)[a-z]*\b', sentence, re.I):
+            return sentence[:160]
+    return (sentences or [body])[0][:160]
 
 
 def _norm(text):
@@ -203,7 +217,7 @@ def validate(item, parsed):
     # paraphrased or invented cannot be matched against other items later
     value = parsed.get('value', '').strip()
     if not value or _norm(value) not in _norm(text):
-        value = item['body'].split('\n')[0][:120]
+        value = _decision_sentence(item['body'])
     # the model copies whole sentences or channel names into retracts, which
     # then matches nothing or too much. we only trust its answer when it is a
     # short span from the body with a digit in it (a date, a version, an id)
@@ -324,7 +338,7 @@ def group_events(events):
         merged += 1
 
     # groups with no anchor of their own (a doc, a linear issue, a quiet reply)
-    # join the topic they are clearly about, or are dropped
+    # join the topic they are plainly about, or are dropped
     for members in loose.values():
         best, target = 0.0, None
         for key, group in anchored.items():
@@ -384,7 +398,7 @@ def resolve(events):
         # the anchor is the last event that changed the plan. everything from
         # there on, plus anything duplicating it in another tool, is the
         # current state. earlier events are superseded. records after the
-        # anchor (a linear issue closed once the email went out) agree with it.
+        # anchor (a linear issue closed once the email went out) agree with it
         # which records still state an old plan is a separate pass (stale.py)
         changers = [e for e in live if e['kind'] in ('reversal', 'correction')]
         anchor = (changers or live)[-1]

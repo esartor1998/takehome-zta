@@ -314,7 +314,7 @@ def pull_structured(conn, question, intents, window, people, extras=None):
                     words & set(re.findall(r'[a-z0-9]+', (r['title'] + ' ' + r['body']).lower())))
             best = max((len(w) for w in topic_words.values()), default=0)
             # nothing matches: the question names something that is not a decision
-            # topic ('is ACME-440 up to date'), so the decision pull has nothing to add.
+            # topic ('is ACME-440 up to date'), so the decision pull has nothing to add
             # returning every decision here buried the one item the question named
             keep = {t for t, w in topic_words.items() if len(w) == best} if best else set()
             rows = [r for r in rows if r['topic'] in keep]

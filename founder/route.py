@@ -180,7 +180,7 @@ def plan(conn, question):
                 org_people.append(row['id'])
     activity = bool(re.search(r'\b(saying|said|up to|doing|working on|latest from|anything from|hear from)\b', q))
 
-    # a person with nothing else to ask about is a request for their activity.
+    # a person with nothing else to ask about is a request for their activity
     # 'what is daniel saying', 'anything from priya', 'dan?'
     if kind == 'topic' and org_people and activity:
         kind = 'person'
