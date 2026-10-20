@@ -39,12 +39,15 @@ KIND_PATTERNS = (
                   r"need(?:s)? (?:a |my )?(?:reply|response|answer)|who.?s waiting|what am i missing|anything i.?m missing)\b"),
     ('focus', r"\b(urgent|priorit\w+|focus|on fire|needs? (?:my )?attention|most important|first thing|"
               r"what should i (?:do|work)|where do i start)\b"),
+    ('decisions', r"\b(decisions?|decided|what was decided|what did we decide)\b"),
     ('catchup', r"\b(catch me up|catch up|what did i miss|what.?s new|any updates?|updates?\??$|brief me|"
-                r"summar(?:y|ize|ise)|recap|what happened|going on|how.?s everything|overview)\b"),
+                r"recap|what happened|going on|how.?s everything|overview|summar(?:y|ize|ise) (?:my|the|everything|all))\b"),
     ('blocked', r"\b(block(?:ed|ers?)?|stuck|stalled)\b"),
     ('schedule', r"(\bon today\b|\bon tomorrow\b|\bmy day\b|\bagenda\b|\bcalendar\b|\bschedule\b|\bmeetings?\b|"
                  r"\bwhat do i have\b|\bam i free\b|\bwhat.?s on\b|\bwhats on\b|\bany(?:thing)? (?:calls|meetings)\b)"),
 )
+
+DECISION_WORDS = frozenset('decision decisions decided decide made make recently were was lately'.split())
 
 # role words and the crm status that marks them
 ROLE_WORDS = {'investor': 'investor', 'vc': 'investor', 'candidate': 'candidate', 'recruiter': 'recruiter'}
@@ -154,22 +157,39 @@ def plan(conn, question):
         if re.search(pattern, q):
             kind = name
             break
+    # 'which emails relate to upcoming meetings' asks for mail, not the calendar
+    if kind == 'schedule' and re.search(r'\bemails?\b|\bmessages?\b', q):
+        kind = 'topic'
     words = re.findall(r"[a-z0-9$][a-z0-9'$-]*", q)
     name_words = {w for p in people for w in re.findall(r'[a-z]+', (rows_by_id(
         [dict(r) for r in conn.execute('SELECT id, name FROM people')], p)['name']).lower())}
     alias_words = {a for ids in ambiguous.values() for a in ()} | set(ambiguous)
     terms = [w for w in words if w not in FILLER and w not in name_words and w not in alias_words and len(w) > 1]
 
+    # 'what decisions were made recently' lists decisions. 'what was the original
+    # auth decision' is about one topic, and listing every decision answers it badly
+    if kind == 'decisions' and any(t not in DECISION_WORDS for t in terms):
+        kind = 'topic'
+    # a company name stands for the people we know there. 'what is hooli saying'
+    # is about Sam Okafor even though his emails never say 'Hooli'. a bare
+    # company name stays a topic question, since a company is more than its contacts
+    org_people = []
+    if not people:
+        for row in conn.execute("SELECT id, org FROM people WHERE org != ''"):
+            if any(t == row['org'].lower().split()[0] for t in terms):
+                org_people.append(row['id'])
+    activity = bool(re.search(r'\b(saying|said|up to|doing|working on|latest from|anything from|hear from)\b', q))
+
     # a person with nothing else to ask about is a request for their activity.
     # 'what is daniel saying', 'anything from priya', 'dan?'
-    if kind == 'topic' and not people and not terms and window:
-        kind = 'schedule'            # 'tomorrow?' on its own is 'what is on tomorrow'
-    elif kind == 'topic' and people and (not terms or window):
+    if kind == 'topic' and org_people and activity:
         kind = 'person'
-    elif kind == 'topic' and people and re.search(r'\b(saying|said|up to|doing|working on|latest from|anything from|hear from)\b', q):
+    elif kind == 'topic' and not people and not terms and window:
+        kind = 'schedule'            # 'tomorrow?' on its own is 'what is on tomorrow'
+    elif kind == 'topic' and people and (not terms or window or activity):
         kind = 'person'
     # a role word stands for the people who have it: 'investors' is Jordan and
-    # Caroline, 'candidates' is Taylor. the question is then about their activity
+    # Caroline, 'candidates' is Taylor
     group = ''
     for word, role in ROLE_WORDS.items():
         if any(t.startswith(word) for t in terms) and not people:
@@ -177,6 +197,7 @@ def plan(conn, question):
             if ids:
                 people, group = ids, word.rstrip('s') + 's'
                 kind = 'person' if kind == 'topic' else kind
+    people = people or org_people
     expansions = []
     for key, words_ in SYNONYMS.items():
         if any(t.startswith(key[:5]) for t in terms):
@@ -185,6 +206,9 @@ def plan(conn, question):
                  terms=terms, mine=mine)
     if window:
         plan_.start, plan_.end, plan_.day_label = window
+    elif kind == 'schedule' and people:
+        # 'any meetings with investors coming up' looks forward, not at today
+        plan_.start, plan_.end, plan_.day_label = config.NOW, config.NOW + timedelta(days=14), 'coming up'
     elif kind == 'schedule':
         today = config.NOW.replace(hour=0, minute=0, second=0, microsecond=0)
         plan_.start, plan_.end, plan_.day_label = today, today + timedelta(days=1), 'today'

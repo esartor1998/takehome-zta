@@ -108,6 +108,9 @@ def day_events(conn, names, start, end):
 def event_line(e):
     item = e['item']
     when = 'all day' if 'all day' in e['flags'] else f"{_hhmm(item['start'])}-{_hhmm(item['end'])} UTC"
+    # a list that spans days needs the date, or 'Tuesday's meeting' reads as today's
+    if item['start'][:10] != config.NOW.strftime('%Y-%m-%d'):
+        when = f"{_parse(item['start']).strftime('%a %b %-d')} {when}"
     notes = [f for f in e['flags'] if f != 'all day']
     if e['past']:
         notes.append('already happened')
@@ -142,11 +145,12 @@ def meeting_prep(conn, event, names):
 # ---- changes of plan and stale records ----------------------------------------
 
 def recent_decisions(conn):
-    """Topics whose plan changed this week, with what replaced what"""
+    """Topics where a decision was made or changed recently, with what it
+    replaced. A topic counts if its current decision is recent, so a plain
+    decision (pricing, a hiring call) shows up as well as a reversal"""
     since = _iso(config.NOW - timedelta(days=WINDOW_DAYS + 7))
     topics = [r['topic'] for r in conn.execute(
-        "SELECT topic FROM decisions WHERE kind IN ('reversal','correction') AND ts >= ? "
-        'GROUP BY topic', (since,))]
+        "SELECT topic FROM decisions WHERE status='current' AND ts >= ? GROUP BY topic", (since,))]
     out = []
     for topic in topics:
         rows = [dict(r) for r in conn.execute('SELECT * FROM decisions WHERE topic=? ORDER BY ts', (topic,))]
@@ -273,12 +277,15 @@ def build_facts(conn, names):
             hours = (_parse(item['start']) - config.NOW).total_seconds() / 3600
             notes, ids = meeting_prep(conn, e, names)
             prep = f". Before it: {'; '.join(notes)}" if notes else ''
-            add(100 - hours + (10 if notes else 0), f"Meeting today: {event_line(e)}{prep}", [item['id']] + ids, 'meeting')
+            # a routine meeting is not a priority. one with outsiders and open business is, and
+            # a tentative one is not. these weights put a prepared customer meeting above a weekly sync
+            score = 60 - hours + (30 if notes else 0) - (20 if item['status'] == 'tentative' else 0)
+            add(score, f"Meeting today: {event_line(e)}{prep}", [item['id']] + ids, 'meeting')
         else:
             add(5, f"Today, earlier or not happening: {event_line(e)}", [item['id']], 'schedule', handled=True)
     for r in stale_records(conn):
         fact = f", but the newer information says: {r['fact']}" if r['fact'] else ''
-        add(90, f"{r['title']} ({r['source']}) still says '{r['says']}'{fact}. It is out of date and needs updating",
+        add(72, f"{r['title']} ({r['source']}) still says '{r['says']}'{fact}. It is out of date and needs updating",
             [r['item_id'], r['newer_id']], 'stale')
     for d in recent_decisions(conn):
         text = f"{d['label']}: current plan is '{d['current']['value']}'"
@@ -287,7 +294,7 @@ def build_facts(conn, names):
         add(25, text + '. Records already reflect this, no action needed', [d['current']['item_id']], 'change', handled=True)
     for row in followup_rows(conn):
         done = row['status'] != 'open'
-        base = 80 if row['kind'] == 'ask' else 75
+        base = 70 if row['kind'] == 'ask' else 70
         add(5 if done else base + _due_bonus(row), followup_text(row, names), [row['item_id'], row['evidence']],
             'ask' if row['kind'] == 'ask' else 'promise', handled=done)
     for item in blocked_for_founder(conn):
@@ -305,16 +312,79 @@ def collect_facts(conn):
     return build_facts(conn, _names(conn))
 
 
-def schedule_facts(conn, start, end):
-    """One fact per calendar event in the window, in time order"""
+def schedule_facts(conn, start, end, people=None):
+    """One fact per calendar event in the window, in time order. With people,
+    only events they are in"""
     names = _names(conn)
     out = []
     for e in day_events(conn, names, start, end):
         item = e['item']
+        if people and not set(people) & set(item['people']):
+            continue
         notes, ids = (meeting_prep(conn, e, names) if e['upcoming'] else ([], []))
         prep = f". Before it: {'; '.join(notes)}" if notes else ''
         out.append({'score': 0, 'text': event_line(e) + prep, 'ids': [item['id']] + ids, 'cat': 'schedule',
                     'handled': False})
+    return out
+
+
+def blocked_facts(conn, mine_only=False):
+    """Every blocked issue, yours first, so a short answer shows what is yours
+    and says how many others there are"""
+    names = _names(conn)
+    rows = [store.row_to_item(r) for r in conn.execute(
+        "SELECT * FROM items WHERE source='linear' AND state='current' AND status='Blocked'")]
+    mine = sorted((r for r in rows if r['author'] == config.FOUNDER_PERSON_ID), key=_rank)
+    others = sorted((r for r in rows if r['author'] != config.FOUNDER_PERSON_ID), key=lambda r: (_rank(r), r['ts']))
+    out = []
+    for r in mine + ([] if mine_only else others):
+        why = re.search(r'blocked by [^.]+', r['body'], re.I)
+        owner = 'yours' if r['author'] == config.FOUNDER_PERSON_ID else f"owner {names.get(r['author'], 'unassigned')}"
+        out.append({'score': 0, 'text': f"{r['meta']['identifier']} {_clean_title(r)} ({owner}, "
+                    f"{PRIORITY_NAMES.get(r['meta']['priority'], 'no priority')}" + (f"; {why.group(0)}" if why else '') + ')',
+                    'ids': [r['id']], 'cat': 'blocked', 'handled': False, 'mine': r['author'] == config.FOUNDER_PERSON_ID})
+    return out
+
+
+MEETING_EMAIL_DAYS = 14   # how far back mail counts as being about a meeting
+MAX_WORD_DF = 6           # a title word in more emails than this relates nothing
+
+
+def meeting_email_facts(conn):
+    """For each upcoming meeting, the recent emails that relate to it: a reschedule
+    email linked by title, or mail from or to an outside guest, or mail sharing a
+    distinctive word with the meeting title. Teammate chatter needs the title link
+    or a word match, since teammates write to each other about everything"""
+    names = _names(conn)
+    out = []
+    since = _iso(config.NOW - timedelta(days=MEETING_EMAIL_DAYS))
+    email_df = {}
+    for row in conn.execute("SELECT title, body FROM items WHERE kind='email' AND state='current' AND ts >= ?", (since,)):
+        for w in set(re.findall(r'[a-z]{4,}', f"{row['title']} {row['body']}".lower())):
+            email_df[w] = email_df.get(w, 0) + 1
+    for e in day_events(conn, names, config.NOW, config.NOW + timedelta(days=MEETING_EMAIL_DAYS)):
+        if not e['upcoming'] and not e['started']:
+            continue
+        item = e['item']
+        linked = {r['b'] if r['a'] == item['id'] else r['a'] for r in conn.execute(
+            "SELECT a, b FROM links WHERE (a=? OR b=?) AND reason='title'", (item['id'], item['id']))}
+        # distinctive title words only: 'globex' or 'sync' appear in dozens of emails and
+        # relate everything to everything. whole words, so 'board' is not 'dashboard'
+        words = [w for w in re.findall(r'[a-z]{4,}', item['title'].lower())
+                 if w not in ('meeting', 'review', 'check') and email_df.get(w, 0) <= MAX_WORD_DF]
+        guests = [p for p in item['people'] if p != config.FOUNDER_PERSON_ID]
+        found = []
+        for row in conn.execute("SELECT * FROM items WHERE kind='email' AND state='current' AND ts >= ? AND ts <= ? "
+                                'ORDER BY ts DESC', (since, _iso(config.NOW))):
+            mail = store.row_to_item(row)
+            text = f"{mail['title']} {mail['body']}".lower()
+            from_guest = mail['author'] in e['external'] or bool(set(mail['people']) & set(e['external']))
+            if mail['id'] in linked or from_guest or any(re.search(rf'\b{w}\b', text) for w in words):
+                found.append(mail)
+        for mail in found[:3]:
+            out.append({'score': 0, 'text': f"Email '{mail['title']}' from {names.get(mail['author'], 'someone')} "
+                        f"({mail['ts'][:10]}) relates to {item['title']} on {item['start'][:10]}",
+                        'ids': [mail['id'], item['id']], 'cat': 'meeting_email', 'handled': False})
     return out
 
 
@@ -342,7 +412,11 @@ def focus_section(facts):
     # the model likes to open with 'Here is the morning brief'. we only keep
     # the numbered lines
     lines = [l for l in result['text'].strip().splitlines() if re.match(r'\s*\d+\.', l)]
-    return answer.CITE_RE.sub(swap, '\n'.join(lines) or result['text'].strip()), cited, result
+    if len(lines) != len(top):
+        # a model that ignored the format (headings, bullets, a title) gets no say:
+        # the facts themselves are the numbered lines
+        lines = [f"{n}. {f['text']} [{n}]" for n, f in enumerate(top, 1)]
+    return answer.CITE_RE.sub(swap, '\n'.join(lines)), cited, result
 
 
 def generate(conn):

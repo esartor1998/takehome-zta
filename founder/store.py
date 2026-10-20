@@ -114,7 +114,7 @@ def write_items(conn, items, people):
                          if p and p in people)
         conn.execute('INSERT INTO items_fts(rowid, title, body, who) VALUES '
                      '((SELECT rowid FROM items WHERE id=?),?,?,?)',
-                     (item['id'], item['title'], item['body'], names))
+                     (item['id'], f"{item['title']} {item['meta'].get('identifier', '')}".strip(), item['body'], names))
     conn.commit()
 
 

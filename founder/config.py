@@ -39,7 +39,7 @@ def model_slug(spec):
 def use_model(spec):
     """Point the module-level paths at the state for one model"""
     global CHAT_MODEL, STATE_DIR, DB_PATH, CHROMA_PATH, LLM_CACHE_PATH
-    CHAT_MODEL = spec if ':' in spec and spec.split(':')[0] in ('ollama', 'anthropic') \
+    CHAT_MODEL = spec if ':' in spec and spec.split(':')[0] in ('ollama', 'anthropic', 'openai') \
         else f'ollama:{spec}'
     STATE_DIR = Path(os.environ.get('FOUNDER_STATE', ROOT / '.state')) / model_slug(CHAT_MODEL)
     DB_PATH = STATE_DIR / 'context.db'

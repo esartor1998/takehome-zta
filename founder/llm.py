@@ -10,6 +10,7 @@ re-ingesting, since vectors from two models are not comparable.
 """
 import hashlib
 import json
+import os
 import time
 import urllib.error
 import urllib.request
@@ -133,7 +134,25 @@ def _call_anthropic(name, system, user, schema, max_tokens):
             'completion_tokens': usage.get('output_tokens', 0)}
 
 
-PROVIDERS = {'ollama': _call_ollama, 'anthropic': _call_anthropic}
+def _call_openai(name, system, user, schema, max_tokens):
+    """Any server speaking the openai chat completions api: openai itself,
+    openrouter, vllm, lm studio, or ollama's own /v1. FOUNDER_OPENAI_BASE picks
+    the server and OPENAI_API_KEY the key (local servers ignore it)"""
+    base = os.environ.get('FOUNDER_OPENAI_BASE', 'https://api.openai.com/v1').rstrip('/')
+    payload = {'model': name, 'max_tokens': max_tokens, 'temperature': 0,
+               'messages': [{'role': 'system', 'content': system}, {'role': 'user', 'content': user}]}
+    if schema:
+        payload['response_format'] = {'type': 'json_schema',
+                                      'json_schema': {'name': 'respond', 'schema': schema, 'strict': False}}
+    key = os.environ.get('OPENAI_API_KEY', 'none')
+    resp = _http(base + '/chat/completions', payload,
+                 {'Content-Type': 'application/json', 'Authorization': f'Bearer {key}'}, timeout=900)
+    usage = resp.get('usage', {})
+    return {'text': resp['choices'][0]['message']['content'] or '',
+            'prompt_tokens': usage.get('prompt_tokens', 0), 'completion_tokens': usage.get('completion_tokens', 0)}
+
+
+PROVIDERS = {'ollama': _call_ollama, 'anthropic': _call_anthropic, 'openai': _call_openai}
 
 
 # ---- public api -----------------------------------------------------------

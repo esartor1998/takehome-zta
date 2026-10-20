@@ -33,8 +33,7 @@ GENERIC_DECISION_WORDS = frozenset(
 INTENTS = {
     'meetings': r'\b(meeting|calendar|schedule|sync|on today|call|standup|invite|upcoming)\b',
     'blocked': r'\b(block|blocked|blocker|blockers|stuck)\b',
-    'decisions': r'\b(decision|decisions|decided|current|plan|date|ship|auth|authentication|'
-                 r'freeze|roadmap|reversed|changed)\b',
+    'decisions': r'\b(decision|decisions|decided|plan|ship|auth|authentication|freeze|roadmap|reversed|changed)\b',
     'followups': r'\b(follow.?ups?|missing|waiting|unanswered|owe|reply|respond)\b',
     'cancel': r'\b(cancel\w*|resched\w*|moved|postpone\w*)\b',
     'focus': r'\b(focus|priorit\w+|important|urgent|today)\b',
@@ -199,6 +198,20 @@ def pull_person_activity(conn, people, days=ACTIVITY_DAYS):
     return out
 
 
+def pull_named_refs(conn, question):
+    """Items the question names outright: an issue id like ACME-440 or a PR like
+    'PR #231'. An exact reference is the strongest signal there is"""
+    ids = []
+    for ident in dict.fromkeys(re.findall(r'\bACME-\d+\b', question, re.I)):
+        row = conn.execute("SELECT id FROM items WHERE source='linear' AND state='current' AND "
+                           "json_extract(meta,'$.identifier')=? COLLATE NOCASE", (ident,)).fetchone()
+        if row:
+            ids.append(row['id'])
+    for number in dict.fromkeys(re.findall(r'(?:\bPR\b|pull request)\s*#?(\d+)', question, re.I)):
+        ids += [r['id'] for r in conn.execute("SELECT id FROM items WHERE kind='pr' AND json_extract(meta,'$.number')=?", (int(number),))]
+    return ids
+
+
 def pull_named_events(conn, question):
     """Meetings named in the question, in every state and on every date. This is
     what lets 'was the Friday sync cancelled' see the cancelled Friday event and
@@ -278,8 +291,8 @@ def pull_structured(conn, question, intents, window, people, extras=None):
         owner_sql = f" AND author IN ({','.join('?' * len(people))})" if people else ''
         rows = conn.execute(
             "SELECT id FROM items WHERE source='linear' AND state='current' AND status='Blocked'"
-            + owner_sql + ' ORDER BY (json_extract(meta, "$.priority") = 0), '
-            'json_extract(meta, "$.priority"), ts DESC LIMIT 15', sorted(people))
+            + owner_sql + ' ORDER BY (author = ?) DESC, (json_extract(meta, "$.priority") = 0), '
+            'json_extract(meta, "$.priority"), ts DESC LIMIT 15', sorted(people) + [config.FOUNDER_PERSON_ID])
         ids += [r['id'] for r in rows]
 
     if 'decisions' in intents:
@@ -300,9 +313,11 @@ def pull_structured(conn, question, intents, window, people, extras=None):
                 topic_words.setdefault(r['topic'], set()).update(
                     words & set(re.findall(r'[a-z0-9]+', (r['title'] + ' ' + r['body']).lower())))
             best = max((len(w) for w in topic_words.values()), default=0)
-            if best:
-                keep = {t for t, w in topic_words.items() if len(w) == best}
-                rows = [r for r in rows if r['topic'] in keep]
+            # nothing matches: the question names something that is not a decision
+            # topic ('is ACME-440 up to date'), so the decision pull has nothing to add.
+            # returning every decision here buried the one item the question named
+            keep = {t for t, w in topic_words.items() if len(w) == best} if best else set()
+            rows = [r for r in rows if r['topic'] in keep]
         ids += [r['item_id'] for r in rows[:12]]
         if extras is not None:
             extras['decision_topics'] = list(dict.fromkeys(r['topic'] for r in rows[:12]))
@@ -349,7 +364,8 @@ def retrieve(conn, question, k=10, plan=None):
         'structured': pull_structured(conn, question, intents, window, people, extras),
     }
     named = pull_named_events(conn, question)
-    pulls['structured'] = list(dict.fromkeys(named + pulls['structured']))
+    refs = pull_named_refs(conn, question)
+    pulls['structured'] = list(dict.fromkeys(refs + named + pulls['structured']))
     if plan and plan.kind == 'person':
         pulls['structured'] = pull_person_activity(conn, [p for p in plan.people])
     ranked = fuse(pulls)
@@ -366,7 +382,7 @@ def retrieve(conn, question, k=10, plan=None):
         chosen.append(item_id)
         # when exact structured hits exist the vector and fts tail is mostly
         # noise ('rerunning CI' for a meeting question), so we keep a short tail
-        if len(chosen) >= (min(k, len(pulls['structured']) + (0 if 'blocked' in intents or named else 3)) if pulls['structured'] else k):
+        if len(chosen) >= (min(k, len(pulls['structured']) + (0 if 'blocked' in intents or named or refs or (plan and plan.kind == 'person' and not plan.group) else 3)) if pulls['structured'] else k):
             break
     return {'ids': chosen, 'plan_kind': plan.kind if plan else '', 'decision_topics': extras.get('decision_topics', []), 'intents': sorted(intents), 'people': sorted(people),
             'window': window, 'pulls': {n: len(v) for n, v in pulls.items()}}

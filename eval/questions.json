@@ -118,7 +118,7 @@
     "id": "q09",
     "category": "identity",
     "question": "What did Rebecca Liu say about the Globex addendum?",
-    "reference": "Rebecca said Globex signed the OAuth-only addendum, so the v2 API reverts to OAuth only, and asked for ACME-142 to be updated. She said the same in Slack #eng.",
+    "reference": "Rebecca said Globex signed the OAuth-only addendum, so the v2 API reverts to OAuth only. In email she asked for ACME-142 to be updated, and in Slack #eng she said it was closed.",
     "answerable": true,
     "expected_ids": [
       [

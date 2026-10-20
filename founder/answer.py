@@ -63,11 +63,15 @@ DIGESTS = {
     'focus': (None, 'Give up to 3 priorities, most urgent first, one line each. Skip items marked no action needed.'),
     'catchup': (None, 'Summarise the most important items in one sentence each, most important first. '
                       'Group what changed, what is waiting on you, and what is at risk.'),
+    'blocked': (None, 'List the blocked issues, yours first.'),
+    'meeting_emails': (None, 'List each email with the meeting it relates to.'),
+    'decisions': ({'change'}, 'List each decision with its date, who made it and what it replaced. Newest first.'),
     'customers': ({'customer'}, 'List each customer problem, how many times it was reported, over how many days, '
                                 'and whether a fix came back.'),
 }
 DIGEST_LIMIT = 8
 FOLLOWUP_LIMIT = 12
+BLOCKED_LIMIT = 12
 SCHEDULE_LIMIT = 14
 
 # these answers are lists of facts the database already holds. a model adds
@@ -75,7 +79,7 @@ SCHEDULE_LIMIT = 14
 # cancelled meeting called 'superseded', an open ask listed as handled), so
 # they are rendered by code. FOUNDER_DIGEST=llm sends them through the model
 # anyway, which is how the benchmark compares models on the same facts
-CODE_DIGESTS = ('schedule', 'followups', 'customers')
+CODE_DIGESTS = ('schedule', 'followups', 'customers', 'decisions', 'blocked', 'meeting_emails')
 
 CITE_RE = re.compile(r'\[(\d+(?:\s*,\s*\d+)*)\]')
 
@@ -323,18 +327,27 @@ def verify(text, labels):
 def digest_facts(conn, plan, question):
     """(kind, facts, instruction) when the plan calls for a digest, else None"""
     kind = plan.kind
+    if kind == 'topic' and re.search(r'\bemails?\b', question, re.I) and re.search(r'\bmeetings?\b', question, re.I):
+        kind = 'meeting_emails'
     if re.search(r'\bcustomers?\b.*\b(issues?|problems?|repeat\w*|complain\w*)\b', question, re.I):
         kind = 'customers'
     if kind not in DIGESTS:
         return None
     cats, instruction = DIGESTS[kind]
+    if kind == 'blocked':
+        facts = brief.blocked_facts(conn, mine_only=plan.mine)
+        return kind, facts[:BLOCKED_LIMIT], instruction
+    if kind == 'meeting_emails':
+        return kind, brief.meeting_email_facts(conn)[:DIGEST_LIMIT], instruction
     if kind == 'schedule':
-        return kind, brief.schedule_facts(conn, plan.start, plan.end)[:SCHEDULE_LIMIT], instruction
+        return kind, brief.schedule_facts(conn, plan.start, plan.end, plan.people or None)[:SCHEDULE_LIMIT], instruction
     facts = brief.collect_facts(conn)
     if cats:
         facts = [f for f in facts if f['cat'] in cats]
     elif kind == 'catchup':
-        facts = [f for f in facts if f['cat'] != 'schedule']
+        # what changed first, then what is at risk, then what is waiting
+        order = {'change': 0, 'stale': 1, 'customer': 2, 'ask': 3, 'promise': 4, 'blocked': 5, 'meeting': 6}
+        facts = sorted((f for f in facts if f['cat'] != 'schedule'), key=lambda f: order.get(f['cat'], 9))
     if kind == 'followups':
         # asks with a deadline first, then the rest. facts are already scored
         facts = [f for f in facts if f['cat'] in ('ask', 'promise')]
@@ -410,6 +423,11 @@ def render_digest(name, facts, plan_label=''):
         if done:
             lines += ['', 'Already handled:'] + [f"- {f['text']} {cite(f)}" for f in done[:3]]
         return '\n'.join(lines)
+    if name == 'blocked':
+        total = len(facts)
+        mine = sum(1 for f in facts if f.get('mine'))
+        head = f"{total} blocked issue{'s' if total != 1 else ''}, {mine} yours:"
+        return '\n'.join([head] + [f"- {f['text']} {cite(f)}" for f in facts])
     return '\n'.join(f"- {f['text']} {cite(f)}" for f in facts)
 
 
@@ -418,7 +436,10 @@ def ask_digest(conn, question, digest, started, plan=None):
     if name in CODE_DIGESTS and os.environ.get('FOUNDER_DIGEST', 'code') == 'code' and facts:
         label = (plan.day_label if plan and plan.day_label else 'today')
         day = (plan.start if plan and plan.start else config.NOW)
-        text = render_digest(name, facts, f"{label.capitalize()} ({day.strftime('%A %b %-d')})")
+        heading = (f"{label.capitalize()} ({day.strftime('%b %-d')} to {plan.end.strftime('%b %-d')})"
+                   if label in ('coming up', 'next week', 'this week', 'last week')
+                   else f"{label.capitalize()} ({day.strftime('%A %b %-d')})")
+        text = render_digest(name, facts, heading)
         cited = [i for f in facts for i in f['ids'][:2]]
         return {'question': question, 'answer': text, 'cited': list(dict.fromkeys(cited)), 'found': True,
                 'cites_dropped': 0, 'cites_added': 0, 'ungrounded_sentences': [],

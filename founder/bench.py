@@ -104,6 +104,7 @@ def bench_model(spec, judge, cold=True):
     started = time.time()
     summary, rows = evaluate.run(judge_model=judge, save=False)
     out['ask'] = {**summary, 'wall_seconds': time.time() - started}
+    out['retries'] = llm.COUNTERS['retries']
     out['judge_usage'] = _usage('judge')
     out['rows'] = rows
 
@@ -129,6 +130,20 @@ def render(results):
         p = r['placement']
         return f"{p['size_gb']:.1f} GB, {100 * p['vram_gb'] / p['size_gb']:.0f}% on gpu" if p else 'hosted'
 
+    def group_accuracy(r, prefix):
+        rows = [x for x in r['rows'] if x['id'].startswith(prefix)]
+        return f"{sum(x['correct'] for x in rows)}/{len(rows)}" if rows else '-'
+
+    def group_recall(r, prefix):
+        rows = [x for x in r['rows'] if x['id'].startswith(prefix)]
+        return f"{sum(x['cite_recall'] for x in rows) / len(rows):.0%}" if rows else '-'
+
+    def throughput(r):
+        # output tokens per second over the questions that called the model at all
+        used = [x for x in r['rows'] if x['completion_tokens']]
+        secs = sum(x['seconds'] for x in used)
+        return f"{sum(x['completion_tokens'] for x in used) / secs:.0f}" if secs else '-'
+
     lines = [head, rule,
              row('where it runs', place),
              row('first call incl. load (s)', lambda r: f"{r['load_seconds']:.1f}"),
@@ -143,7 +158,10 @@ def render(results):
              row('brief stale record called out', lambda r: 'yes' if r['brief']['stale_called_out'] else 'NO'),
              row('brief meeting in focus', lambda r: 'yes' if r['brief']['meeting_in_focus'] else 'NO'),
              row('**ask** accuracy (judge)', lambda r: f"{r['ask']['accuracy']:.0%}"),
+             row('ask accuracy, original questions (q*)', lambda r: group_accuracy(r, 'q')),
+             row('ask accuracy, vague questions (v*)', lambda r: group_accuracy(r, 'v')),
              row('ask citation recall', lambda r: f"{r['ask']['citation_recall']:.0%}"),
+             row('ask citation recall, vague (v*)', lambda r: group_recall(r, 'v')),
              row('ask citation precision', lambda r: f"{r['ask']['citation_precision']:.0%}"),
              row('ask forbidden cites', lambda r: str(r['ask']['forbidden_cites'])),
              row('ask uncited sentences', lambda r: str(r['ask']['ungrounded_sentences'])),
@@ -151,19 +169,37 @@ def render(results):
              row('ask latency p95 (s)', lambda r: f"{r['ask']['latency_p95']:.1f}"),
              row('ask latency max (s)', lambda r: f"{r['ask']['latency_max']:.1f}"),
              row('ask questions over 5s', lambda r: str(r['ask']['latency_over_budget'])),
+             row('ask output tokens per second', throughput),
+             row('ask latency mean (s)', lambda r: f"{r['ask']['latency_mean']:.1f}"),
+             row('ask questions answered without a model call', lambda r: str(sum(1 for x in r['rows'] if not x['prompt_tokens']))),
              row('ask tokens in/out (mean)', lambda r: f"{r['ask']['tokens_in_mean']:.0f}/{r['ask']['tokens_out_mean']:.0f}"),
              row('ask cost per question ($)', lambda r: f"{r['ask']['actual_cost_mean']:.5f}"),
              row('ask refusals', lambda r: str(r['ask']['refusals'])),
              row('schema failures (ask+judge)', lambda r: str(r['ask']['schema_failures'])),
+             row('http retries (rate limits, 5xx)', lambda r: str(r.get('retries', '-'))),
+             row('whole benchmark wall time (s)', lambda r: f"{r['ingest']['seconds'] + r['brief']['seconds'] + r['ask']['wall_seconds']:.0f}"),
              row('judge cost for this run ($)', lambda r: f"{r['judge_usage']['cost']:.4f}")]
     return '\n'.join(lines)
 
 
-def run(specs, judge, cold=True):
-    results = [bench_model(s, judge, cold) for s in specs]
+def load_all():
+    """Every model result saved so far, so a benchmark run of one model adds a
+    column to the table instead of replacing it"""
+    return [json.loads(p.read_text()) for p in sorted(MODELS_DIR.glob('*.json'))]
+
+
+def report(judge=None):
+    results = load_all()
     table = render(results)
+    judges = sorted({r['judge'] for r in results})
     path = config.ROOT / 'eval' / 'results' / 'benchmark.md'
-    path.write_text(f"# Model benchmark\n\njudge: `{judge}` for every column. "
+    path.write_text(f"# Model benchmark\n\njudge: {', '.join(f'`{j}`' for j in judges)} for every column. "
                     f"questions: {results[0]['ask']['questions']}.\n\n{table}\n")
     print('\n' + table)
     return results
+
+
+def run(specs, judge, cold=True):
+    for spec in specs:
+        bench_model(spec, judge, cold)
+    return report(judge)
