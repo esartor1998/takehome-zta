@@ -20,6 +20,18 @@ class Addresses(unittest.TestCase):
 
 
 class Quotes(unittest.TestCase):
+    def test_inline_replies_are_kept(self):
+        body = ('\nOn Fri, Mar 13, 2026 at 3:00 PM Alex <a@x> wrote:\n> Section 2: churn 3%\n'
+                'cut this slide\n> Section 3: asks\nadd the cohort chart')
+        own, quoted, kind = split_quote(body)
+        self.assertIn('cut this slide', own)
+        self.assertIn('add the cohort chart', own)
+        self.assertNotIn('Section 2', own)
+
+    def test_headerless_quote_keeps_the_answer(self):
+        own, _, _ = split_quote('> are you free?\nyes, thursday works')
+        self.assertEqual(own, 'yes, thursday works')
+
     def test_gmail_wrapped_header(self):
         body, quoted, kind = split_quote('Thanks.\n\nOn Thu, Mar 5, 2026 at 5:00 PM\nJordan <j@x> wrote:\n> hi')
         self.assertEqual((body, kind), ('Thanks.', 'reply'))
@@ -50,6 +62,16 @@ class Deadlines(unittest.TestCase):
         self.assertEqual(followups.parse_due('tomorrow', self.friday), '2026-03-14')
         self.assertEqual(followups.parse_due('early next week', self.friday), '2026-03-16')
 
+    def test_informal_forms(self):
+        self.assertEqual(followups.parse_due('send tmrw', self.friday), '2026-03-14')
+        self.assertEqual(followups.parse_due('by 3/18', self.friday), '2026-03-18')
+        self.assertEqual(followups.parse_due('need yes/no by thurs', self.friday), '2026-03-19')
+        self.assertEqual(followups.parse_due('by the 20th', self.friday), '2026-03-20')
+        self.assertEqual(followups.parse_due('eow is fine', self.friday), '2026-03-13')
+
+    def test_month_is_not_monday(self):
+        self.assertEqual(followups.parse_due('later this month', self.friday), '')
+
     def test_no_deadline(self):
         self.assertEqual(followups.parse_due('whenever you can', self.friday), '')
 
@@ -66,6 +88,13 @@ class Staleness(unittest.TestCase):
 
     def test_status_change_without_numbers(self):
         self.assertTrue(stale.disagrees('Offer approved. Status: offer out.', 'Taylor accepted another offer'))
+
+    def test_deal_terms_are_values(self):
+        self.assertEqual(stale.concrete_values('2yr 15% fine'), {'15%', '2 year'})
+        self.assertTrue(stale.disagrees('Term: 1 year. Discount: 10%.', 'initech renewal is 2 yr at 15% now', 'Initech renewal terms', '#general'))
+
+    def test_slash_dates_compare_to_prose_dates(self):
+        self.assertEqual(stale.concrete_values('by 3/18'), stale.concrete_values('by Mar 18'))
 
     def test_issue_ids_are_not_values(self):
         self.assertEqual(stale.concrete_values('see ACME-431 and PR #218'), set())

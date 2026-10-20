@@ -33,7 +33,8 @@ GENERIC_DECISION_WORDS = frozenset(
 INTENTS = {
     'meetings': r'\b(meeting|calendar|schedule|sync|on today|call|standup|invite|upcoming)\b',
     'blocked': r'\b(block|blocked|blocker|blockers|stuck)\b',
-    'decisions': r'\b(decision|decisions|decided|plan|ship|auth|authentication|freeze|roadmap|reversed|changed)\b',
+    'decisions': r'\b(decision|decisions|decided|plan|ship|auth|authentication|freeze|roadmap|reversed|changed|'
+                 r'when (?:do|is|are|will|did)|still)\b',
     'followups': r'\b(follow.?ups?|missing|waiting|unanswered|owe|reply|respond)\b',
     'cancel': r'\b(cancel\w*|resched\w*|moved|postpone\w*)\b',
     'focus': r'\b(focus|priorit\w+|important|urgent|today)\b',
@@ -143,8 +144,9 @@ def pull_person(conn, people, question):
     if not people:
         return []
     marks = ','.join('?' * len(people))
-    name_words = {w.lower() for r in conn.execute(f'SELECT name FROM people WHERE id IN ({marks})',
-                                                  list(people)) for w in re.findall(r'\w+', r['name'])}
+    # a company the question names ('hooli') is not a term to search for in its own contacts' mail
+    name_words = {w.lower() for r in conn.execute(f'SELECT name, org FROM people WHERE id IN ({marks})',
+                                                  list(people)) for w in re.findall(r'\w+', f"{r['name']} {r['org']}")}
     terms = [t for t in _terms(question) if t.lower() not in name_words and t.lower() not in
              ('say', 'said', 'says', 'tell', 'told', 'mention', 'mentioned')]
     if terms:
@@ -370,6 +372,15 @@ def retrieve(conn, question, k=10, plan=None, disable=None, weights=None):
     named = pull_named_events(conn, question) if 'structured' not in disable else []
     refs = pull_named_refs(conn, question) if 'structured' not in disable else []
     pulls['structured'] = list(dict.fromkeys(refs + named + pulls['structured']))
+    if plan and plan.org_people and plan.kind != 'person' and 'structured' not in disable:
+        # a question about a company: what its people wrote, then the open issues that name it. the text
+        # search alone returned 30 template emails that mention the company in passing
+        mentions = []
+        for org in plan.orgs:
+            mentions += [r['id'] for r in conn.execute(
+                "SELECT id FROM items WHERE source='linear' AND state='current' AND status != 'Done' "
+                'AND (title LIKE ? OR body LIKE ?) ORDER BY ts DESC LIMIT 4', (f'%{org}%', f'%{org}%'))]
+        pulls['structured'] = list(dict.fromkeys(pull_person_activity(conn, plan.org_people) + mentions + pulls['structured']))
     if plan and plan.kind == 'person' and 'structured' not in disable:
         pulls['structured'] = pull_person_activity(conn, [p for p in plan.people])
     ranked = fuse(pulls, weights)
@@ -386,7 +397,7 @@ def retrieve(conn, question, k=10, plan=None, disable=None, weights=None):
         chosen.append(item_id)
         # when exact structured hits exist the vector and fts tail is mostly
         # noise ('rerunning CI' for a meeting question), so we keep a short tail
-        if len(chosen) >= (min(k, len(pulls['structured']) + (0 if 'blocked' in intents or named or refs or (plan and plan.kind == 'person' and not plan.group) else 3)) if pulls['structured'] else k):
+        if len(chosen) >= (min(k, len(pulls['structured']) + (0 if 'blocked' in intents or named or refs or (plan and (plan.kind == 'person' and not plan.group or plan.org_people)) else 3)) if pulls['structured'] else k):
             break
     return {'ids': chosen, 'plan_kind': plan.kind if plan else '', 'decision_topics': extras.get('decision_topics', []), 'intents': sorted(intents), 'people': sorted(people),
             'window': window, 'pulls': {n: len(v) for n, v in pulls.items()}}

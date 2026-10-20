@@ -58,7 +58,7 @@ def context_ids(conn, question, plan, **options):
     """The items a model could cite for this question under one configuration:
     what retrieval picked, plus the current-decision items it adds"""
     found = retrieve.retrieve(conn, question, plan=plan, **options)
-    ids = answer.expand_decision_context(conn, found['ids'], found['decision_topics'])
+    ids = answer.assemble_ids(conn, found)
     ids = [i for i in ids if not (re_email_only(question) and not i.startswith(('gmail:', 'calendar:')))]
     cited = [cite for _, cite in answer.decision_timelines(conn, found['decision_topics'])]
     return ids, [c for c in cited if c not in ids]

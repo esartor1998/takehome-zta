@@ -189,7 +189,8 @@ class IdentityResolver:
         hits = []
         for person in self.people.values():
             parts = person.name.lower().replace('.', '').split()
-            if parts[0] == first and (parts[-1] == last or (len(last) == 1 and parts[-1][0] == last)):
+            # 'Dan F.' is Daniel Foster: a nickname stands for the first name it shortens
+            if (parts[0] == first or first in NICKNAMES.get(parts[0], ())) and (parts[-1] == last or (len(last) == 1 and parts[-1][0] == last)):
                 hits.append(person.id)
         return hits[0] if len(hits) == 1 else None
 
@@ -251,7 +252,9 @@ class IdentityResolver:
         if not match:
             return None
         first = match.group(1).lower()
-        hits = [p.id for p in self.people.values() if p.first == first and not p.external]
+        # '-- Dan' signs as Daniel. teammates first: outsiders sign with a full name
+        hits = [p.id for p in self.people.values()
+                if (p.first == first or first in NICKNAMES.get(p.first, ())) and not p.external]
         return hits[0] if len(hits) == 1 else None
 
     def from_slack(self, user_id):

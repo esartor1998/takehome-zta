@@ -64,6 +64,8 @@ DIGESTS = {
     'catchup': (None, 'Summarise the most important items in one sentence each, most important first. '
                       'Group what changed, what is waiting on you, and what is at risk.'),
     'blocked': (None, 'List the blocked issues, yours first.'),
+    'prep': (None, 'List what to know before the meeting, one line each.'),
+    'company': (None, 'Summarise the account in a few lines: meetings, what they wait on, open issues, the deal.'),
     'meeting_emails': (None, 'List each email with the meeting it relates to.'),
     'decisions': ({'change'}, 'List each decision with its date, who made it and what it replaced. Newest first.'),
     'customers': ({'customer'}, 'List each customer problem, how many times it was reported, over how many days, '
@@ -72,6 +74,7 @@ DIGESTS = {
 DIGEST_LIMIT = 8
 FOLLOWUP_LIMIT = 12
 BLOCKED_LIMIT = 12
+PREP_LIMIT = 10
 SCHEDULE_LIMIT = 14
 
 # these answers are lists of facts the database already holds. a model adds
@@ -79,7 +82,7 @@ SCHEDULE_LIMIT = 14
 # cancelled meeting called 'superseded', an open ask listed as handled), so
 # they are rendered by code. FOUNDER_DIGEST=llm sends them through the model
 # anyway, which is how the benchmark compares models on the same facts
-CODE_DIGESTS = ('schedule', 'followups', 'customers', 'decisions', 'blocked', 'meeting_emails')
+CODE_DIGESTS = ('schedule', 'followups', 'customers', 'decisions', 'blocked', 'meeting_emails', 'prep', 'company')
 
 CITE_RE = re.compile(r'\[(\d+(?:\s*,\s*\d+)*)\]')
 
@@ -238,6 +241,47 @@ def decision_timelines(conn, topics, limit=2):
                 out.append((f"The record {r['item_id'].split('@')[0].split(':')[1]} is NOT up to date ({label}). "
                             f"It still says: {r['value']}. The plan was corrected after it was written", r['item_id']))
     return out
+
+
+THREAD_TOP = 4            # only the best-ranked items get their conversation pulled in
+THREAD_EXTRA = 2          # siblings added per conversation
+UPDATE_EXTRA = 3          # updates added for stale records in the context
+
+
+def pull_in_updates(conn, ids):
+    """A stale record that made it into the context brings the item that shows it is
+    stale. Lexical search finds the old Notion page that says 'Initech renewal terms'
+    and misses the one-line reply that changed them"""
+    extra = []
+    for item_id in ids:
+        row = conn.execute('SELECT newer_id FROM stale_records WHERE item_id=?', (item_id,)).fetchone()
+        if row and row['newer_id'] not in ids and row['newer_id'] not in extra:
+            extra.append(row['newer_id'])
+    return ids + extra[:UPDATE_EXTRA]
+
+
+def expand_threads(conn, ids):
+    """The conversation around the best hits. 'ok by me, 2yr 15% fine' shares no
+    words with the question about the Initech discount, and the thread it is in does"""
+    extra = []
+    for item_id in ids[:THREAD_TOP]:
+        row = conn.execute('SELECT thread_key, kind FROM items WHERE id=?', (item_id,)).fetchone()
+        if not row or row['kind'] not in ('email', 'message'):
+            continue
+        siblings = conn.execute(
+            "SELECT id FROM items WHERE thread_key=? AND id!=? AND state='current' AND kind IN ('email','message') "
+            'ORDER BY (author = ?) DESC, ts DESC LIMIT ?',
+            (row['thread_key'], item_id, config.FOUNDER_PERSON_ID, THREAD_EXTRA)).fetchall()
+        extra += [s['id'] for s in siblings if s['id'] not in ids and s['id'] not in extra]
+    return ids + extra
+
+
+def assemble_ids(conn, found):
+    """Everything a model may cite for one question: what retrieval picked, the
+    current decisions for its topics, the updates behind any stale record, and the
+    conversations around the best hits"""
+    ids = expand_decision_context(conn, found['ids'], found['decision_topics'])
+    return expand_threads(conn, pull_in_updates(conn, ids))
 
 
 def build_context(conn, ids, timelines=()):
@@ -403,6 +447,10 @@ def digest_facts(conn, plan, question):
     if kind not in DIGESTS:
         return None
     cats, instruction = DIGESTS[kind]
+    if kind == 'company':
+        return kind, brief.company_facts(conn, plan)[:PREP_LIMIT], instruction
+    if kind == 'prep':
+        return kind, brief.prep_facts(conn, plan, question)[:PREP_LIMIT], instruction
     if kind == 'blocked':
         facts = brief.blocked_facts(conn, mine_only=plan.mine)
         return kind, facts[:BLOCKED_LIMIT], instruction
@@ -420,6 +468,12 @@ def digest_facts(conn, plan, question):
     if kind == 'followups':
         # asks with a deadline first, then the rest. facts are already scored
         facts = [f for f in facts if f['cat'] in ('ask', 'promise')]
+        # 'what did I promise hooli' is about one company's people, and 'anything overdue'
+        # about the late ones
+        if plan.people:
+            facts = [f for f in facts if set(f.get('people', [])) & set(plan.people)]
+        if re.search(r'overdue|past due|late|slipp', question, re.I):
+            facts = [f for f in facts if f.get('overdue')]
     return kind, facts[:FOLLOWUP_LIMIT if kind == 'followups' else DIGEST_LIMIT], instruction
 
 
@@ -452,7 +506,7 @@ def ask(conn, question, k=10):
     hints = ' '.join(MODE_HINTS[i] for i in intents if i in MODE_HINTS)
     if plan.ambiguous:
         hints += ' ' + ambiguity_note(conn, plan)
-    ids = expand_decision_context(conn, found['ids'], found['decision_topics'])
+    ids = assemble_ids(conn, found)
     if re.search(r'\bemails?\b', question, re.I):
         # a question about emails gets emails and the events they relate to,
         # slack chatter in the list was presented as email
@@ -499,6 +553,8 @@ def render_digest(name, facts, plan_label=''):
         if done:
             lines += ['', 'Already handled:'] + [f"- {f['text']} {cite(f)}" for f in done[:3]]
         return '\n'.join(lines)
+    if name == 'prep':
+        return '\n'.join([facts[0]['text'], 'Before it:'] + [f"- {f['text']} {cite(f)}" for f in facts[1:]]) if len(facts) > 1 else facts[0]['text'] + ' ' + cite(facts[0])
     if name == 'blocked':
         total = len(facts)
         mine = sum(1 for f in facts if f.get('mine'))

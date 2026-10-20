@@ -61,6 +61,10 @@ GATE_FRACTION = 0.10      # share of the pool taken by similarity, on top of the
 GATE_RECORD_FRACTION = 0.25   # tools of record get a wider net, since a stale
                               # record is what we are trying to find in them
 
+# hedged wording is a proposal, not a decision: 'maybe we go with $59?' changes nothing
+HEDGE_RE = re.compile(r"\b(i think|maybe|not sure|might|thinking (?:about|of)|should we|what if|probably|unsure|"
+                      r"tentatively|perhaps|wondering)\b|\?\s*$", re.I | re.M)
+
 DECISION_KINDS = ('decision', 'reversal', 'correction')
 RECORD_SOURCES = ('linear', 'notion', 'crm')   # a tool of record can go stale
 GATE_KINDS = ('email', 'message', 'doc', 'issue', 'note', 'comment', 'deal')
@@ -232,6 +236,10 @@ def validate(item, parsed):
     # count: the model's own retracts also fired on a plain doc that lists two dates
     if rule_retracts and kind in ('decision', 'restatement', 'none'):
         kind = 'correction'
+
+    if kind in ('decision', 'restatement') and not rule_kind and HEDGE_RE.search(item['body']) \
+            and item['source'] not in RECORD_SOURCES:
+        kind = 'proposal'
 
     # a record in a tool of record states the current plan whether or not its
     # wording carries a decision verb. that is what lets us notice it going stale

@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS people (
     org TEXT, external INTEGER, aliases TEXT, role TEXT
 );
 CREATE TABLE IF NOT EXISTS links (a TEXT, b TEXT, reason TEXT);
+CREATE TABLE IF NOT EXISTS vocab (term TEXT PRIMARY KEY, doc INTEGER);
 CREATE TABLE IF NOT EXISTS stale_records (
     item_id TEXT PRIMARY KEY, newer_id TEXT, current_fact TEXT, why TEXT
 );
@@ -115,6 +116,18 @@ def write_items(conn, items, people):
         conn.execute('INSERT INTO items_fts(rowid, title, body, who) VALUES '
                      '((SELECT rowid FROM items WHERE id=?),?,?,?)',
                      (item['id'], f"{item['title']} {item['meta'].get('identifier', '')}".strip(), item['body'], names))
+    # the words the inbox contains, unstemmed, with how many items use each. the fts
+    # index holds stems ('price' for 'pricing'), which cannot correct a typo
+    counts = {}
+    for item in items:
+        if item['state'] == 'automated':
+            continue
+        for word in set(re.findall(r'[a-z]{3,}', f"{item['title']} {item['body']}".lower())):
+            counts[word] = counts.get(word, 0) + 1
+    for person in people.values():
+        for word in re.findall(r'[a-z]{3,}', ' '.join([person.name, person.org]).lower()):
+            counts[word] = counts.get(word, 0) + 5
+    conn.executemany('INSERT OR REPLACE INTO vocab VALUES (?,?)', counts.items())
     conn.commit()
 
 

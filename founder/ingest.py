@@ -75,7 +75,7 @@ def run(skip_decisions=False):
     vectors = dict(zip((i['id'] for i in items), llm.embed([i['embed_text'] for i in items])))
 
     dedupe.collapse_linear_snapshots(items)
-    dupe_pairs = dedupe.find_cross_source_dupes(items, vectors)
+    dupe_pairs = dedupe.find_cross_source_dupes(items, vectors) + dedupe.find_duplicate_events(items)
     by_id = {i['id']: i for i in items}
     for first, second in dupe_pairs:
         # the earlier post is canonical. both stay searchable and citable
@@ -101,7 +101,7 @@ def run(skip_decisions=False):
     if not skip_decisions:
         entities = extract.entity_map(items, ident)
         decisions = extract.extract_decisions(items, topics, ident, vectors, scores, entities, plain)
-        stale_rows = stale.find_stale(items, plain, scores, entities)
+        stale_rows = stale.find_stale(items, plain, scores, entities, ident)
         print(f'{len(stale_rows)} records still state an outdated plan')
         follow_rows = followups.find_followups(items, ident)
         print(f'{len(follow_rows)} follow-ups ({sum(r["status"] == "open" for r in follow_rows)} open)')

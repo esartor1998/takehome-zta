@@ -31,6 +31,7 @@ STOPWORDS = frozenset('the a an and or to of in on at for is are was be we i you
 # a calendar title only links to an email or message when it is specific. one
 # word titles like 'Standup' or 'Retro' appear everywhere and would glue
 # unrelated chatter together
+GENERIC_TITLE_WORDS = frozenset('meeting call sync review check weekly daily standup catch'.split())
 MIN_TITLE_WORDS = 2
 MIN_TITLE_CHARS = 8
 
@@ -51,6 +52,25 @@ def collapse_linear_snapshots(items):
             older['state'] = 'superseded'
             older['superseded_by'] = newer['id']
     return items
+
+
+def find_duplicate_events(items):
+    """The same meeting on two calendars under two titles ('Northwind Ventures
+    partner update' and 'Northwind <> Acme: partner update'). Same start within
+    15 minutes, the same status, at least two attendees in common and a
+    distinctive title word in common. Returns (canonical, duplicate) pairs"""
+    events = sorted((i for i in items if i['kind'] == 'event'), key=lambda i: i['start'])
+    pairs = []
+    for n, first in enumerate(events):
+        for second in events[n + 1:]:
+            if _ts({'ts': second['start']}) - _ts({'ts': first['start']}) > timedelta(minutes=15):
+                break
+            shared = set(first['people']) & set(second['people'])
+            words = ({w for w in re.findall(r'[a-z]{4,}', first['title'].lower())}
+                     & {w for w in re.findall(r'[a-z]{4,}', second['title'].lower())}) - GENERIC_TITLE_WORDS
+            if first['status'] == second['status'] and len(shared) >= 2 and words:
+                pairs.append((first['id'], second['id']))
+    return pairs
 
 
 def _cosine(a, b):
@@ -164,11 +184,24 @@ def build_topics(items, dupe_pairs):
             words = item['title'].split()
             if len(words) >= MIN_TITLE_WORDS and len(item['title']) >= MIN_TITLE_CHARS:
                 events.setdefault(item['title'].lower(), item['id'])
+    # an invite title written another way ('Northwind <> Acme partner update' for
+    # 'Northwind Ventures partner update') still names the meeting if every
+    # distinctive word of the event title appears
+    event_words = {}
+    for item in items:
+        if item['source'] == 'calendar':
+            words = {w for w in re.findall(r'[a-z]{4,}', item['title'].lower()) if w not in GENERIC_TITLE_WORDS}
+            if len(words) >= 2:
+                event_words.setdefault(frozenset(words), item['id'])
     for item in items:
         if item['source'] in ('gmail', 'slack'):
             text = (item['title'] + ' ' + item['body']).lower()
             for title, event_id in events.items():
                 if title in text:
+                    link(event_id, item['id'], 'title')
+            have = set(re.findall(r'[a-z]{4,}', text))
+            for words, event_id in event_words.items():
+                if words <= have and (event_id, item['id'], 'title') not in links:
                     link(event_id, item['id'], 'title')
 
     for a, b in dupe_pairs:

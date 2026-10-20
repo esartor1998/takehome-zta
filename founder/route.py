@@ -35,18 +35,22 @@ tonight tomorrow yesterday week this next last""".split())
 # what a question word means. checked in order, first hit wins, so the specific
 # forms come before the loose ones
 KIND_PATTERNS = (
-    ('followups', r"\b(waiting on me|owe|promised?|promises|follow.?ups?|unanswered|haven.?t (?:replied|answered|responded)|"
+    ('followups', r"\b(waiting on me|owe|promised?|promises|follow.?ups?|unanswered|overdue|past due|slipp(?:ed|ing)|haven.?t (?:replied|answered|responded)|"
                   r"need(?:s)? (?:a |my )?(?:reply|response|answer)|who.?s waiting|what am i missing|anything i.?m missing)\b"),
     ('focus', r"\b(urgent|priorit\w+|focus|on fire|needs? (?:my )?attention|most important|first thing|"
               r"what should i (?:do|work)|where do i start)\b"),
     ('decisions', r"\b(decisions?|decided|what was decided|what did we decide)\b"),
-    ('catchup', r"\b(catch me up|catch up|what did i miss|what.?s new|any updates?|updates?\??$|brief me|"
+    ('prep', r"(\b(before|prep(?:are)? for|ready for|going into|heading into)\b.{0,40}\b(call|meeting|sync|check.?in|chat)\b|"
+             r"\bnext (meeting|call)\b|\bmeeting prep\b)"),
+    ('catchup', r"\b(catch me up|catch up|what did i miss|what.?s new|any updates|^\s*updates?\??\s*$|brief me|"
                 r"recap|what happened|going on|how.?s everything|overview|summar(?:y|ize|ise) (?:my|the|everything|all))\b"),
     ('blocked', r"\b(block(?:ed|ers?)?|stuck|stalled)\b"),
     ('schedule', r"(\bon today\b|\bon tomorrow\b|\bmy day\b|\bagenda\b|\bcalendar\b|\bschedule\b|\bmeetings?\b|"
                  r"\bwhat do i have\b|\bam i free\b|\bwhat.?s on\b|\bwhats on\b|\bany(?:thing)? (?:calls|meetings)\b)"),
 )
 
+OVERVIEW_WORDS = frozenset('story deal status update updates news happening going issues issue problems problem about info '
+                           'summary overview situation anything account customer'.split())
 DECISION_WORDS = frozenset('decision decisions decided decide made make recently were was lately'.split())
 
 # role words and the crm status that marks them
@@ -77,7 +81,87 @@ class Plan:
     expansions: list = field(default_factory=list)   # extra search words from SYNONYMS
     terms: list = field(default_factory=list)        # topic words left after filler is removed
     group: str = ''                                   # 'investors' when the question names a role, not a person
+    fixes: dict = field(default_factory=dict)         # typos corrected in the question, word -> word
+    org_people: list = field(default_factory=list)    # the contacts of a company the question names
+    orgs: list = field(default_factory=list)          # the company names themselves
     mine: bool = False                                # 'I', 'my', 'me' in the question
+
+
+_vocab_cache = {}
+
+
+def vocabulary(conn):
+    """Every word in the indexed text with the number of items it appears in,
+    read from the fts index. It is what a typo is corrected against, so a
+    misspelling of 'northwind' becomes 'northwind' because that is a word this
+    inbox contains"""
+    key = conn.execute('PRAGMA database_list').fetchone()[2]
+    if key not in _vocab_cache:
+        try:
+            _vocab_cache[key] = {r['term']: r['doc'] for r in conn.execute('SELECT term, doc FROM vocab')}
+            # words a founder types that the inbox may never contain
+            for word in QUESTION_WORDS:
+                _vocab_cache[key].setdefault(word, 50)
+        except Exception:
+            _vocab_cache[key] = {}
+    return _vocab_cache[key]
+
+
+def _edit_distance_one(a, b):
+    """True when a and b differ by one insertion, deletion, substitution or swap"""
+    if a == b or abs(len(a) - len(b)) > 1:
+        return False
+    if len(a) == len(b):
+        diff = [i for i in range(len(a)) if a[i] != b[i]]
+        if len(diff) == 1:
+            return True
+        return len(diff) == 2 and diff[1] == diff[0] + 1 and a[diff[0]] == b[diff[1]] and a[diff[1]] == b[diff[0]]
+    short, long_ = (a, b) if len(a) < len(b) else (b, a)
+    i = 0
+    while i < len(short) and short[i] == long_[i]:
+        i += 1
+    return short[i:] == long_[i + 1:]
+
+
+MIN_FIX_LENGTH = 4     # shorter words are too easy to turn into other words. four letters is allowed
+                       # only when the fix is a word the inbox uses often (see MIN_SHORT_FIX_DOC)
+MIN_SHORT_FIX_DOC = 4
+QUESTION_WORDS = frozenset("""waiting promised promise follow followups unanswered blocked blockers stuck urgent priority
+priorities focus decisions decided meeting meetings calendar schedule agenda summary happened investors customers
+emails missing saying talking working anything everything yesterday tomorrow today tonight overdue important
+attention update updates caught recap overview""".split()) | FILLER
+# shorthand that is not a typo
+ABBREVIATIONS = {'tdy': 'today', 'tday': 'today', 'tmrw': 'tomorrow', 'tmr': 'tomorrow', 'tmrrw': 'tomorrow',
+                 'yday': 'yesterday', 'mtg': 'meeting', 'mtgs': 'meetings', 'wk': 'week', 'prio': 'priority',
+                 'prios': 'priorities', 'eod': 'today', 'abt': 'about', 'w/': 'with', 'pls': 'please'}
+
+
+def near_words(vocab, word, limit=3):
+    """Corpus words one edit away from word, most common first"""
+    if len(word) < MIN_FIX_LENGTH:
+        return []
+    close = [(n, w) for w, n in vocab.items() if _edit_distance_one(word, w)
+             and (len(word) > MIN_FIX_LENGTH or n >= MIN_SHORT_FIX_DOC)]
+    return [w for n, w in sorted(close, reverse=True)[:limit]]
+
+
+def fix_typos(q, vocab, keep=()):
+    """Replace words the inbox has never seen with the nearest word it has. The
+    founder types fast: 'whats daniel sayin', 'anyting from investers'. Words in
+    keep are left alone, and a word already in the vocabulary is never touched"""
+    fixed = {}
+
+    def swap(match):
+        word = match.group(0)
+        if len(word) < MIN_FIX_LENGTH or word in vocab or word in FILLER or word in keep or not word.isalpha():
+            return word
+        close = near_words(vocab, word, 1)
+        if close:
+            fixed[word] = close[0]
+            return close[0]
+        return word
+
+    return (re.sub(r"[a-z]+", swap, q) if vocab else q), fixed
 
 
 def normalise(question):
@@ -85,7 +169,8 @@ def normalise(question):
     q = re.sub(r"\bwhat'?s\b", 'what is', q)
     q = re.sub(r"\bwhos\b", 'who is', q)
     q = re.sub(r"\bhows\b", 'how is', q)
-    return re.sub(r'\s+', ' ', q)
+    q = re.sub(r'\s+', ' ', q)
+    return re.sub(r"[a-z/]+", lambda m: ABBREVIATIONS.get(m.group(0), m.group(0)), q)
 
 
 def day_window(q):
@@ -149,6 +234,8 @@ def rows_by_id(rows, pid):
 
 def plan(conn, question):
     q = normalise(question)
+    vocab = vocabulary(conn)
+    q, fixes = fix_typos(q, vocab, keep=set(SYNONYMS) | set(ROLE_WORDS))
     window = day_window(q)
     people, ambiguous = match_people(conn, q, question)
     mine = bool(re.search(r"\b(i|my|me|mine|i have|i am)\b", q))
@@ -173,17 +260,20 @@ def plan(conn, question):
     # a company name stands for the people we know there. 'what is hooli saying'
     # is about Sam Okafor even though his emails never say 'Hooli'. a bare
     # company name stays a topic question, since a company is more than its contacts
-    org_people = []
+    org_people, orgs = [], []
     if not people:
         for row in conn.execute("SELECT id, org FROM people WHERE org != ''"):
             if any(t == row['org'].lower().split()[0] for t in terms):
                 org_people.append(row['id'])
+                orgs.append(row['org'].split()[0])
     activity = bool(re.search(r'\b(saying|said|up to|doing|working on|latest from|anything from|hear from)\b', q))
 
     # a person with nothing else to ask about is a request for their activity
     # 'what is daniel saying', 'anything from priya', 'dan?'
     if kind == 'topic' and org_people and activity:
         kind = 'person'
+    elif kind == 'topic' and org_people and all(t in OVERVIEW_WORDS or t in {o.lower() for o in orgs} for t in terms):
+        kind = 'company'             # a company name with nothing else to ask is a request for the whole account
     elif kind == 'topic' and not people and not terms and window:
         kind = 'schedule'            # 'tomorrow?' on its own is 'what is on tomorrow'
     elif kind == 'topic' and people and (not terms or window or activity):
@@ -202,8 +292,12 @@ def plan(conn, question):
     for key, words_ in SYNONYMS.items():
         if any(t.startswith(key[:5]) for t in terms):
             expansions += words_.split()
+    # the other direction: the inbox may hold the misspelling. 'northwind' also searches 'northwnd'
+    for t in terms:
+        if t in vocab:
+            expansions += near_words(vocab, t)
     plan_ = Plan(kind=kind, people=people, ambiguous=ambiguous, group=group, expansions=list(dict.fromkeys(expansions)),
-                 terms=terms, mine=mine)
+                 terms=terms, mine=mine, fixes=fixes, org_people=org_people, orgs=list(dict.fromkeys(orgs)))
     if window:
         plan_.start, plan_.end, plan_.day_label = window
     elif kind == 'schedule' and people:

@@ -6,7 +6,10 @@
     "notion:0f8a538c21e4ef3f1024c7d25666cd47",
     "notion:0f72e0247be2673ff5388bb55ebd12b3",
     "crm:deal:23a551d6fe",
-    "notion:4324f4a965bc64d11787c2369776502e"
+    "notion:4324f4a965bc64d11787c2369776502e",
+    "notion:fdfd76a06532aec244da50d79fa1676a",
+    "linear:ACME-460@20260304T1800",
+    "crm:deal:feeb461b12"
   ],
   "must_not_be_stale": [
     "notion:163647759184b558a347537639422466",

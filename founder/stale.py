@@ -27,7 +27,7 @@ from .extract import SPECIFIC_DF, _cosine
 RECORD_KINDS = ('doc', 'deal', 'issue')
 RELATED_COSINE = 0.64        # a newer item this close to the record may be about it
 ENTITY_COSINE = 0.58         # lower bar when they share a specific person or company
-CHANGE_LIKE = 0.68           # gate score of a newer item that reads like a change
+CHANGE_LIKE = 0.60           # gate score of a newer item that reads like a change. lowered from 0.68 once the typed-value and shared-word tests existed: the gate had been the main brake, and it dropped real updates scoring 0.64
 MAX_NEWER = 4                # items shown to the model per record
 MIN_GAP_HOURS = 1            # newer means at least this much later, not the same edit
 NEWER_KINDS = ('email', 'message', 'doc', 'note', 'issue')
@@ -48,6 +48,10 @@ SYSTEM = (
 MONEY_RE = re.compile(r'\$\s?\d[\d,.]*\s?[kKmM]?\b')
 DATE_RE = re.compile(r'\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+\d{1,2}\b', re.I)
 ISO_RE = re.compile(r'\b(\d{4})-(\d{2})-(\d{2})\b')
+SLASH_RE = re.compile(r'\b(\d{1,2})/(\d{1,2})\b')
+PERCENT_RE = re.compile(r'\b(\d+(?:\.\d+)?)\s?(?:%|percent)')
+DURATION_RE = re.compile(r'\b(\d+)\s?-?\s?(yrs?|years?|mos?|months?|wks?|weeks?)\b', re.I)
+UNIT = {'y': 'year', 'm': 'month', 'w': 'week'}
 MONTHS = ('jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec')
 # a status change with no number in it. 'accepted another offer' makes a hiring
 # page stale though neither says a date
@@ -65,6 +69,12 @@ def concrete_values(text):
         vals.add(f'{month[:3]} {int(day.strip())}')
     for y, mo, d in ISO_RE.findall(text):
         vals.add(f'{MONTHS[int(mo) - 1]} {int(d)}')
+    # terms of a deal: '15%' and '2 yr' are values as much as a date is
+    vals |= {f'{p}%' for p in PERCENT_RE.findall(text)}
+    vals |= {f'{n} {UNIT[u[0].lower()]}' for n, u in DURATION_RE.findall(text)}
+    for mo, d in SLASH_RE.findall(text):
+        if 1 <= int(mo) <= 12 and 1 <= int(d) <= 31:
+            vals.add(f'{MONTHS[int(mo) - 1]} {int(d)}')
     return vals
 
 
@@ -83,16 +93,67 @@ def shared_words(a, b):
     return (set(WORD_RE.findall(a.lower())) & set(WORD_RE.findall(b.lower()))) - GENERIC
 
 
-def disagrees(record_text, newer_text):
-    """True when the newer text states a value the record does not, and the
-    record states some value of its own, or the newer text is a status change"""
-    old, new = concrete_values(record_text), concrete_values(newer_text)
-    if old and new and not new <= old:
-        return True
-    return bool(STATUS_CHANGE_RE.search(newer_text))
+def _typed(values):
+    """Group values by what they measure: a date, an amount, a percentage, a duration"""
+    out = {}
+    for v in values:
+        kind = ('percent' if v.endswith('%') else 'money' if v.startswith('$') else
+                'duration' if v.split()[-1] in ('year', 'month', 'week') else 'date')
+        out.setdefault(kind, set()).add(v)
+    return out
 
 
-def find_stale(items, vectors, scores, entities):
+SENTENCE_SPLIT = re.compile(r'(?<=[.!?])\s+|\n|;')
+
+
+def _label_words(text):
+    """Words that say what a sentence is about, without its values"""
+    return {w for w in WORD_RE.findall(text.lower())} - GENERIC - {'date', 'target', 'expected', 'status'}
+
+
+def conflict_strength(record_text, newer_text, record_title='', newer_title=''):
+    """How strongly the newer text contradicts the record, 0 for not at all. A
+    different value of the thing the record states a value of. Three tests, all code:
+      1. same kind of value: another date where the record has a date, another
+         price where it has a price. a date in the newer text means nothing to a
+         record that has none
+      2. the new value sits in a sentence about the same thing: for dates the
+         two sentences must share a word ('close' and 'close', 'cutover' and
+         'cutover'). an email that says 'reproduce by Mar 13' shares nothing with a
+         deal's 'expected close date' and no longer marks it stale
+      3. the record's title may supply the shared word, since 'Initech renewal
+         terms' and 'initech renewal is 2 yr at 15%' are about the same renewal
+         though no sentence of the record repeats a word
+    A status change with no number ('accepted another offer') also counts, weakly.
+    The strength is the number of subject words the new value's sentence shares
+    with the record, which ranks the real update above a template email that
+    happens to mention the same company"""
+    old, new = _typed(concrete_values(record_text)), _typed(concrete_values(newer_text))
+    best = 0.0
+    for kind in new:
+        if kind not in old or not new[kind] - old[kind]:
+            continue
+        fresh = new[kind] - old[kind]
+        new_labels = set().union(*[_label_words(x) for x in SENTENCE_SPLIT.split(newer_text)
+                                   if _typed(concrete_values(x)).get(kind, set()) & fresh] or [set()])
+        old_labels = set().union(*[_label_words(x) for x in SENTENCE_SPLIT.split(record_text)
+                                   if kind in _typed(concrete_values(x))] or [set()])
+        # the record's own title says what it is about, so its words count on the record
+        # side. the newer title does not count: a template email titled 'Initech renewal #45'
+        # is about latency, whatever its subject line says
+        shared = len(new_labels & (old_labels | _label_words(record_title)))
+        if shared:
+            best = max(best, float(shared))
+    if best:
+        return best
+    return 0.25 if STATUS_CHANGE_RE.search(newer_text) else 0.0
+
+
+def disagrees(record_text, newer_text, record_title='', newer_title=''):
+    return conflict_strength(record_text, newer_text, record_title, newer_title) > 0
+
+
+def find_stale(items, vectors, scores, entities, ident=None):
     """vectors must be header-free embeddings of title and body. the ones used for
     retrieval start with 'Email from X on date', which makes unrelated items look alike"""
     from datetime import datetime, timedelta
@@ -116,11 +177,17 @@ def find_stale(items, vectors, scores, entities):
             if (cos >= RELATED_COSINE or (shared and cos >= ENTITY_COSINE)) and \
                     (shared or len(shared_words(f"{rec['title']} {rec['body']}", f"{new['title']} {new['body']}")) >= MIN_SHARED_WORDS):
                 related.append((cos, new))
-        related = [(c, n) for c, n in related if scores.get(n['id'], 0) >= CHANGE_LIKE
-                   and disagrees(f"{rec['title']}. {rec['body']}", f"{n['title']}. {n['body']}")]
+        # a deal belongs to a counterparty: an update only counts if it names that company or
+        # its contact, by name in the text (entity links are too coarse for a customer every email mentions). without this, one investor's email marked another investor's deal stale
+        if rec['kind'] == 'deal' and ident is not None:
+            parties = {w for pid in rec['people'] for w in re.findall(r'[a-z]{4,}', f'{ident.people[pid].name} {ident.people[pid].org}'.lower())}
+            related = [(c, n) for c, n in related if parties & set(re.findall(r'[a-z]{4,}', f"{n['title']} {n['body']}".lower()))]
+        strength = {n['id']: conflict_strength(rec['body'], n['body'], rec['title'], n['title']) for _, n in related}
+        related = [(c, n) for c, n in related if scores.get(n['id'], 0) >= CHANGE_LIKE and strength[n['id']] > 0]
         if not related:
             continue
-        related = sorted(related, key=lambda t: -t[0])[:MAX_NEWER]
+        # strongest contradiction first, then closest in meaning
+        related = sorted(related, key=lambda t: (-strength[t[1]['id']], -t[0]))[:MAX_NEWER]
         newer = [n for _, n in related]
         numbered = '\n'.join(f"[{k}] ({n['ts'][:10]}) {n['title']}. {n['body'][:200]}" for k, n in enumerate(newer, 1))
         prompt = (f"RECORD ({rec['kind']}, last edited {rec['ts'][:10]}): {rec['title']}. {rec['body'][:300]}\n"
@@ -131,8 +198,10 @@ def find_stale(items, vectors, scores, entities):
         # the filters above already require a conflicting value, and a 3B model
         # answering 'same subject' false dropped a real stale plan
         k = (parsed or {}).get('newer_item', 0)
-        if not 1 <= k <= len(newer):
-            k = 1     # the closest item by similarity
+        # the model picks which newer item shows the change, but not a weaker one than the
+        # best contradiction: a 3b model picked a template email over the real update
+        if not 1 <= k <= len(newer) or strength[newer[k - 1]['id']] < strength[newer[0]['id']]:
+            k = 1
         out.append({'item_id': rec['id'], 'newer_id': newer[k - 1]['id'],
                     'current_fact': _fact_sentence(newer[k - 1], rec, parsed.get('current_fact', '')),
                     'why': f"newer {newer[k - 1]['source']} item from {newer[k - 1]['ts'][:10]} changes this"})

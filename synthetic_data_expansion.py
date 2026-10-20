@@ -67,6 +67,95 @@ AUTOMATED = {
 }
 
 
+# ---- human noise ------------------------------------------------------------
+# real mail and chat are typed in a hurry. these operators touch only the words a
+# person chose: casing, shorthand, a dropped final period, the odd typo, a mobile
+# signature. dates, amounts, ids, addresses and the words that carry a decision
+# are protected, because a typo in 'Mar 22' would make the question unanswerable
+# for a person as well, and that would test nothing
+import re as _re
+PROTECT = _re.compile(r"(ACME-\d+|#\d+|\$\s?\d[\d,.]*\s?[kKmM]?|\b\d[\d:/.,-]*\b|"
+                      r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.? \d+|"
+                      r"[\w.+-]+@[\w.-]+|https?://\S+|<@U\w+>|\b[A-Z][a-z]+\b)")
+CUE_WORDS = frozenset('decision decided correction corrected reverting reversing reopening cancelled canceled '
+                      'rescheduled moved confirmed approved accepted closing cutover freeze ship'.split())
+ABBREVIATIONS = {'please': 'pls', 'thanks': 'thx', 'tomorrow': 'tmrw', 'because': 'bc', 'about': 'abt',
+                 'before': 'bfr', 'weekend': 'wknd', 'meeting': 'mtg', 'customer': 'cust', 'review': 'rev'}
+NOISE_SKIP_THREADS = {'thread_auth_001', 'thread_roadmap_001', 'thread_meeting_001', 'thread_billing_001',
+                      'thread_ooo_001'}
+NOISE_SKIP_SLACK = ('ACME-142', 'Roadmap:', 'Weekly Product Sync', 'billing migration is blocked on my side',
+                    'Confirmed: OAuth')
+SIGNOFFS = ('\n\nSent from my iPhone', '\n\nsent from my phone, excuse typos', '\n\nSent from Outlook for Android')
+DISCLAIMER = ('\n\nThis message may contain confidential information. If you are not the intended recipient, '
+              'please delete it and notify the sender.')
+
+
+def _typo(word, rng):
+    kind = rng.choice(('swap', 'drop', 'double'))
+    i = rng.randrange(1, len(word) - 1)
+    if kind == 'swap':
+        return word[:i] + word[i + 1] + word[i] + word[i + 2:]
+    if kind == 'drop':
+        return word[:i] + word[i + 1:]
+    return word[:i] + word[i] + word[i:]
+
+
+def humanise(text, rng, typo_rate=0.010, abbr_rate=0.5, external=False):
+    """One message, typed in a hurry. Deterministic for a given rng state"""
+    out, last = [], 0
+    for match in PROTECT.finditer(text):
+        chunk = text[last:match.start()]
+        out.append(_edit_chunk(chunk, rng, typo_rate, abbr_rate))
+        out.append(match.group(0))
+        last = match.end()
+    out.append(_edit_chunk(text[last:], rng, typo_rate, abbr_rate))
+    text = ''.join(out)
+    roll = rng.random()
+    if roll < 0.20 and text[:1].isupper() and not text.startswith(('Hi ', 'Hello')):
+        text = text[0].lower() + text[1:]                 # no capital, typed on a phone
+    if rng.random() < 0.20:
+        text = _re.sub(r'[.]\s*$', '', text)               # last full stop dropped
+    if rng.random() < 0.08:
+        text += rng.choice(SIGNOFFS)
+    elif external and rng.random() < 0.10:
+        text += DISCLAIMER
+    return text
+
+
+def _edit_chunk(chunk, rng, typo_rate, abbr_rate):
+    def edit(match):
+        word = match.group(0)
+        low = word.lower()
+        if low in CUE_WORDS:
+            return word
+        if low in ABBREVIATIONS and rng.random() < abbr_rate:
+            return ABBREVIATIONS[low]
+        if len(word) >= 5 and word.islower() and rng.random() < typo_rate:
+            return _typo(word, rng)
+        return word
+    return _re.sub(r"[A-Za-z]+", edit, chunk)
+
+
+def _rewrite_mail(row, fn):
+    """Apply fn to the readable text parts of a Gmail row, keeping the encoding"""
+    def one(part):
+        data = part.get('body', {}).get('data')
+        if not data or part.get('mimeType', 'text/plain') != 'text/plain':
+            return
+        text = base64.urlsafe_b64decode(data + '=' * (-len(data) % 4)).decode()
+        part['body']['data'] = base64.urlsafe_b64encode(fn(text).encode()).decode().rstrip('=')
+    payload = row['payload']
+    if payload.get('parts'):
+        for part in payload['parts']:
+            one(part)
+    else:
+        one(payload)
+    first = payload['parts'][0] if payload.get('parts') else payload
+    data = first.get('body', {}).get('data')
+    if data:
+        row['snippet'] = base64.urlsafe_b64decode(data + '=' * (-len(data) % 4)).decode()[:120].replace('\n', ' ')
+
+
 def expand(ctx):
     PEOPLE, hexid = ctx['PEOPLE'], ctx['hex']
     gmail, cal, slack, linear = ctx['gmail_raw'], ctx['cal_raw'], ctx['slack_raw'], ctx['linear_raw']
@@ -557,6 +646,100 @@ def expand(ctx):
               f'Routine task {ident}.', X.choice(['Todo', 'In Progress', 'Done']),
               X.choice([p for p in PEOPLE if p != 'P1']), D(3, 1) + timedelta(hours=X.randint(0, 24 * 14)),
               D(2, 20), priority=X.choice([0, 3, 4]), labels=(X.choice(['backend', 'frontend', 'infra']),))
+
+
+    # ======================================================================
+    # scenario 7: a renewal whose terms the founder changed with two words
+    # ======================================================================
+    page('Initech renewal terms', 'Term: 1 year.\nDiscount: 10%.\nOwner: Rebecca Liu.\nStatus: draft sent to legal.',
+         'P9', D(3, 3, 16), D(3, 4, 16))
+    ren = deal('Initech - renewal', 84000, 'contract sent', D(3, 31), D(3, 4, 17), 'P9', 'X2', 'renewal',
+               'Renewal at 1 year, 10 percent discount')
+    issue('ACME-460', 'Initech renewal paperwork', 'Prepare 1 year renewal at 10% discount for legal.',
+          'Todo', 'P9', D(3, 4, 18), D(3, 4, 17), priority=2, labels=('legal',))
+    t7 = 'thread_initech_renew_001'
+    mail(addr('X2', 'name'), me, 'renewal q', 'hi alex, legal is asking if we can do 2 yrs w/ 15% off?? lmk\n\nMei',
+         D(3, 9, 16), t7)
+    mail(addr('P9', 'name'), me, 'Re: renewal q', 'Alex - Initech wants 2yr / 15%. ok by you? need yes/no by thurs so '
+         'legal can redline', D(3, 10, 15), t7, cc=work('P2'))
+    mail(addr('P1', 'name'), addr('P9', 'name'), 'Re: renewal q', 'ok by me. 2yr 15% fine, go ahead', D(3, 12, 20), t7)
+    say('P9', 'C03GEN', 'initech renewal is 2 yr at 15% now, legal redlining', D(3, 13, 15))
+    key['initech_renewal'] = {
+        'current': '2-year term at 15% discount, approved by Alex on Mar 12 (email), up from 1 year at 10%',
+        'stale_records': ['Notion Initech renewal terms (1 year, 10%)', 'CRM Initech renewal deal (1 year, 10%)',
+                          'Linear ACME-460 (1 year renewal at 10%)']}
+
+    # ======================================================================
+    # scenario 8: a security report promised for tomorrow, with a deadline in slash dates
+    # ======================================================================
+    t8 = 'thread_hooli_soc2_001'
+    mail(addr('X5', 'name'), me, 'SOC 2 report', 'Alex, our security team needs your SOC 2 report before we renew. '
+         'can u send by 3/18? thx\n\nSam', D(3, 11, 17), t8)
+    mail(addr('P1', 'name'), addr('X5', 'name'), 'Re: SOC 2 report', 'will send the summary tmrw', D(3, 11, 18), t8)
+    say('P2', 'C03GEN', 'do we have the soc2 report ready for hooli?', D(3, 12, 15))
+    say('P8', 'C03GEN', 'audit report lands 3/20, summary before that is just the pen test exec summary', D(3, 12, 15, 20))
+    key['soc2'] = {'ask': 'Sam Okafor (Hooli) wants the SOC 2 report by 3/18 (Mar 18)',
+                   'promise': 'Alex told Sam on Mar 11 he would send a summary tomorrow (Mar 12), and nothing shows he did',
+                   'fact': 'the audit report lands Mar 20'}
+
+    # ======================================================================
+    # scenario 9: an investor update draft answered inline
+    # ======================================================================
+    t9 = 'thread_investor_update_001'
+    mail(addr('P1', 'name'), addr('P2', 'name'), 'Investor update draft', 'draft attached, thoughts?\n\nSection 1: ARR is $1.8M, '
+         'up 12% MoM\nSection 2: churn 3%\nSection 3: asks', D(3, 12, 19), t9)
+    mail(addr('P2', 'name'), me, 'Re: Investor update draft',
+         '\nOn Fri, Mar 13, 2026 at 3:00 PM Alex Chen <alex.chen@acmerobotics.com> wrote:\n'
+         '> Section 1: ARR is $1.8M, up 12% MoM\nFine, but say roughly $1.8M, not exact.\n'
+         '> Section 2: churn 3%\ncut this slide, Jordan will ask about it live\n'
+         '> Section 3: asks\nadd the cohort chart here', D(3, 13, 20), t9)
+    key['investor_update'] = {'priya_edits': ['say roughly $1.8M ARR, not exact', 'cut the churn slide',
+                                              'add the cohort chart to the asks section']}
+
+    # ======================================================================
+    # everyday chatter that could be mistaken for an answer, and duplicates across calendars
+    # ======================================================================
+    mail(addr('P4', 'name'), me, 'Re: SSO login loops for our users', 'ack', D(3, 12, 18), 'thread_globex_sso_001')
+    mail(addr('P2', 'name'), me, 'Re: Northwind term sheet template', '+1', D(3, 9, 15), 'thread_fwd_001')
+    for n, when in enumerate((D(3, 10, 14), D(3, 11, 13), D(3, 12, 14), D(3, 13, 13), D(3, 13, 17))):
+        target = X.choice(['P2', 'P3', 'P4', 'P7'])
+        mail(addr('P5', 'name'), addr(target, 'name'), 'Automatic reply: ' + X.choice(['Standup notes', 'Weekly sync agenda',
+             'billing question', 'Re: Deploy checklist']), "I'm out of the office until Mar 16 with limited access. "
+             'For billing, contact Priya Nair.', when, f'thread_autoreply_{n}', automated=True)
+    event('Northwind <> Acme: partner update', D(3, 17, 15), D(3, 17, 16), people=('P1',), externals=('X3',), tz=-4,
+          organizer='P2', responses={'X3': 'accepted'})
+    event('sync w/ priya re raise', D(3, 16, 15), D(3, 16, 15, 30), people=('P1', 'P2'), organizer='P2')
+    for ident, title, desc, state in (
+            ('ACME-470', 'exports r slow again??', 'see slack. same as hooli thing', 'Todo'),
+            ('ACME-471', 'fix the thing w/ the audit log', 'priya knows', 'In Progress'),
+            ('ACME-472', 'sso cleanup (not the globex one)', 'old okta config', 'Todo'),
+            ('ACME-473', 'billing: ledgerly sandbox keys', 'omar has them', 'Done'),
+            ('ACME-474', 'docs for api keys??', 'maybe not needed now', 'Todo'),
+            ('ACME-475', 'rate limit headers', 'follow up from eng sync', 'In Progress')):
+        issue(ident, title, desc, state, X.choice([p for p in PEOPLE if p != 'P1']),
+              D(3, 1) + timedelta(hours=X.randint(0, 24 * 14)), D(2, 25), priority=X.choice([0, 3, 4]),
+              labels=(X.choice(['backend', 'infra', 'docs']),))
+    for text in ('\U0001F44D', 'ty!', 'k', 'lol ok', 'on it', '\U0001F64F', 'same here', 'sgtm', 'nice', 'ack'):
+        say(X.choice(list(PEOPLE)), X.choice(['C01ENG', 'C02PROD', 'C03GEN']), text,
+            D(3, 5) + timedelta(hours=X.randint(0, 24 * 9)))
+
+    # ======================================================================
+    # the noise pass: every message a person typed gets a little human mess
+    # ======================================================================
+    rng = random.Random(20260319)
+    people_emails = {v['work'] for v in PEOPLE.values()}
+    for row in gmail:
+        headers = {h['name']: h['value'] for h in row['payload']['headers']}
+        if row['threadId'] in NOISE_SKIP_THREADS or 'Auto-Submitted' in headers or 'List-Unsubscribe' in headers:
+            continue
+        if rng.random() < 0.30:
+            external = not any(e in headers.get('From', '') for e in people_emails)
+            _rewrite_mail(row, lambda text, e=external: humanise(text, rng, external=e))
+    for row in slack:
+        if row.get('bot_id') or any(k in row['text'] for k in NOISE_SKIP_SLACK) or len(row['text']) < 8:
+            continue
+        if rng.random() < 0.30:
+            row['text'] = humanise(row['text'], rng, typo_rate=0.015)
 
     contacts = {'results': [
         {'id': e['id'], 'properties': {'firstname': e['name'].split()[0], 'lastname': e['name'].split()[1],

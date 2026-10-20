@@ -7,6 +7,7 @@ section is a query we can assert on, and the model is limited to phrasing a
 short list of facts we already verified. The same facts answer the open
 questions in answer.py ('anything urgent', 'what am I missing'), so the brief
 and the question path cannot disagree about what matters"""
+import json
 import re
 from datetime import datetime, timedelta
 
@@ -72,12 +73,17 @@ def day_events(conn, names, start, end):
     """The founder's events between start and end in every state, with what a
     person needs to know about each: done or still to come, cancelled,
     tentative, all-day, a time zone other than UTC, outside guests"""
-    out = []
+    out, shown = [], set()
     for row in conn.execute("SELECT * FROM items WHERE kind='event' AND start >= ? AND start < ? ORDER BY start",
                             (_iso(start), _iso(end))):
         item = store.row_to_item(row)
         if config.FOUNDER_PERSON_ID not in item['people']:
             continue
+        # one meeting on two calendars is one line
+        if item['dup_group']:
+            if item['dup_group'] in shown:
+                continue
+            shown.add(item['dup_group'])
         flags = []
         if item['status'] == 'cancelled':
             flags.append('CANCELLED')
@@ -276,8 +282,8 @@ def build_facts(conn, names):
     like 'what am I missing' can say they were checked"""
     facts = []
 
-    def add(score, text, ids, cat, handled=False):
-        facts.append({'score': score, 'text': text, 'ids': [i for i in ids if i], 'cat': cat, 'handled': handled})
+    def add(score, text, ids, cat, handled=False, **extra):
+        facts.append({'score': score, 'text': text, 'ids': [i for i in ids if i], 'cat': cat, 'handled': handled, **extra})
 
     today = config.NOW.replace(hour=0, minute=0, second=0, microsecond=0)
     for e in day_events(conn, names, today, today + timedelta(days=1)):
@@ -305,7 +311,9 @@ def build_facts(conn, names):
         done = row['status'] != 'open'
         base = 70 if row['kind'] == 'ask' else 70
         add(5 if done else base + _due_bonus(row), followup_text(row, names), [row['item_id'], row['evidence']],
-            'ask' if row['kind'] == 'ask' else 'promise', handled=done)
+            'ask' if row['kind'] == 'ask' else 'promise', handled=done,
+            people=[row['who']] + [p for p in row['whom'].split(',') if p],
+            overdue=bool(row['due']) and row['due'] < config.NOW.strftime('%Y-%m-%d') and row['status'] == 'open')
     for item in blocked_for_founder(conn):
         add(50 - _rank(item), f"Blocked, owned by you: {item['meta']['identifier']} {_clean_title(item)}", [item['id']], 'blocked')
     for c in recurring_customer_issues(conn, names):
@@ -314,6 +322,104 @@ def build_facts(conn, names):
         add(30 + c['score'], f"{c['customer']} {c['label']} reported again: {len(c['items'])} reports on {c['days']} days "
             f"across {', '.join(c['sources'])}{recurred}", ids, 'customer')
     return sorted(facts, key=lambda f: -f['score'])
+
+
+def prep_facts(conn, plan, question):
+    """Everything to have in your head before one meeting. The meeting is the one
+    the question names (by a guest, a company or a title word) or else the next one.
+    Open asks the guests have made of you, promises you made them, the open issues
+    for their company and the pull requests waiting on you that fix those, the
+    emails linked to the meeting, and anything that changed about it"""
+    names = _names(conn)
+    low = question.lower()
+    upcoming = [e for e in day_events(conn, names, config.NOW - timedelta(hours=1), config.NOW + timedelta(days=14))
+                if e['upcoming'] or e['started']]
+    if not upcoming:
+        return []
+    org_words = {w for pid in plan.people for w in re.findall(r'[a-z]{4,}', names.get(pid, '').lower())}
+    word_set = set(re.findall(r'[a-z]{4,}', low)) | org_words
+
+    def relevance(e):
+        title = set(re.findall(r'[a-z]{4,}', e['item']['title'].lower()))
+        guests = {w for pid in e['item']['people'] for w in re.findall(r'[a-z]{4,}', names.get(pid, '').lower())}
+        return len((title | guests) & word_set - GENERIC_QUESTION_WORDS)
+    best = max(upcoming, key=lambda e: (relevance(e), -upcoming.index(e)))
+    e = best if relevance(best) else upcoming[0]
+    item = e['item']
+    facts = [{'score': 0, 'text': f'Meeting: {event_line(e)}', 'ids': [item['id']], 'cat': 'prep', 'handled': False}]
+
+    def add(text, *ids):
+        facts.append({'score': 0, 'text': text, 'ids': [i for i in ids if i], 'cat': 'prep', 'handled': False})
+
+    guests = [p for p in item['people'] if p != config.FOUNDER_PERSON_ID]
+    for row in followup_rows(conn):
+        if row['status'] == 'open' and row['kind'] == 'ask' and row['who'] in guests:
+            add(followup_text(row, names), row['item_id'])
+        if row['status'] == 'open' and row['kind'] == 'promise' and set(row['whom'].split(',')) & set(guests):
+            add(followup_text(row, names), row['item_id'])
+    notes, ids = meeting_prep(conn, e, names)
+    seen_issue = set()
+    for note, item_id in zip(notes, ids):
+        if 'waiting on you' not in note:
+            add(note, item_id)
+            seen_issue.add(item_id)
+    # pull requests waiting on you that name one of those issues
+    for issue_id in list(seen_issue):
+        row = conn.execute("SELECT meta FROM items WHERE id=?", (issue_id,)).fetchone()
+        ident = (json.loads(row['meta']) if row else {}).get('identifier')
+        if ident:
+            for pr in conn.execute("SELECT id, title, status, people FROM items WHERE kind='pr' AND status='open' "
+                                   "AND (title LIKE ? OR body LIKE ?)", (f'%{ident}%', f'%{ident}%')):
+                if config.FOUNDER_PERSON_ID in json.loads(pr['people']):
+                    add(f"PR waiting on your review: {pr['title']}", pr['id'])
+    for r in conn.execute("SELECT a, b FROM links WHERE (a=? OR b=?) AND reason='title'", (item['id'], item['id'])):
+        other = r['b'] if r['a'] == item['id'] else r['a']
+        row = conn.execute("SELECT title, ts, source FROM items WHERE id=? AND kind IN ('email','message')", (other,)).fetchone()
+        if row:
+            add(f"Related {row['source']} ({row['ts'][:10]}): {row['title']}", other)
+    return facts
+
+
+def company_facts(conn, plan):
+    """The whole picture of one account: meetings coming up with its people, what they
+    are waiting on from you, what you promised them, open issues that name the
+    company, the recent mail, the deal, and anything on file that is out of date"""
+    names = _names(conn)
+    people = list(plan.org_people)
+    org = plan.orgs[0] if plan.orgs else 'the company'
+    facts = []
+
+    def add(text, *ids):
+        facts.append({'score': 0, 'text': text, 'ids': [i for i in ids if i], 'cat': 'company', 'handled': False})
+
+    for e in day_events(conn, names, config.NOW, config.NOW + timedelta(days=14)):
+        if (e['upcoming'] or e['started']) and set(e['item']['people']) & set(people):
+            add(f"Meeting coming up: {event_line(e)}", e['item']['id'])
+    for row in followup_rows(conn):
+        if row['status'] == 'open' and (row['who'] in people or set(row['whom'].split(',')) & set(people)):
+            add(followup_text(row, names), row['item_id'])
+    for r in conn.execute("SELECT id, title, status, ts FROM items WHERE source='linear' AND state='current' AND status != 'Done' "
+                          'AND (title LIKE ? OR body LIKE ?) ORDER BY ts DESC LIMIT 4', (f'%{org}%', f'%{org}%')):
+        old = conn.execute('SELECT current_fact FROM stale_records WHERE item_id=?', (r['id'],)).fetchone()
+        add(f"Open issue: {_clean_title({'title': r['title']})} is {r['status']} (updated {r['ts'][:10]})"
+            + (f", out of date: newer information says {old['current_fact']}" if old else ''), r['id'])
+    for c in recurring_customer_issues(conn, names):
+        if c['customer'].lower() == org.lower():
+            ids = [i['id'] for i in sorted(c['items'], key=lambda i: i['ts'])][-2:]
+            recurred = ', and a fix that was marked done came back' if c['reopened'] else ''
+            add(f"{c['label']} reported again: {len(c['items'])} reports on {c['days']} days across {', '.join(c['sources'])}{recurred}", *ids)
+    marks = ','.join('?' * len(people))
+    for r in conn.execute(f"SELECT id, title, ts FROM items WHERE kind='email' AND state='current' AND author IN ({marks}) "
+                          'ORDER BY ts DESC LIMIT 3', people):
+        add(f"Email from them on {r['ts'][:10]}: {r['title']}", r['id'])
+    for r in conn.execute("SELECT id, title, status, ts FROM items WHERE kind='deal' AND (title LIKE ? OR body LIKE ?)",
+                          (f'%{org}%', f'%{org}%')):
+        stale = conn.execute('SELECT current_fact FROM stale_records WHERE item_id=?', (r['id'],)).fetchone()
+        add(f"CRM deal '{r['title']}' ({r['status']})" + (f", out of date: newer information says {stale['current_fact']}" if stale else ''), r['id'])
+    return facts
+
+
+GENERIC_QUESTION_WORDS = frozenset('before next call meeting need what know should about with from have'.split())
 
 
 def collect_facts(conn):

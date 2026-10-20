@@ -39,10 +39,12 @@ QUOTE_STARTS = (
     ('reply', re.compile(r'^(?:On .+?,? )?[A-Z][\w. ]+ wrote:\s*$', re.M)),
     ('reply', re.compile(r'^From: .+\n(?:Sent|Date): ', re.M)),
     ('forward', re.compile(r'^-{3,}\s*Forwarded message\s*-{3,}', re.M)),
-    ('reply', re.compile(r'^>', re.M)),
 )
+QUOTED_LINE_RE = re.compile(r'^>', re.M)
+HEADER_LINE_RE = re.compile(r'^(?:On .+?,? )?[A-Z][\w. ]+ wrote:\s*$|^On .{5,160}$|^[A-Za-z][\w. ]{0,40}.* wrote:\s*$')
 ACME_RE = re.compile(r'\bACME-\d+\b')
 AUTOMATED_HEADERS = ('Auto-Submitted', 'List-Unsubscribe')
+AUTO_REPLY_SUBJECT_RE = re.compile(r'^\s*(automatic reply|auto-?reply|out of office|undeliverable|delivery status)', re.I)
 
 
 def _iso(dt):
@@ -54,15 +56,30 @@ def _parse_iso(text):
 
 
 def split_quote(body):
-    """Returns (own text, quoted tail, 'reply' | 'forward' | '')"""
+    """Returns (own text, quoted tail, 'reply' | 'forward' | '').
+
+    Three styles of reply: the header then a quoted block (top posting), a
+    quoted block with the writer's answers between its lines (inline), and
+    quoted lines with no header at all. Cutting at the first marker is right
+    for the first and throws away every answer in the other two, so the lines of
+    the tail that are not quoted are kept as the writer's own words"""
     cut, kind = None, ''
     for label, pattern in QUOTE_STARTS:
         match = pattern.search(body)
         if match and (cut is None or match.start() < cut):
             cut, kind = match.start(), label
     if cut is None:
-        return body.strip(), '', ''
-    return body[:cut].strip(), body[cut:].strip(), kind
+        if not QUOTED_LINE_RE.search(body):
+            return body.strip(), '', ''
+        own = [l for l in body.splitlines() if not l.startswith('>')]
+        return '\n'.join(own).strip(), '\n'.join(l for l in body.splitlines() if l.startswith('>')), 'reply'
+    own, tail = body[:cut].strip(), body[cut:].strip()
+    if kind == 'reply' and QUOTED_LINE_RE.search(tail):
+        inline = [l for l in tail.splitlines()
+                  if l.strip() and not l.startswith('>') and not HEADER_LINE_RE.match(l.strip())]
+        if inline:
+            own = (own + '\n' + '\n'.join(inline)).strip()
+    return own, tail, kind
 
 
 def html_to_text(markup):
@@ -105,7 +122,7 @@ def gmail_items(raw_dir, ident):
         headers = {h['name']: h['value'] for h in row['payload']['headers']}
         body, quoted, quote_kind = split_quote(mail_text(row['payload']))
         ts = datetime.fromtimestamp(int(row['internalDate']) / 1000, tz=timezone.utc)
-        automated = any(h in headers for h in AUTOMATED_HEADERS)
+        automated = any(h in headers for h in AUTOMATED_HEADERS) or bool(AUTO_REPLY_SUBJECT_RE.match(headers.get('Subject', '')))
 
         author, how = ident.from_email(headers.get('From', ''), automated=automated)
         # a role address or an unknown sender is identified by the signature

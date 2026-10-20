@@ -10,11 +10,14 @@
   ],
   "open_promises": [
     "gmail:ccd9c787ded3995d",
-    "gmail:3794ed2c45e9c301"
+    "gmail:3794ed2c45e9c301",
+    "gmail:c81c70603acf1120"
   ],
   "must_not_be_open": [
     "gmail:ceece9b31878fe40",
     "gmail:ff9c102bbfa27a06",
-    "gmail:19d8c431017747e4"
+    "gmail:19d8c431017747e4",
+    "gmail:42a6081b54253d8a",
+    "gmail:67d8c49f3e07178f"
   ]
 }

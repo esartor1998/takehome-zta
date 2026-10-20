@@ -18,16 +18,24 @@ from datetime import datetime, timedelta, timezone
 
 from . import config, llm
 
-ASK_RE = re.compile(r'\b(can you|could you|would you|please|need you|any update|any updates|'
-                    r'let me know (?:when|by|once))\b|\?', re.I)
+ASK_RE = re.compile(r"\b(can you|could you|would you|can u|could u|please|pls|plz|need you|need this|any update|"
+                    r"any updates|any chance|wondering if|would you mind|lmk (?:when|by|once)|"
+                    r"let me know (?:when|by|once))\b|\?", re.I)
 # closers that look like asks or promises and are neither. real mail is full of
 # them, and without this every status email became a follow-up
 BOILERPLATE_RE = re.compile(
     r'no action needed|let me know if you (?:want|have|need|would like)|follow up if nothing changes|'
     r'for visibility|recommend we ship|rolling forward|if we cannot reproduce', re.I)
-PROMISE_RE = re.compile(r"\b(i will|i'll|will send|will get|will update|will share|let me get|"
-                        r'early next week|by (?:mon|tue|wed|thu|fri)\w*|by eod|by tomorrow)\b', re.I)
+PROMISE_RE = re.compile(r"\b(i will|i'll|ill send|will send|will get|will update|will share|let me get|on it|"
+                        r"early next week|by (?:mon|tue|wed|thu|fri)\w*|by eod|by tomorrow|by tmrw|"
+                        r"sending (?:it )?(?:over )?(?:tmrw|tomorrow|tonight|today))\b", re.I)
 WEEKDAYS = ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')
+# how people write them. 'thurs' and 'weds' are everywhere, and a bare 'mon' would also match 'month'
+WEEKDAY_FORMS = {'monday': ('monday', 'mon'), 'tuesday': ('tuesday', 'tues', 'tue'),
+                 'wednesday': ('wednesday', 'weds', 'wed'), 'thursday': ('thursday', 'thurs', 'thur', 'thu'),
+                 'friday': ('friday', 'fri'), 'saturday': ('saturday', 'sat'), 'sunday': ('sunday', 'sun')}
+SLASH_DATE_RE = re.compile(r'\b(\d{1,2})/(\d{1,2})\b')
+ORDINAL_RE = re.compile(r'\b(?:the )?(\d{1,2})(?:st|nd|rd|th)\b')
 MONTHS = ('jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec')
 DATE_RE = re.compile(r'\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})\b', re.I)
 MAX_AGE_DAYS = 30         # older than this and a still-open ask is probably dead
@@ -47,18 +55,33 @@ SYSTEM = (
 
 def parse_due(text, base):
     """A date for a deadline phrase, resolved against when the message was
-    sent. Returns an iso date string or ''"""
+    sent. Handles prose dates (Mar 20), slash dates (3/20), ordinals (the 20th),
+    weekdays and their short forms, tomorrow and tmrw, end of day, week and month.
+    Returns an iso date string or ''"""
     low = text.lower()
     match = DATE_RE.search(low)
     if match:
         month = MONTHS.index(match.group(1)[:3]) + 1
         return datetime(base.year, month, int(match.group(2))).strftime('%Y-%m-%d')
-    if 'tomorrow' in low:
+    match = SLASH_DATE_RE.search(low)
+    if match and 1 <= int(match.group(1)) <= 12 and 1 <= int(match.group(2)) <= 31:
+        return datetime(base.year, int(match.group(1)), int(match.group(2))).strftime('%Y-%m-%d')
+    match = ORDINAL_RE.search(low)
+    if match and 1 <= int(match.group(1)) <= 31:
+        day = int(match.group(1))
+        month, year = (base.month, base.year) if day >= base.day else ((base.month % 12) + 1, base.year + (base.month == 12))
+        try:
+            return datetime(year, month, day).strftime('%Y-%m-%d')
+        except ValueError:
+            pass
+    if re.search(r'\b(tomorrow|tmrw|tmr)\b', low):
         return (base + timedelta(days=1)).strftime('%Y-%m-%d')
-    if re.search(r'\b(eod|today|end of day)\b', low):
+    if re.search(r'\b(eod|today|end of day|tonight)\b', low):
         return base.strftime('%Y-%m-%d')
-    for name in WEEKDAYS:
-        if re.search(rf'\b{name}\b|\b{name[:3]}\b', low):
+    if re.search(r'\b(eow|end of (?:the )?week)\b', low):
+        return (base + timedelta(days=(4 - base.weekday()) % 7)).strftime('%Y-%m-%d')
+    for name, forms in WEEKDAY_FORMS.items():
+        if any(re.search(rf'\b{form}\b', low) for form in forms):
             ahead = (WEEKDAYS.index(name) - base.weekday()) % 7
             return (base + timedelta(days=ahead)).strftime('%Y-%m-%d')
     if re.search(r'early next week|next week', low):
@@ -72,6 +95,16 @@ def _due(due_phrase, body, base):
         return parse_due(due_phrase, base)
     match = re.search(r'\b(?:by|before)\b[^.?!\n]*', body, re.I)
     return parse_due(match.group(0), base) if match else ''
+
+
+ACK_ONLY_RE = re.compile(r"^\W*(ok(ay)?|ack|\+1|thanks?|thx|ty|sgtm|lgtm|got it|noted|on it|will do|looks good|nice|same here)\W*$", re.I)
+MIN_REPLY_WORDS = 8
+
+
+def substantive(item):
+    """A reply that answers something. 'ack' and '+1' from a teammate in the
+    thread do not close an ask made of the founder"""
+    return len(item['body'].split()) >= MIN_REPLY_WORDS and not ACK_ONLY_RE.match(item['body'].strip())
 
 
 def evidence_index(items):
@@ -148,7 +181,7 @@ def find_followups(items, ident):
         later_mine = [m for m in later if m['author'] == founder]
         # a teammate answering a thread the founder was copied on closes the ask
         # as well: it was answered, by someone other than the founder
-        later_team = [m for m in later if not ident.people[m['author']].external] if item['kind'] == 'email' else []
+        later_team = [m for m in later if not ident.people[m['author']].external and substantive(m)] if item['kind'] == 'email' else []
         evidence = (later_mine or later_team)[0]['id'] if (later_mine or later_team) else (handled_by(item) or '')
         status = 'replied' if (later_mine or later_team) else ('handled' if evidence else 'open')
         rows.append({'item_id': item['id'], 'kind': 'ask', 'who': item['author'], 'whom': founder,

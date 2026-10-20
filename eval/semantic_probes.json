@@ -213,5 +213,45 @@
     ],
     "forbidden_ids": [],
     "reference": ""
+  },
+  {
+    "id": "p16",
+    "category": "semantic_probe",
+    "question": "how long is the contract we are renewing with the company that disputed seats",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:7d508a6afb1224fb",
+        "slack:C03GEN:1773414000.655032"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  },
+  {
+    "id": "p17",
+    "category": "semantic_probe",
+    "question": "which prospect is asking for our security attestation",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:b0358e336931b315"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
+  },
+  {
+    "id": "p18",
+    "category": "semantic_probe",
+    "question": "what feedback did the cfo type person give on our quarterly letter to backers",
+    "answerable": true,
+    "expected_ids": [
+      [
+        "gmail:6c967d680a755c1f"
+      ]
+    ],
+    "forbidden_ids": [],
+    "reference": ""
   }
 ]
