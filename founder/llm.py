@@ -168,16 +168,36 @@ def _call_openrouter(name, system, user, schema, max_tokens):
     if not config.OPENROUTER_KEY:
         raise ModelError('no OPENROUTER_API_KEY or OPENROUTER_KEY in the environment or .env')
     payload = {'model': name, 'messages': [{'role': 'system', 'content': system}, {'role': 'user', 'content': user}],
-               'max_tokens': max_tokens + (OPENAI_REASONING_ROOM if config.THINKING else 0), 'temperature': 0,
-               'reasoning': {'enabled': config.THINKING}}
+               'temperature': 0}
     if schema:
         payload['response_format'] = {'type': 'json_schema',
                                       'json_schema': {'name': 'respond', 'schema': schema, 'strict': False}}
-    resp = _http('https://openrouter.ai/api/v1/chat/completions', payload,
-                 {'Content-Type': 'application/json', 'Authorization': f'Bearer {config.OPENROUTER_KEY}'}, timeout=300)
+    headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {config.OPENROUTER_KEY}'}
+    url = 'https://openrouter.ai/api/v1/chat/completions'
+    # some endpoints refuse to run without reasoning (minimax m3.1 answers 400 'Reasoning is mandatory').
+    # we learn that from the first refusal and stop sending the flag, and give those models room for the
+    # thinking they will do anyway, since it counts against max_tokens
+    thinks = config.THINKING or name in _REASONING_REQUIRED
+    for attempt in range(2):
+        payload['max_tokens'] = max_tokens + (OPENAI_REASONING_ROOM if thinks else 0)
+        if name in _REASONING_REQUIRED:
+            payload.pop('reasoning', None)
+        else:
+            payload['reasoning'] = {'enabled': config.THINKING}
+        try:
+            resp = _http(url, payload, headers, timeout=300)
+            break
+        except ModelError as err:
+            if attempt or 'mandatory' not in str(err):
+                raise
+            _REASONING_REQUIRED.add(name)
+            thinks = True
     usage = resp.get('usage', {})
     return {'text': resp['choices'][0]['message']['content'] or '',
             'prompt_tokens': usage.get('prompt_tokens', 0), 'completion_tokens': usage.get('completion_tokens', 0)}
+
+
+_REASONING_REQUIRED = set()
 
 
 OPENAI_REASONING_ROOM = 1500    # tokens a hosted reasoning model may spend thinking, on top of the answer

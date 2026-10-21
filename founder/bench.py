@@ -98,6 +98,10 @@ def bench_model(spec, judge, cold=True):
     if cold and config.LLM_CACHE_PATH.exists():
         config.LLM_CACHE_PATH.unlink()
         llm.forget_cache()
+    if cold:
+        # the glossary memo is a second cache. a cold run that kept it would skip the glossary calls and
+        # report a cheaper, faster ingest than a first run really is
+        (config.STATE_DIR / 'glossary_memo.json').unlink(missing_ok=True)
     llm.reset_usage()
     started = time.time()
     ingest.run()

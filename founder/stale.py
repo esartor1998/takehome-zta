@@ -376,7 +376,7 @@ def find_stale(items, vectors, scores, entities, ident=None):
                 or newer[k - 1]['ts'] < newer[0]['ts']:
             k = 1
         out.append({'item_id': rec['id'], 'newer_id': newer[k - 1]['id'],
-                    'current_fact': _fact_sentence(newer[k - 1], rec, parsed.get('current_fact', ''), said.get(newer[k - 1]['id'], '')),
+                    'current_fact': _fact_sentence(newer[k - 1], rec, (parsed or {}).get('current_fact', ''), said.get(newer[k - 1]['id'], '')),
                     'why': f"newer {newer[k - 1]['source']} item from {newer[k - 1]['ts'][:10]} changes this"})
     return out
 
