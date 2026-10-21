@@ -162,59 +162,60 @@ question -> route (kind, people, day) -> digest by code | hybrid retrieval -> nu
 
 The judge is `openai:gpt-6-luna` for every column (`FOUNDER_JUDGE` or `--judge` change it). It is never a model being graded, since a model grades its own wording more kindly than another model's. It judges each answer on the core facts of its reference (see Evaluation).
 
-Four models are benchmarked on the same code, one run each, 70 questions, on an otherwise idle machine (RTX 2060 6GB, 23GB RAM, 4 cores). A fifth, `openrouter:minimax/minimax-m3.1-flash:free`, was still running when this was written; an earlier run of it was on older code and is left out rather than mixed in. The two Qwen models were dropped for time (the 9B took 30 minutes to ingest and answered 47 of 70 questions over the 5s budget). Full per-question results are in `eval/results/models/*.json`.
+Five models are benchmarked on the same code, one run each, 70 questions, on an otherwise idle machine (RTX 2060 6GB, 23GB RAM, 4 cores). The two Qwen models were dropped for time (the 9B took 30 minutes to ingest and answered 47 of 70 questions over the 5s budget). Full per-question results are in `eval/results/models/*.json`.
 
-| metric | anthropic:claude-haiku-4-5-20251001 | ollama:llama3.2:latest | openrouter:deepseek/deepseek-v4.1-flash-1017 | openrouter:xiaomi/mimo-v2.6-pro |
-| --- | --- | --- | --- | --- |
-| where it runs | hosted | 3.1 GB, 100% on gpu | hosted | hosted |
-| first call incl. load (s) | 0.6 | 0.1 | 0.7 | 0.6 |
-| **ingest** wall (s) | 257.3 | 307.9 | 188.8 | 733.7 |
-| ingest model calls | 177 | 176 | 177 | 177 |
-| ingest tokens in/out | 173651/24834 | 52015/30592 | 53701/12573 | 50682/10850 |
-| ingest cost ($) | 0.2978 | 0.0000 | 0.0156 | 0.0315 |
-| ingest checks passed (decisions, stale, follow-ups) | 51/51 | 50/51 | 51/51 | 51/51 |
-| **brief** wall (s) | 1.8 | 0.8 | 1.0 | 3.4 |
-| brief cost ($) | 0.00103 | 0.00000 | 0.00013 | 0.00029 |
-| brief invalid ids | 0 | 0 | 0 | 0 |
-| brief stale record called out | yes | yes | yes | yes |
-| brief meeting in focus | yes | yes | yes | yes |
-| **ask** accuracy (judge) | 83% | 63% | 70% | 77% |
-| ask accuracy, original questions (q*) | 15/18 | 14/18 | 12/18 | 15/18 |
-| ask accuracy, vague questions (v*) | 16/23 | 12/23 | 17/23 | 17/23 |
-| ask citation recall | 91% | 85% | 94% | 95% |
-| ask citation recall, vague (v*) | 91% | 83% | 96% | 95% |
-| ask citation precision | 53% | 44% | 53% | 49% |
-| ask answers with a citation flag | 10 | 9 | 2 | 2 |
-| ask flag precision (flagged and judged wrong) | 20% | 56% | 0% | 0% |
-| ask flag recall (wrong answers that were flagged) | 17% | 19% | 0% | 0% |
-| ask forbidden cites | 0 | 2 | 1 | 1 |
-| ask uncited sentences | 30 | 22 | 14 | 12 |
-| ask latency p50 (s) | 1.9 | 1.6 | 1.2 | 3.2 |
-| ask latency p95 (s) | 4.0 | 4.0 | 3.8 | 13.4 |
-| ask latency max (s) | 4.7 | 4.9 | 7.1 | 18.3 |
-| ask questions over 5s | 0 | 0 | 3 | 15 |
-| ask output tokens per second | 67 | 81 | 79 | 34 |
-| ask latency mean (s) | 1.8 | 1.7 | 1.3 | 3.7 |
-| ask questions answered without a model call | 23 | 23 | 23 | 23 |
-| ask tokens in/out (mean) | 1535/123 | 1268/134 | 1214/106 | 1244/125 |
-| ask cost per question ($) | 0.00149 | 0.00000 | 0.00015 | 0.00040 |
-| ask refusals | 0 | 0 | 3 | 4 |
-| judge verdicts that failed (counted wrong) | 0 | 0 | 0 | 0 |
-| schema failures (ask+judge) | 0 | 0 | 0 | 0 |
-| http retries (rate limits, 5xx) | 0 | 0 | 0 | 0 |
-| whole benchmark wall time (s) | 595 | 628 | 492 | 1203 |
-| judge cost for this run ($) | 0.1427 | 0.1492 | 0.1525 | 0.1484 |
+| metric | anthropic:claude-haiku-4-5-20251001 | ollama:llama3.2:latest | openrouter:deepseek/deepseek-v4.1-flash-1017 | openrouter:minimax/minimax-m3.1-flash:free | openrouter:xiaomi/mimo-v2.6-pro |
+| --- | --- | --- | --- | --- | --- |
+| where it runs | hosted | 3.1 GB, 100% on gpu | hosted | hosted | hosted |
+| first call incl. load (s) | 0.6 | 0.1 | 0.7 | 1.6 | 0.6 |
+| **ingest** wall (s) | 257.3 | 307.9 | 188.8 | 1263.0 | 733.7 |
+| ingest model calls | 177 | 176 | 177 | 177 | 177 |
+| ingest tokens in/out | 173651/24834 | 52015/30592 | 53701/12573 | 82393/99929 | 50682/10850 |
+| ingest cost ($) | 0.2978 | 0.0000 | 0.0156 | 0.0000 | 0.0315 |
+| ingest checks passed (decisions, stale, follow-ups) | 51/51 | 50/51 | 51/51 | 51/51 | 51/51 |
+| **brief** wall (s) | 1.8 | 0.8 | 1.0 | 1.7 | 3.4 |
+| brief cost ($) | 0.00103 | 0.00000 | 0.00013 | 0.00000 | 0.00029 |
+| brief invalid ids | 0 | 0 | 0 | 0 | 0 |
+| brief stale record called out | yes | yes | yes | yes | yes |
+| brief meeting in focus | yes | yes | yes | yes | yes |
+| **ask** accuracy (judge) | 83% | 63% | 70% | 66% | 77% |
+| ask accuracy, original questions (q*) | 15/18 | 14/18 | 12/18 | 10/18 | 15/18 |
+| ask accuracy, vague questions (v*) | 16/23 | 12/23 | 17/23 | 14/23 | 17/23 |
+| ask citation recall | 91% | 85% | 94% | 80% | 95% |
+| ask citation recall, vague (v*) | 91% | 83% | 96% | 77% | 95% |
+| ask citation precision | 53% | 44% | 53% | 53% | 49% |
+| ask answers with a citation flag | 10 | 9 | 2 | 3 | 2 |
+| ask flag precision (flagged and judged wrong) | 20% | 56% | 0% | 33% | 0% |
+| ask flag recall (wrong answers that were flagged) | 17% | 19% | 0% | 4% | 0% |
+| ask forbidden cites | 0 | 2 | 1 | 0 | 1 |
+| ask uncited sentences | 30 | 22 | 14 | 10 | 12 |
+| ask latency p50 (s) | 1.9 | 1.6 | 1.2 | 6.0 | 3.2 |
+| ask latency p95 (s) | 4.0 | 4.0 | 3.8 | 18.7 | 13.4 |
+| ask latency max (s) | 4.7 | 4.9 | 7.1 | 28.2 | 18.3 |
+| ask questions over 5s | 0 | 0 | 3 | 37 | 15 |
+| ask output tokens per second | 67 | 81 | 79 | 97 | 34 |
+| ask latency mean (s) | 1.8 | 1.7 | 1.3 | 7.8 | 3.7 |
+| ask questions answered without a model call | 23 | 23 | 23 | 23 | 23 |
+| ask tokens in/out (mean) | 1535/123 | 1268/134 | 1214/106 | 1322/759 | 1244/125 |
+| ask cost per question ($) | 0.00149 | 0.00000 | 0.00015 | 0.00000 | 0.00040 |
+| ask refusals | 0 | 0 | 3 | 1 | 4 |
+| judge verdicts that failed (counted wrong) | 0 | 0 | 0 | 0 | 0 |
+| schema failures (ask+judge) | 0 | 0 | 0 | 0 | 0 |
+| http retries (rate limits, 5xx) | 0 | 0 | 0 | 0 | 0 |
+| whole benchmark wall time (s) | 595 | 628 | 492 | 2011 | 1203 |
+| judge cost for this run ($) | 0.1427 | 0.1492 | 0.1525 | 0.1341 | 0.1484 |
 
-The judge's cost uses a placeholder rate, because the price of `gpt-6-luna` is not in `config.PRICES`. Chat-model spend uses each model's listed rate. The OpenRouter models were run with reasoning requested off, which DeepSeek and MiMo honoured.
+The judge's cost uses a placeholder rate, because the price of `gpt-6-luna` is not in `config.PRICES`. Chat-model spend uses each model's listed rate. The OpenRouter models were run with reasoning requested off, which DeepSeek and MiMo honoured. MiniMax M3.1 Flash cannot turn thinking off (its endpoint answers 400 'Reasoning is mandatory'), so the provider learns that from the first refusal and gives it 1,500 tokens of thinking room. It still returned a blank answer on 13 of 70 questions because the thinking used the whole budget. Those count as wrong; on the 57 it did answer it got 46 right (81%). It ran on a free, rate-limited endpoint, so its latency says little about the model.
 
 **What the numbers say**
 
 - **Haiku 4.5 is the most accurate at 83%** and the only column that is accurate, fast and cheap together: 1.9s median, 4.7s slowest, no refusals, all 51 ingest checks, $0.0015 a question and $0.30 to ingest
 - **MiMo V2.6 Pro (77%) and DeepSeek V4.1 Flash (70%)** trail it. DeepSeek is the cheapest hosted run ($0.016 to ingest, $0.00015 a question) and the fastest median (1.2s). MiMo is the slowest hosted model here: 15 of 70 answers over 5s
 - **Llama 3B scores 63%** for free and with every answer inside 5s. It is the weakest at writing answers (26 of the 47 model-written ones) and invents an answer to the unanswerable runway question
-- **Gaps under about eight points are not reliable.** Earlier runs of the same code differed by seven to nine points for DeepSeek, Haiku and Llama, and the judge graded 3 of 13 pairs of byte-identical answers differently
-- **7 questions are judged wrong on all four models.** Three are the questions about the two Daniels. Others fail on the grader's strictness over a missing detail (the word 'today', a section label). The report explains them and shows the answers
-- **Citation recall runs 85% to 95% and precision 44% to 53%.** Recall is high because code checks and adds citations. Precision is low because the key lists the minimum evidence and a good answer often cites more
+- **MiniMax M3.1 Flash scores 66%**, which is not a fair reading of the model: see the blanks above. It is the slowest (37 answers over 5s) and averages 759 output tokens an answer, because it thinks
+- **Gaps under about eight points are not reliable.** Earlier runs of the same code differed by seven to nine points for DeepSeek, Haiku and Llama, and the judge graded 3 of 17 pairs of byte-identical answers differently
+- **6 questions are judged wrong on all five models.** Three are the questions about the two Daniels. Others fail on the grader's strictness over a missing detail (the word 'today', a section label). The report explains them and shows the answers
+- **Citation recall runs 80% to 95% and precision 44% to 53%.** Recall is high because code checks and adds citations. Precision is low because the key lists the minimum evidence and a good answer often cites more
 - **Citation flags are rare and catch little** (2 to 10 answers a model, 0% to 56% of them wrong). Read them as a prompt to look
 - **The brief** names the meeting and calls out the stale record on every model, with no invalid ids
 
@@ -230,7 +231,7 @@ For the answers themselves, side by side with the reference, see the results rep
 
 ## How accuracy was improved
 
-**What we measure, and why there is more than one number.** A single judged accuracy is the number everyone asks for and the least trustworthy: the same code scored 70% and 77% on two runs, and the judge graded 3 of 13 byte-identical answers differently. So each part of the pipeline gets a check that does not depend on the judge:
+**What we measure, and why there is more than one number.** A single judged accuracy is the number everyone asks for and the least trustworthy: the same code scored 70% and 77% on two runs, and the judge graded 3 of 17 byte-identical answers differently. So each part of the pipeline gets a check that does not depend on the judge:
 
 - **Accuracy** is judged by a model that is never one of the contenders, on each reference's core facts only
 - **Citation recall and precision** are plain id comparison against the evidence the key lists, so they do not move with the judge
@@ -240,7 +241,7 @@ For the answers themselves, side by side with the reference, see the results rep
 
 **The loop.** Run every model on the same 70 questions. A question that fails on every model is a pipeline fault or a bad key, not a model weakness, so read what reached the context before touching a prompt: if the needed item is missing, the fault is in retrieval or in an ingest stage, and that is where the fix goes. After each change, rerun the ingest checks and the retrieval ablation, which must not drop, then the models. The weakest local model is the canary: what it gets wrong that a strong model gets right is usually a pipeline stage leaning on the model, and the first sign of one that needs to be code.
 
-**One change, in detail.** 'Is the Linear issue ACME-231 up to date?' failed on every model we had. Reading the context showed why: the Slack message that corrected the ship date was never in it. The issue was stale only through a retraction recorded in the decision history, and the step that adds the correcting message to the context read the stale-record table, which held no row for it. The fix was at ingest: every item a retraction makes stale now gets a stale-record row, with the correcting item parsed from the recorded reason. Only that one issue gained a row, all 51 ingest checks stayed at 51, and the question now passes on all four models in the latest benchmark. It was one cause for one failure on every model, which is the kind of change worth making.
+**One change, in detail.** 'Is the Linear issue ACME-231 up to date?' failed on every model we had. Reading the context showed why: the Slack message that corrected the ship date was never in it. The issue was stale only through a retraction recorded in the decision history, and the step that adds the correcting message to the context read the stale-record table, which held no row for it. The fix was at ingest: every item a retraction makes stale now gets a stale-record row, with the correcting item parsed from the recorded reason. Only that one issue gained a row, all 51 ingest checks stayed at 51, and the question now passes on all five models in the latest benchmark. It was one cause for one failure on every model, which is the kind of change worth making.
 
 **Guardrails against fitting the sample.** The dataset is synthetic, so a fix that only works because of how it was generated is easy to make and worth nothing:
 
