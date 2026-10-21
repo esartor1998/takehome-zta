@@ -160,95 +160,98 @@ question -> route (kind, people, day) -> digest by code | hybrid retrieval -> nu
 
 `founder bench` runs four tasks on each model against one fixed judge, so scores compare: load, ingest (cold, with the llm cache cleared), the brief, and every eval question. Per model it reports where the model runs and how much of it is on the GPU, calls, tokens, cost and wall time for each task, latency (p50, p95, max, mean, questions over the 5s budget), output tokens per second, accuracy split into original and vague questions, citation recall and precision, uncited sentences, refusals, schema failures, retries, and ingest checks against the answer key (decisions, stale records, follow-ups).
 
-The judge is `openai:gpt-6-luna` for every column (`FOUNDER_JUDGE` or `--judge` change it). It used to be Haiku, which was also a competitor, and a model grades its own wording more kindly than another model's. **Numbers from before the switch are not comparable with these.** Re-grading the same saved answers with Luna gave Haiku 70% (83% from its own judging), Llama 51% (71%) and the 9B 57% (80%). Luna is the stricter judge: it failed 11, 14 and 18 answers that the Haiku judge passed and passed 2, 0 and 2 that it failed, so it agrees with the Haiku judge on 81%, 80% and 71% of verdicts. Both Qwen models were dropped for time. The 35B (`qwen3.6:35b-a3b`) ingested in 2,550s and answered in a median of 20s. The 9B (`qwen3.5:9b`) ingested in 1,815s, answered 47 of 70 questions over the 5s budget and scored 56%, no better than Llama. Their numbers appear below only where a measurement was made while the 9B was still in the benchmark, and say so.
+The judge is `openai:gpt-6-luna` for every column (`FOUNDER_JUDGE` or `--judge` change it). It is never a model being graded, since a model grades its own wording more kindly than another model's. It judges each answer on the core facts of its reference (see Evaluation).
 
-70 questions, one model at a time on an otherwise idle machine (RTX 2060 6GB, 23GB RAM, 4 cores). Every column is from the same code and the same data. Timings are wall clock. The full per-question results are in `eval/results/models/*.json`.
+Four models are benchmarked on the same code, one run each, 70 questions, on an otherwise idle machine (RTX 2060 6GB, 23GB RAM, 4 cores). A fifth, `openrouter:minimax/minimax-m3.1-flash:free`, was still running when this was written; an earlier run of it was on older code and is left out rather than mixed in. The two Qwen models were dropped for time (the 9B took 30 minutes to ingest and answered 47 of 70 questions over the 5s budget). Full per-question results are in `eval/results/models/*.json`.
 
-| metric | anthropic:claude-haiku-4-5-20251001 | ollama:llama3.2:latest | openrouter:deepseek/deepseek-v4.1-flash-1017 | openrouter:minimax/minimax-m3.1-flash:free | openrouter:xiaomi/mimo-v2.6-pro |
-| --- | --- | --- | --- | --- | --- |
-| where it runs | hosted | 3.1 GB, 100% on gpu | hosted | hosted | hosted |
-| first call incl. load (s) | 0.6 | 0.1 | 0.7 | 6.3 | 0.8 |
-| **ingest** wall (s) | 257.3 | 307.9 | 220.8 | 1294.4 | 563.4 |
-| ingest model calls | 177 | 176 | 175 | 175 | 175 |
-| ingest tokens in/out | 173651/24834 | 52015/30592 | 52919/12870 | 81604/103564 | 50254/10823 |
-| ingest cost ($) | 0.2978 | 0.0000 | 0.0157 | 0.0000 | 0.0313 |
-| ingest checks passed (decisions, stale, follow-ups) | 51/51 | 50/51 | 51/51 | 51/51 | 51/51 |
-| **brief** wall (s) | 1.8 | 0.8 | 1.0 | 12.8 | 12.4 |
-| brief cost ($) | 0.00103 | 0.00000 | 0.00014 | 0.00000 | 0.00030 |
-| brief invalid ids | 0 | 0 | 0 | 0 | 0 |
-| brief stale record called out | yes | yes | yes | yes | yes |
-| brief meeting in focus | yes | yes | yes | yes | yes |
-| **ask** accuracy (judge) | 83% | 63% | 79% | 69% | 79% |
-| ask accuracy, original questions (q*) | 15/18 | 14/18 | 17/18 | 13/18 | 13/18 |
-| ask accuracy, vague questions (v*) | 16/23 | 12/23 | 18/23 | 14/23 | 19/23 |
-| ask citation recall | 91% | 85% | 92% | 77% | 89% |
-| ask citation recall, vague (v*) | 91% | 83% | 92% | 70% | 93% |
-| ask citation precision | 53% | 44% | 53% | 50% | 48% |
-| ask answers with a citation flag | 10 | 9 | 3 | 1 | 1 |
-| ask flag precision (flagged and judged wrong) | 20% | 56% | 0% | 0% | 100% |
-| ask flag recall (wrong answers that were flagged) | 17% | 19% | 0% | 0% | 7% |
-| ask forbidden cites | 0 | 2 | 0 | 1 | 0 |
-| ask uncited sentences | 30 | 22 | 16 | 6 | 5 |
-| ask latency p50 (s) | 1.9 | 1.6 | 1.2 | 6.3 | 2.7 |
-| ask latency p95 (s) | 4.0 | 4.0 | 2.4 | 26.8 | 9.3 |
-| ask latency max (s) | 4.7 | 4.9 | 9.8 | 32.1 | 21.7 |
-| ask questions over 5s | 0 | 0 | 1 | 36 | 8 |
-| ask output tokens per second | 67 | 81 | 66 | 84 | 31 |
-| ask latency mean (s) | 1.8 | 1.7 | 1.2 | 9.0 | 3.0 |
-| ask questions answered without a model call | 23 | 23 | 23 | 23 | 23 |
-| ask tokens in/out (mean) | 1535/123 | 1268/134 | 689/79 | 809/756 | 711/91 |
-| ask cost per question ($) | 0.00149 | 0.00000 | 0.00015 | 0.00000 | 0.00039 |
-| ask refusals | 0 | 0 | 4 | 1 | 7 |
-| judge verdicts that failed (counted wrong) | 0 | 0 | 0 | 0 | 0 |
-| schema failures (ask+judge) | 0 | 0 | 0 | 0 | 0 |
-| http retries (rate limits, 5xx) | 0 | 0 | 0 | 0 | 0 |
-| whole benchmark wall time (s) | 595 | 628 | 487 | 2150 | 962 |
-| judge cost for this run ($) | 0.1427 | 0.1492 | 0.1520 | 0.1350 | 0.1409 |
+| metric | anthropic:claude-haiku-4-5-20251001 | ollama:llama3.2:latest | openrouter:deepseek/deepseek-v4.1-flash-1017 | openrouter:xiaomi/mimo-v2.6-pro |
+| --- | --- | --- | --- | --- |
+| where it runs | hosted | 3.1 GB, 100% on gpu | hosted | hosted |
+| first call incl. load (s) | 0.6 | 0.1 | 0.7 | 0.6 |
+| **ingest** wall (s) | 257.3 | 307.9 | 188.8 | 733.7 |
+| ingest model calls | 177 | 176 | 177 | 177 |
+| ingest tokens in/out | 173651/24834 | 52015/30592 | 53701/12573 | 50682/10850 |
+| ingest cost ($) | 0.2978 | 0.0000 | 0.0156 | 0.0315 |
+| ingest checks passed (decisions, stale, follow-ups) | 51/51 | 50/51 | 51/51 | 51/51 |
+| **brief** wall (s) | 1.8 | 0.8 | 1.0 | 3.4 |
+| brief cost ($) | 0.00103 | 0.00000 | 0.00013 | 0.00029 |
+| brief invalid ids | 0 | 0 | 0 | 0 |
+| brief stale record called out | yes | yes | yes | yes |
+| brief meeting in focus | yes | yes | yes | yes |
+| **ask** accuracy (judge) | 83% | 63% | 70% | 77% |
+| ask accuracy, original questions (q*) | 15/18 | 14/18 | 12/18 | 15/18 |
+| ask accuracy, vague questions (v*) | 16/23 | 12/23 | 17/23 | 17/23 |
+| ask citation recall | 91% | 85% | 94% | 95% |
+| ask citation recall, vague (v*) | 91% | 83% | 96% | 95% |
+| ask citation precision | 53% | 44% | 53% | 49% |
+| ask answers with a citation flag | 10 | 9 | 2 | 2 |
+| ask flag precision (flagged and judged wrong) | 20% | 56% | 0% | 0% |
+| ask flag recall (wrong answers that were flagged) | 17% | 19% | 0% | 0% |
+| ask forbidden cites | 0 | 2 | 1 | 1 |
+| ask uncited sentences | 30 | 22 | 14 | 12 |
+| ask latency p50 (s) | 1.9 | 1.6 | 1.2 | 3.2 |
+| ask latency p95 (s) | 4.0 | 4.0 | 3.8 | 13.4 |
+| ask latency max (s) | 4.7 | 4.9 | 7.1 | 18.3 |
+| ask questions over 5s | 0 | 0 | 3 | 15 |
+| ask output tokens per second | 67 | 81 | 79 | 34 |
+| ask latency mean (s) | 1.8 | 1.7 | 1.3 | 3.7 |
+| ask questions answered without a model call | 23 | 23 | 23 | 23 |
+| ask tokens in/out (mean) | 1535/123 | 1268/134 | 1214/106 | 1244/125 |
+| ask cost per question ($) | 0.00149 | 0.00000 | 0.00015 | 0.00040 |
+| ask refusals | 0 | 0 | 3 | 4 |
+| judge verdicts that failed (counted wrong) | 0 | 0 | 0 | 0 |
+| schema failures (ask+judge) | 0 | 0 | 0 | 0 |
+| http retries (rate limits, 5xx) | 0 | 0 | 0 | 0 |
+| whole benchmark wall time (s) | 595 | 628 | 492 | 1203 |
+| judge cost for this run ($) | 0.1427 | 0.1492 | 0.1525 | 0.1484 |
 
-**The columns are not from one commit.** Haiku and Llama were re-run on the latest code (the model-read router, 68 generic gate prototypes, a 15% gate share, no one-hour stale gap). DeepSeek, MiMo and MiniMax are from the code one step earlier and have not been re-run. The planner's tokens (about 620 per question, on local Llama) are inside every Haiku and Llama row's token counts and make the 'answered without a model call' row read 23 only because the planner is excluded from it.
+The judge's cost uses a placeholder rate, because the price of `gpt-6-luna` is not in `config.PRICES`. Chat-model spend uses each model's listed rate. The OpenRouter models were run with reasoning requested off, which DeepSeek and MiMo honoured.
 
-The judge's cost uses a placeholder rate (1.0 and 5.0 dollars per million tokens), because the price of `gpt-6-luna` is not in `config.PRICES`. Chat-model spend is costed at each model's listed rate. The OpenRouter models were run with reasoning requested off. MiMo and DeepSeek honoured it (91 and 79 output tokens per answer on average). MiniMax M3.1 Flash cannot turn thinking off: its endpoint answers 400 'Reasoning is mandatory', so the provider learns that from the first refusal and gives it 1,500 tokens of thinking room. It averaged 756 output tokens per answer, took 1,294s to ingest, and **returned a blank answer on 13 of 70 questions** because the thinking used the whole budget. Those count as wrong. On the 57 it did answer it got 48 right (84%). MiniMax ran on the free, rate-limited endpoint, so its latency says little about the model. There were no rate-limit retries.
+**What the numbers say**
 
-**How much of a gap is noise.** Earlier measurements (taken on the previous run, with the old grading) say not to read small gaps. Haiku scored 70% and 77% on the same code between two runs, with 9 of 70 verdicts flipping. In this run, 18 pairs of answers across the five columns are byte-for-byte identical (code-rendered lists that no model wrote) and Luna graded 2 of them differently. It has no temperature setting. Each model here was run once, so gaps of a few points between the top three are ties.
-
-What the numbers say:
-
-- **Haiku 4.5 leads at 83%, and is the only column that is accurate, fast and cheap together:** 1.9s median, 4.7s slowest, 0 refusals, 51 of 51 ingest checks, $0.0015 per question and $0.29 to ingest. DeepSeek V4.1 Flash and MiMo V2.6 Pro are level at 79%, which with one run each is a tie with Haiku within the spread
-- **DeepSeek V4.1 Flash is the value pick.** 79%, 1.2s median, 51 of 51 checks, about $0.016 to ingest and $0.00015 per question: a tenth of Haiku's cost for four points. It has the best citation recall (92%) and four refusals
-- **MiMo V2.6 Pro refuses more (7) and is slower** (2.7s median, 8 questions over 5s, 563s to ingest), and fails `v16` by saying it cannot find anything. It leads the field on carrying background facts (27 answers with all of it)
-- **Llama 3B is the local model that stays, with a wide spread:** 71% in the earlier run and 63% in the latest, with the pipeline structurally the same, so read it as 63% to 71%. 1.6s median, free. It is weakest on questions a model has to write (26 of 47 in the latest run), fails an unanswerable question by inventing a runway (35 seats, then 4 weeks), and passes 50 of 51 ingest checks
-- **MiniMax M3.1 Flash scores 69% and is not a fair speed or accuracy reading** because of the blank answers above
-- **6 questions fail on every model** (`q14`, `v04`, `v05`, `v15`, `v16`, `t04`), down from 15 before the fixes. `q14` is a code-rendered answer the judge fails for not saying 'today'. `v04`, `v05` and `t04` are the Daniel questions left alone on purpose (the message that carries the ask is neither the newest nor the most distinctive). `v16` ('what's the deal with sso') was misrouted to the two investors; that is fixed (see below) and Haiku now answers with the SSO story and PR 231, but the judge still fails it for not stating the Mar 10 fix, the Mar 12 Okta recurrence and the reopened ACME-431. `v15` is wording: the models say the round 'cannot close before May 15' and the reference says it 'closes' then. Of the earlier 15, `q15`, `v17`, `v21` and `n08` now pass on Haiku, and `q01`, `q09`, `n01`, `n02` and `t03` pass on Haiku now that the references are split into core and extra facts
-- **Ingest checks against the answer key** (51 checks): all pass on Haiku, DeepSeek, MiMo and MiniMax, and 50 on Llama
-- **Citation recall is 77% to 92%, precision 44% to 53%.** Recall is high because code checks and adds citations. Precision is low because the key lists the minimum and code-rendered lists are not cut
-- **Citation flags are rare and catch little.** In the latest runs Haiku raised 10 (20% of them on wrong answers) and Llama 9 (56%). Earlier: DeepSeek 3 (none), MiniMax 1 (none), MiMo 1 (a hit). Read them as a prompt to look
+- **Haiku 4.5 is the most accurate at 83%** and the only column that is accurate, fast and cheap together: 1.9s median, 4.7s slowest, no refusals, all 51 ingest checks, $0.0015 a question and $0.30 to ingest
+- **MiMo V2.6 Pro (77%) and DeepSeek V4.1 Flash (70%)** trail it. DeepSeek is the cheapest hosted run ($0.016 to ingest, $0.00015 a question) and the fastest median (1.2s). MiMo is the slowest hosted model here: 15 of 70 answers over 5s
+- **Llama 3B scores 63%** for free and with every answer inside 5s. It is the weakest at writing answers (26 of the 47 model-written ones) and invents an answer to the unanswerable runway question
+- **Gaps under about eight points are not reliable.** Earlier runs of the same code differed by seven to nine points for DeepSeek, Haiku and Llama, and the judge graded 3 of 13 pairs of byte-identical answers differently
+- **7 questions are judged wrong on all four models.** Three are the questions about the two Daniels. Others fail on the grader's strictness over a missing detail (the word 'today', a section label). The report explains them and shows the answers
+- **Citation recall runs 85% to 95% and precision 44% to 53%.** Recall is high because code checks and adds citations. Precision is low because the key lists the minimum evidence and a good answer often cites more
+- **Citation flags are rare and catch little** (2 to 10 answers a model, 0% to 56% of them wrong). Read them as a prompt to look
 - **The brief** names the meeting and calls out the stale record on every model, with no invalid ids
 
-**How trustworthy is the judge?** `founder bench --judge-check` re-grades answers with several judges and reports agreement and Cohen's kappa. It was last run with Haiku against Llama on the earlier 61-question set: Haiku agreed with itself on 100% of verdicts, and with Llama on 72% (kappa -0.06, no agreement beyond chance). It has not been run with Luna. The direct evidence is the one above: Luna disagreed with itself on 5 of 23 identical answers. At least `n01`, `t03` and `q01` read as correct to a person while failing. Treat accuracy as a rough ranking and read the per-question table before drawing a conclusion.
+For the answers themselves, side by side with the reference, see the results report.
 
-**Changes this run measured.** The table above is the first from the code after these changes. The previous benchmark (Haiku 77%, Llama 57%, with the old grading) described commit `6ef2890`, and the two do not compare because the judge now decides on each reference's core facts. Together the changes moved Haiku from 77% to 83% and Llama from 57% to 71%, and the run cannot say how much of that is the fixes and how much is the grading:
+**Changes this run measured.** The previous benchmark (Haiku 77%, Llama 57%, an older judge setup) described commit `6ef2890`, and the two do not compare because the judge now decides on each reference's core facts. Between them: stale records found through retractions, a source word like 'deal' filtering only when unambiguous, the company-issues lookup for company questions, a directory line for 'who is', inline replies shown under the line they answer, a per-word glossary memo, kept promises, core and extra facts, a model-read router (people, company, role and tool, grounded in the question), 68 generic gate prototypes, and no one-hour stale gap. The run cannot say how much of the movement is those changes and how much is the grading.
 
-- **Stale items found by retraction now get a stale record** (`q15`). Before, a record whose value a later message retracted was marked stale only in the decision history, so a question about the record never saw the correction.
-- **A source word filters only when it is unambiguous** (`v16`). 'notion', 'crm', 'linear', 'github', 'slack' always filter. 'deal', 'issue' and 'page' filter only if the rest of the question finds something of that kind, and the source word is no longer searched for. 'What's the deal with sso' no longer lists CRM deals. Known gap: 'what's the deal with globex' still does, because a Globex deal exists.
-- **A company question looks up the company's open issues even when it is routed as a person** (`v17`).
-- **'Who is X' gets a directory line** (`v21`): title, company and CRM status, stored at ingest and cited to the contact's newest deal, since a contact is not an item. A refusal now counts only when the answer is nothing but the refusal.
-- **A reply written between quoted lines shows each answer under the line it answers** (`n06`), in what the model reads and nowhere else.
-- **The company view shows what blocks an issue and the deadline of an ask** (`n08`).
-- **The glossary is remembered by word** and its candidate ordering is deterministic, so a repeat ingest of unchanged data should make no glossary calls. The first ingest still pays for all of them.
-- **A promise is marked kept** when the founder later writes a sentence saying they did it and naming the thing. A question, a negation or a plan does not count, and neither does a thank-you from the person promised.
-- **References are split into core and extra facts** (see Evaluation). The judge decides correctness on core, and reports how much of the extra each answer carried (Haiku: all of it on 24 answers, some on 17, none on 9).
-- `v04`, `v05` and `t04` (Daniel's messages) were left alone on purpose.
-
-
-**Changes after that run.** The glossary relates 'deal' to 'investor', and the router treated any word the glossary related to a role as that role's group, so 'what's the deal with sso' became a question about the two investors (D9). Fixed by the model-read router above: across the 70 questions only two plans changed (v16, and q10, which the glossary had also pointed at the investors). The gate prototypes were replaced by 68 generic sentences, and the stale-record rule that a newer item be an hour later was dropped after a replay showed it changed no record and no check. Net effect on scores: none that stands out from the noise (Haiku 83% both times, Llama 71% to 63%).
+**How trustworthy is the judge?** `founder bench --judge-check` re-grades answers with several judges and reports agreement and Cohen's kappa. It was last run with Haiku against Llama on an earlier 61-question set: Haiku agreed with itself on 100% of verdicts, and with Llama on 72% (kappa -0.06). It has not been run with Luna. The direct evidence is the pairs of identical answers it graded differently, and answers that read as correct to a person while failing (`n06`, `q14`, `v15`). Treat accuracy as a rough ranking.
 
 ## Evaluation
 
 `eval/questions.json` has 70 questions, each with a reference answer split into `core` (what the question asks, and every member of a list it asks for) and `extra` (reasons, dates, history and background), and the item ids that support it (a group lists interchangeable copies, like the same update in gmail and slack). 18 are the original required cases, 3 are the take-home's own wording for what happened across the company, repeated customer issues and blocked tasks, 23 are vague (phrasing a founder would type, two Daniels, a role word, a company name, an issue id, two unanswerable questions), 8 are the same questions with typos and shorthand ('whats on tdy', 'anyting from investers'), 7 cover the earlier scenarios, 7 cover plans changed in soft words ('pushed back for now', 'moved to next friday'), 2 use a nickname or a first-name sign-off, and 2 need several steps ('what do I need to do before the Globex call', 'anything overdue'). `eval/semantic_probes.json` adds 18 questions worded unlike their source for the vector tests. Accuracy comes from an LLM judge (`gpt-6-luna`, never one of the models being graded) and depends on the core only: a short answer that leaves background out is right. How much extra each answer volunteered (all, some, none) is reported next to accuracy and never inside it. The answer prompt asks for the direct answer first and background only if the word limit allows. Citation recall and precision are plain id comparison. Abstention is judged like every other answer: the judge is told that when the reference says the information is not available, a candidate is right only if it says it cannot find it. An earlier version overrode the judge in code for this. That was removed, and regrading the saved answers changed one verdict out of 164. Ingest checks name items from the answer key and the status each must end with.
 
-What running every model through the questions taught us, twice: the same questions failed on every model, so the pipeline was at fault and not the models. 'Is ACME-440 up to date' pulled every decision and buried the issue. 'Decision' in a history question sent it to the list of decisions. A bare 'what is blocked' listed other people's issues first. 'What changed' missed the seed close, the hiring outcome and the renewal terms because the model labelled them decisions and nothing anchored them, so stale records now feed back into the decision history. A template email that named the same issue after the real change became the current state, so only an event that reads like a change can anchor a decision. Each fix helped every model.
+## How accuracy was improved
 
-One lesson was about the key and not the code: seven references were incomplete, and the models were right to list more than the key did. They were corrected, and the benchmark notes say so.
+**What we measure, and why there is more than one number.** A single judged accuracy is the number everyone asks for and the least trustworthy: the same code scored 70% and 77% on two runs, and the judge graded 3 of 13 byte-identical answers differently. So each part of the pipeline gets a check that does not depend on the judge:
+
+- **Accuracy** is judged by a model that is never one of the contenders, on each reference's core facts only
+- **Citation recall and precision** are plain id comparison against the evidence the key lists, so they do not move with the judge
+- **51 ingest checks** name items from the answer key and the status each must end with (a decision, a stale record, an open follow-up, a nickname), so a change to labelling shows up without a single question being asked
+- **Retrieval recall and first-hit rank** (`founder ablate`) need no chat model at all, and 18 paraphrase probes test questions worded unlike their source
+- **Latency and cost** against the take-home's budgets (5 seconds and $0.02 a question)
+
+**The loop.** Run every model on the same 70 questions. A question that fails on every model is a pipeline fault or a bad key, not a model weakness, so read what reached the context before touching a prompt: if the needed item is missing, the fault is in retrieval or in an ingest stage, and that is where the fix goes. After each change, rerun the ingest checks and the retrieval ablation, which must not drop, then the models. The weakest local model is the canary: what it gets wrong that a strong model gets right is usually a pipeline stage leaning on the model, and the first sign of one that needs to be code.
+
+**One change, in detail.** 'Is the Linear issue ACME-231 up to date?' failed on every model we had. Reading the context showed why: the Slack message that corrected the ship date was never in it. The issue was stale only through a retraction recorded in the decision history, and the step that adds the correcting message to the context read the stale-record table, which held no row for it. The fix was at ingest: every item a retraction makes stale now gets a stale-record row, with the correcting item parsed from the recorded reason. Only that one issue gained a row, all 51 ingest checks stayed at 51, and the question now passes on all four models in the latest benchmark. It was one cause for one failure on every model, which is the kind of change worth making.
+
+**Guardrails against fitting the sample.** The dataset is synthetic, so a fix that only works because of how it was generated is easy to make and worth nothing:
+
+- The decision gate's example sentences once included four that paraphrased planted cases in the data. They were replaced with 68 that name no product, person, month or number
+- A vector-weight change that looked better on rank was left out, because it was measured on the same questions it was tuned on
+- The effect of linking first-name mentions was measured on its own (70% with it, 71% without, inside the run-to-run spread) before it was kept
+- The judge was changed from Haiku to a model that is not a contender, because a model grades its own wording kindly. That makes earlier scores incomparable, and the benchmark says so
+- References were corrected when the models were right and the key was incomplete (seven times), and then split into core and extra facts. This too changes the grading, so scores from before and after do not compare
+- A model was tried for choosing the kind of answer and rejected: 31 of 70 plans changed and some got worse (the customer webinar question went to the calendar digest). It is used only to name who and what a question mentions, and only after code has checked those names against the question and the data
+
+**What this cannot tell you.** The 70 questions are the same ones the faults were found with, not a held-out set. Accuracy moved from 77% to 83% for Haiku across the fixes and the grading change together, and the two cannot be separated. Small models swing by seven points or more between runs. Treat the scores as direction and the per-check numbers as the sturdier evidence.
 
 ## Citation checks and flags
 
@@ -265,23 +268,22 @@ Flags are in the result as `flags` (claim, kind, verdict, reason, cited ids). On
 
 ## Does the vector store earn its place
 
-`founder ablate` switches retrieval pulls off one at a time and measures what a model would see, with no model involved: recall of the expected evidence, precision, rank of the first hit, and per question whether the vector pull brought in or pushed out expected items. It covers the 42 eval questions that use retrieval, because schedule, follow-up and similar questions are rendered by code and never touch the vector store, and 15 semantic probes (`eval/semantic_probes.json`) worded unlike the source text ('who is unavailable this week' for an out-of-office note). `--e2e` repeats the comparison with a model answering and a judge grading. Run on the final code with Haiku's store; no model is called.
+`founder ablate` switches retrieval pulls off one at a time and measures what a model would see, with no model involved: recall of the expected evidence, precision, rank of the first hit, and per question whether the vector pull brought in or pushed out expected items. It covers the 42 eval questions that use retrieval, because schedule, follow-up and similar questions are rendered by code and never touch the vector store, and 15 semantic probes (`eval/semantic_probes.json`) worded unlike the source text ('who is unavailable this week' for an out-of-office note). `--e2e` repeats the comparison with a model answering and a judge grading. Run on the final code with Llama's store; no model is called.
 
 | | eval questions (42) | semantic probes (15) |
 | --- | --- | --- |
 | everything | 93% recall | 77% recall |
-| everything except vectors | 88% | 60% |
-| vectors alone | 74% | 63% |
-| full text search alone | 71% | 53% |
-| vector pull helps / hurts / no change (recall) | 3 / 0 / 39 | 3 / 0 / 12 |
+| everything except vectors | 90% | 60% |
+| vectors alone | 74% | 77% |
+| full text search alone | 72% | 53% |
+| vector pull helps / hurts / no change (recall) | 2 / 1 / 39 | 3 / 0 / 12 |
 
-- On the questions as written the vector pull adds 5 points of recall (93% against 88%) and 0.07 of first-hit rank (0.64 against 0.57). It rescued three questions (out-of-office, billing, the onboarding date) and hurt none. Precision is higher with it on 13 questions and lower on 4.
-- On questions worded unlike the source it does the work: recall 60% to 77%, first-hit rank 0.18 to 0.39. It found 'who is unavailable this week', 'when is the board getting together' and 'who needs to look at my code changes'. It never pushed an expected item out in this set.
-- It makes the context a little bigger on paraphrases: 11.3 items against 10.0. On the questions as written it is level, 8.8 against 8.9.
-- Weight is a free parameter. At double weight recall on the eval questions is 92% and first-hit rank 0.72 (against 0.64), with probe recall unchanged at 77%. That is a hint, not a result: the weight was not tuned on held-out questions and is left at 1.0.
-- Neither pull is enough alone. Vectors alone reach 74% and full text alone 71% on the questions as written (63% and 53% on paraphrases), and both have the lowest precision, 12%. Together they reach 93% and 77%.
-- Answered end to end by Haiku on an earlier 33 retrieval questions, accuracy was 91% with the vector pull and 94% without. That was not repeated on the current data. It was within noise and says better evidence did not obviously turn into better answers.
-- It costs about 20 ms per question, one embedding call.
+- On the questions as written the vector pull adds 3 points of recall (93% against 90%) and 0.05 of first-hit rank (0.65 against 0.60). It rescued two questions and hurt one, pushing one expected item out of the context. Precision is higher with it on 4 questions and lower on 7. This is a smaller effect than in the earlier measurement (88% to 93%), after the router and the gate changes
+- On questions worded unlike the source it does the work: recall 60% to 77%, first-hit rank 0.30 to 0.40. It found 'who needs to look at my code changes', 'when is the board getting together' and 'which company disputed the seat count'. It never pushed an expected item out in this set
+- It makes the context a little bigger on paraphrases: 10.8 items against 9.7
+- Weight is a free parameter. At double weight recall on the eval questions is 92% with first-hit rank 0.72 (against 0.65), but probe recall falls to 63%. Not tuned on held-out questions, so it stays at 1.0
+- Neither pull is enough alone. Vectors alone reach 74% and full text alone 72% on the questions as written (77% and 53% on paraphrases), and both have low precision. Together they reach 93% and 77%
+- It costs about 24 ms per question, one embedding call
 
 The probes were written by us, from knowledge of the data, to be paraphrases, and there are 15 of them. They show where the vector store can help, not how often a real founder's question falls there. The embeddings are also used at ingest (duplicates, the decision gate, stale records, novelty), which these tests do not switch off.
 
