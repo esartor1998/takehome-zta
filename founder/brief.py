@@ -232,6 +232,8 @@ def followup_text(row, names):
     overdue = ' (overdue)' if row['due'] and row['due'] < config.NOW.strftime('%Y-%m-%d') and row['status'] == 'open' else ''
     if row['kind'] == 'promise':
         whom = ', '.join(names.get(p, p) for p in row['whom'].split(',') if p) or 'someone'
+        if row['status'] == 'kept':
+            return f"You promised {whom}: {row['what']}{due} (kept, a later message says it is done)"
         return f"You promised {whom}: {row['what']}{due}{overdue}, and it is still open"
     who = names.get(row['who'], 'someone')
     state = {'open': 'nobody has handled it', 'replied': 'already answered', 'handled': 'already handled'}[row['status']]
@@ -409,10 +411,12 @@ def company_facts(conn, plan):
     for row in followup_rows(conn):
         if row['status'] == 'open' and (row['who'] in people or set(row['whom'].split(',')) & set(people)):
             add(followup_text(row, names), row['item_id'])
-    for r in conn.execute("SELECT id, title, status, ts FROM items WHERE source='linear' AND state='current' AND status != 'Done' "
+    for r in conn.execute("SELECT id, title, status, ts, body FROM items WHERE source='linear' AND state='current' AND status != 'Done' "
                           'AND (title LIKE ? OR body LIKE ?) ORDER BY ts DESC', (f'%{org}%', f'%{org}%')):
         old = conn.execute('SELECT current_fact FROM stale_records WHERE item_id=?', (r['id'],)).fetchone()
+        why = blocker(r['body'])
         add(f"Open issue: {_clean_title({'title': r['title']})} is {r['status']} (updated {r['ts'][:10]})"
+            + (f", {why}" if why else '')
             + (f", out of date: newer information says {old['current_fact']}" if old else ''), r['id'])
     for c in recurring_customer_issues(conn, names):
         if c['customer'].lower() == org.lower():
@@ -422,7 +426,9 @@ def company_facts(conn, plan):
     marks = ','.join('?' * len(people))
     for r in conn.execute(f"SELECT id, title, ts FROM items WHERE kind='email' AND state='current' AND author IN ({marks}) "
                           'AND ts >= ? ORDER BY ts DESC', [*people, _iso(config.NOW - timedelta(days=MEETING_EMAIL_DAYS))]):
-        add(f"Email from them on {r['ts'][:10]}: {r['title']}", r['id'])
+        # the ask in the mail and its deadline: a subject line ('SOC 2 report') leaves out 'by Mar 18'
+        ask = conn.execute("SELECT what, due FROM followups WHERE item_id=? AND kind='ask'", (r['id'],)).fetchone()
+        add(f"Email from them on {r['ts'][:10]}: {r['title']}" + (f", asking: {ask['what']} (due {ask['due']})" if ask and ask['due'] else ''), r['id'])
     for r in conn.execute("SELECT id, title, status, ts FROM items WHERE kind='deal' AND (title LIKE ? OR body LIKE ?)",
                           (f'%{org}%', f'%{org}%')):
         stale = conn.execute('SELECT current_fact FROM stale_records WHERE item_id=?', (r['id'],)).fetchone()
@@ -454,6 +460,12 @@ def schedule_facts(conn, start, end, people=None):
     return out
 
 
+def blocker(body):
+    """What an issue says is holding it up ('blocked by infra change ACME-420'), or ''"""
+    found = re.search(r'blocked by [^.]+', body, re.I)
+    return found.group(0) if found else ''
+
+
 def blocked_facts(conn, mine_only=False):
     """Every blocked issue, yours first, so a short answer shows what is yours
     and says how many others there are"""
@@ -466,10 +478,10 @@ def blocked_facts(conn, mine_only=False):
                     key=lambda r: ('customer' not in r['meta'].get('labels', []), _rank(r), r['ts']))
     out = []
     for r in mine + ([] if mine_only else others):
-        why = re.search(r'blocked by [^.]+', r['body'], re.I)
+        why = blocker(r['body'])
         owner = 'yours' if r['author'] == config.FOUNDER_PERSON_ID else f"owner {names.get(r['author'], 'unassigned')}"
         out.append({'score': 0, 'text': f"{r['meta']['identifier']} {_clean_title(r)} ({owner}, "
-                    f"{PRIORITY_NAMES.get(r['meta']['priority'], 'no priority')}" + (f"; {why.group(0)}" if why else '') + ')',
+                    f"{PRIORITY_NAMES.get(r['meta']['priority'], 'no priority')}" + (f"; {why}" if why else '') + ')',
                     'ids': [r['id']], 'cat': 'blocked', 'handled': False, 'mine': r['author'] == config.FOUNDER_PERSON_ID})
     return out
 

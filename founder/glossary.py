@@ -17,11 +17,12 @@ and 'runway' nearest 'routine'). So the work is split:
 The result is stored as data (the glossary table) and rebuilt at ingest, so a new company, a new
 product name or a new nickname for a project is picked up on the next run with no code change
 """
+import json
 import re
 
 import numpy as np
 
-from . import llm
+from . import config, llm
 
 MIN_DF = 3                # a word in fewer items than this has no pattern to learn
 MAX_DF = 150              # one in more says nothing about a topic
@@ -31,6 +32,8 @@ POOL_COOCCUR = 12         # co-occurring words offered per word
 KEEP = 6
 MAX_RELATED_DF = 40       # a related word in more items than this blurs a search instead of focusing it
 BATCH = 10
+MEMO_OVERLAP = 0.7        # a remembered entry is reused while this much of its candidate list is unchanged
+SIM_DIGITS = 3            # similarities are rounded before ranking, so embedding noise cannot reorder near-ties
 
 SCHEMA = {'type': 'object',
           'properties': {'entries': {'type': 'array', 'items': {
@@ -54,7 +57,9 @@ def _words(text):
 
 def candidates(items, vocab, stop):
     """term -> candidate words, from embeddings and from co-occurrence"""
-    terms = [w for w, n in sorted(vocab.items(), key=lambda kv: -kv[1])
+    # ties on the count break by word. the counts come out of a set, whose order changes between runs, and the
+    # cut at MAX_TERMS fell on a different word each time
+    terms = [w for w, n in sorted(vocab.items(), key=lambda kv: (-kv[1], kv[0]))
              if MIN_DF <= n <= MAX_DF and len(w) >= 3 and w not in stop][:MAX_TERMS]
     usable = {w for w, n in vocab.items() if 2 <= n <= MAX_DF * 2 and len(w) >= 3 and w not in stop}
     index = {}
@@ -71,7 +76,9 @@ def candidates(items, vocab, stop):
     for term in terms:
         if term not in where:
             continue
-        near = np.argsort(-(vectors @ vectors[where[term]]))
+        # a stable sort on rounded scores: the embedder's last-digit noise reordered near-ties between two
+        # ingests of the same data, which changed the candidate list and so the prompt
+        near = np.argsort(-np.round(vectors @ vectors[where[term]], SIM_DIGITS), kind='stable')
         by_embedding = [pool[i] for i in near if pool[i] != term][:POOL_EMBED]
         mine = index.get(term, set())
         together = sorted(((len(mine & ids) / len(mine | ids), w) for w, ids in index.items() if w != term and mine & ids),
@@ -81,22 +88,60 @@ def candidates(items, vocab, stop):
     return out
 
 
+def _memo_path():
+    return config.STATE_DIR / 'glossary_memo.json'
+
+
+def _load_memo():
+    try:
+        return json.loads(_memo_path().read_text())
+    except (OSError, ValueError):
+        return {}       # no memo yet, or one that does not parse: every term is asked again
+
+
+def _save_memo(memo):
+    try:
+        config.STATE_DIR.mkdir(parents=True, exist_ok=True)
+        _memo_path().write_text(json.dumps(memo))
+    except OSError:
+        pass            # the memo only saves calls
+
+
+def _unchanged(old, new):
+    old, new = set(old), set(new)
+    return bool(old | new) and len(old & new) / len(old | new) >= MEMO_OVERLAP
+
+
 def choose(pool, vocab):
-    """term -> related words the model gave that the inbox contains"""
-    glossary = {}
-    terms = list(pool)
-    for start in range(0, len(terms), BATCH):
-        batch = terms[start:start + BATCH]
+    """term -> related words the model gave that the inbox contains. The model's answer for a word is
+    remembered by word, next to its candidate list. The prompt cache keys on the whole batch, so one word
+    whose candidates moved re-asked its nine neighbours: 33 of 35 batches missed on unchanged data. A
+    remembered word is asked again only when its candidates changed by more than MEMO_OVERLAP allows, which
+    is how a daily ingest pays for the words new mail touched and for nothing else"""
+    memo = _load_memo()
+    raw = {t: memo[t]['related'] for t in pool if t in memo and _unchanged(memo[t]['pool'], pool[t])}
+    todo = [t for t in pool if t not in raw]
+    for start in range(0, len(todo), BATCH):
+        batch = todo[start:start + BATCH]
         prompt = '\n\n'.join(f"TERM {t}\nCANDIDATES: {', '.join(pool[t])}" for t in batch)
         result = llm.chat(SYSTEM, prompt, schema=SCHEMA, cache=True, max_tokens=800, role='extract')
         parsed = llm.parse_json(result['text'], None) or {}
         for entry in parsed.get('entries', []):
             term = str(entry.get('term', '')).lower()
-            if term in pool:
-                kept = [w for w in dict.fromkeys(str(w).lower().strip() for w in entry.get('related', []))
-                        if w != term and 1 <= vocab.get(w, 0) <= MAX_RELATED_DF and w.isalpha()][:KEEP]
-                if kept:
-                    glossary[term] = kept
+            if term in batch and term not in raw:
+                raw[term] = [str(w).lower().strip() for w in entry.get('related', [])]
+        if parsed.get('entries'):
+            # a word the model left out of an answer that otherwise parsed has nothing to relate. without an
+            # empty entry it was asked again on every ingest
+            for term in batch:
+                raw.setdefault(term, [])
+                memo[term] = {'pool': pool[term], 'related': raw[term]}
+        _save_memo(memo)
+    glossary = {}
+    for term, related in raw.items():
+        kept = [w for w in dict.fromkeys(related) if w != term and 1 <= vocab.get(w, 0) <= MAX_RELATED_DF and w.isalpha()][:KEEP]
+        if kept:
+            glossary[term] = kept
     return glossary
 
 

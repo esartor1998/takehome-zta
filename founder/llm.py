@@ -1,7 +1,7 @@
 """Model access. Everything model-shaped goes through chat() and embed().
 
-A model is named 'provider:name'. Two providers exist today (ollama for local,
-anthropic for hosted) and adding a third is one more _call_* function and one
+A model is named 'provider:name'. Four providers exist today (ollama for local,
+anthropic, openai and openrouter for hosted) and adding another is one more _call_* function and one
 line in PROVIDERS. Nothing outside this file knows which provider answered.
 
 Embeddings stay on local ollama on purpose: the vector index is built once and
@@ -160,10 +160,30 @@ def _call_openai(name, system, user, schema, max_tokens):
             'prompt_tokens': usage.get('prompt_tokens', 0), 'completion_tokens': usage.get('completion_tokens', 0)}
 
 
+def _call_openrouter(name, system, user, schema, max_tokens):
+    """OpenRouter's chat completions api, one key for many hosted models. Reasoning is switched off unless
+    FOUNDER_THINK=1, as it is for local models: hidden thinking tokens are billed as output and add seconds to
+    every call. A model that cannot turn it off ignores the flag, and its thinking then counts against
+    max_tokens, which is why a thinking run gets the same extra room openai models do"""
+    if not config.OPENROUTER_KEY:
+        raise ModelError('no OPENROUTER_API_KEY or OPENROUTER_KEY in the environment or .env')
+    payload = {'model': name, 'messages': [{'role': 'system', 'content': system}, {'role': 'user', 'content': user}],
+               'max_tokens': max_tokens + (OPENAI_REASONING_ROOM if config.THINKING else 0), 'temperature': 0,
+               'reasoning': {'enabled': config.THINKING}}
+    if schema:
+        payload['response_format'] = {'type': 'json_schema',
+                                      'json_schema': {'name': 'respond', 'schema': schema, 'strict': False}}
+    resp = _http('https://openrouter.ai/api/v1/chat/completions', payload,
+                 {'Content-Type': 'application/json', 'Authorization': f'Bearer {config.OPENROUTER_KEY}'}, timeout=300)
+    usage = resp.get('usage', {})
+    return {'text': resp['choices'][0]['message']['content'] or '',
+            'prompt_tokens': usage.get('prompt_tokens', 0), 'completion_tokens': usage.get('completion_tokens', 0)}
+
+
 OPENAI_REASONING_ROOM = 1500    # tokens a hosted reasoning model may spend thinking, on top of the answer
 
 
-PROVIDERS = {'ollama': _call_ollama, 'anthropic': _call_anthropic, 'openai': _call_openai}
+PROVIDERS = {'ollama': _call_ollama, 'anthropic': _call_anthropic, 'openai': _call_openai, 'openrouter': _call_openrouter}
 
 
 # ---- public api -----------------------------------------------------------

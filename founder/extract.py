@@ -366,6 +366,27 @@ def mark_stale(events, stale_rows):
             e['why'] = f"newer item {flagged[e['item_id']]['newer_id']} changes this"
 
 
+RETRACTED_RE = re.compile(r"^value '.*' was retracted in (\S+)$")
+
+
+def retraction_rows(events, stale_rows):
+    """Stale records for the items a retraction made stale. resolve() marks an event stale when a later
+    correction retracts its value, but that lived only in the decisions table, so a question about the
+    record (the issue still says 'Mar 20') never saw the correction. Rows for items the record check
+    already found are left alone: its pair is the better evidence, found from the record's side"""
+    have = {r['item_id'] for r in stale_rows}
+    by_item = {e['item_id']: e for e in events}
+    out = []
+    for e in events:
+        found = RETRACTED_RE.match(e['why']) if e['status'] == 'stale' else None
+        if not found or e['item_id'] in have or found.group(1) not in by_item:
+            continue
+        correction = by_item[found.group(1)]
+        out.append({'item_id': e['item_id'], 'newer_id': correction['item_id'],
+                    'current_fact': (correction['value'] or correction['summary'])[:140], 'why': e['why']})
+    return out
+
+
 def group_events(events):
     """Assign each event a decision topic, built around anchors. Returns
     (events kept, number of merges)"""

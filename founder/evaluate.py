@@ -1,7 +1,8 @@
 """Evaluation harness: runs eval/questions.json against the live system.
 
 Reports, per question and overall:
-  accuracy           an llm judge compares the answer to a reference answer
+  accuracy           an llm judge compares the answer to the core of a reference answer. a question's
+                     extra facts are background, scored apart from accuracy (see extra_coverage)
   citation recall    share of expected evidence groups with at least one cited
                      member (a group lists interchangeable copies, like the
                      same update in gmail and slack)
@@ -14,6 +15,7 @@ treat accuracy as a rough signal. Citation numbers are plain id comparison and
 do not depend on any model
 """
 import json
+import re
 import statistics
 import time
 
@@ -30,8 +32,9 @@ JUDGE_SCHEMA = {
         'reference_key_fact': {'type': 'string'},
         'candidate_says': {'type': 'string'},
         'correct': {'type': 'boolean'},
+        'extra_covered': {'type': 'string', 'enum': ['all', 'some', 'none', 'no extra']},
     },
-    'required': ['reference_key_fact', 'candidate_says', 'correct'],
+    'required': ['reference_key_fact', 'candidate_says', 'correct', 'extra_covered'],
 }
 # two judge designs failed on this model and are why this one has the fields
 # in this order. a bare verdict passed answers about the wrong topic (a reply
@@ -48,13 +51,37 @@ JUDGE_SYSTEM = (
     'present outdated information as current. false if it is about something else, misses a '
     'listed item, or gives a different date, time, name or decision. Extra true detail is fine. '
     'When the reference says the information is not available, correct is true only if the '
-    'candidate says it cannot find it.\n\n'
+    'candidate says it cannot find it.\n'
+    'A reference may split into Core facts and Extra facts. Core is what the question asks and decides '
+    'correct. Extra is background a good answer may add. Leaving Extra out never makes a candidate wrong, '
+    'but a candidate that contradicts an Extra fact is still wrong.\n'
+    'extra_covered: how much of the Extra facts the candidate states (all, some, none), or no extra when the '
+    'reference has none.\n\n'
     'Example 1\nQuestion: When is the launch?\nReference: The launch is March 22, corrected from March 20.\n'
     'Candidate: The launch is on March 20.\n'
-    '{"reference_key_fact": "launch is March 22", "candidate_says": "launch is March 20", "correct": false}\n\n'
+    '{"reference_key_fact": "launch is March 22", "candidate_says": "launch is March 20", "correct": false, "extra_covered": "no extra"}\n\n'
     'Example 2\nQuestion: Who owns billing?\nReference: Priya Nair owns billing.\n'
     'Candidate: Billing is owned by Priya Nair, who joined in January.\n'
-    '{"reference_key_fact": "Priya Nair owns billing", "candidate_says": "Priya Nair owns billing", "correct": true}')
+    '{"reference_key_fact": "Priya Nair owns billing", "candidate_says": "Priya Nair owns billing", "correct": true, "extra_covered": "no extra"}\n\n'
+    'Example 3\nQuestion: When is the launch?\nReference: Core: The launch is March 22.\n'
+    'Extra: It was corrected from March 20 on Mar 12.\nCandidate: The launch is March 22.\n'
+    '{"reference_key_fact": "launch is March 22", "candidate_says": "launch is March 22", "correct": true, "extra_covered": "none"}')
+
+
+def reference_text(q):
+    """What the judge is shown as the reference. A question with a core and an extra part (eval/questions.json)
+    is judged on its core: the facts the question asks for. The extra part is background a short answer may
+    leave out, and how much of it the answer carries is reported apart from accuracy. A question without a
+    split is judged on its whole reference"""
+    if not q.get('core'):
+        return q['reference']
+    return f"Core: {q['core']}\nExtra: {q['extra']}" if q.get('extra') else q['core']
+
+
+def extra_of(reason):
+    """The extra_covered verdict the judge's reason string ends with, or ''"""
+    found = re.search(r'\| extra: (all|some|none|no extra)$', reason)
+    return found.group(1) if found else ''
 
 
 def judge(question, reference, candidate, model):
@@ -69,7 +96,8 @@ def judge(question, reference, candidate, model):
             break
     if not parsed or 'correct' not in parsed:
         return False, 'judge returned invalid json'
-    return bool(parsed['correct']), f"ref: {parsed['reference_key_fact']} | cand: {parsed['candidate_says']}"
+    return bool(parsed['correct']), (f"ref: {parsed['reference_key_fact']} | cand: {parsed['candidate_says']}"
+                                     f" | extra: {parsed.get('extra_covered', 'no extra')}")
 
 
 def citation_scores(question, result):
@@ -95,7 +123,7 @@ def rejudge(path, judge_model=None):
     data = json.loads(path.read_text())
     for row in data['rows']:
         q = questions[row['id']]
-        row['correct'], row['judge_reason'] = judge(q['question'], q['reference'], row['answer'], judge_model)
+        row['correct'], row['judge_reason'] = judge(q['question'], reference_text(q), row['answer'], judge_model)
     data['summary'] = summarize(data['rows'], judge_model)
     return data
 
@@ -111,7 +139,7 @@ def run(judge_model=None, only=None, save=True):
     rows = []
     for q in questions:
         result = answer.ask(conn, q['question'])
-        correct, reason = judge(q['question'], q['reference'], result['answer'], judge_model)
+        correct, reason = judge(q['question'], reference_text(q), result['answer'], judge_model)
         cites = citation_scores(q, result)
         rows.append({
             'id': q['id'], 'category': q['category'], 'question': q['question'],
@@ -147,6 +175,7 @@ def summarize(rows, judge_model):
         'latency_p95': secs[min(len(secs) - 1, int(round(0.95 * (len(secs) - 1))))],
         'latency_mean': mean(secs), 'schema_failures': llm.COUNTERS['schema_failures'],
         'refusals': sum(not r['found'] for r in rows),
+        **extra_coverage(rows),
         **flag_quality(rows),
         'judge_failures': sum(1 for r in rows if r['judge_reason'] == 'judge returned invalid json'),
         'latency_over_budget': sum(s > BUDGET_SECONDS for s in secs),
@@ -156,6 +185,16 @@ def summarize(rows, judge_model):
         'actual_cost_mean': mean(r['cost'] for r in rows),
         'actual_cost_total': sum(r['cost'] for r in rows),
     }
+
+
+def extra_coverage(rows):
+    """Of the answers that had background facts to carry, how many carried all of them, some, or none. It
+    is reported next to accuracy and never inside it: a short answer that leaves out background is
+    right, and this says how much of it each model volunteers"""
+    seen = [extra_of(r['judge_reason']) for r in rows]
+    seen = [v for v in seen if v in ('all', 'some', 'none')]
+    return {'extra_questions': len(seen), 'extra_all': seen.count('all'), 'extra_some': seen.count('some'),
+            'extra_none': seen.count('none')}
 
 
 def flag_quality(rows):
@@ -176,6 +215,8 @@ def render_summary(s):
     return (f"\naccuracy {s['accuracy']:.0%} | citation recall {s['citation_recall']:.0%} "
             f"precision {s['citation_precision']:.0%} | forbidden cites {s['forbidden_cites']} | "
             f"ungrounded sentences {s['ungrounded_sentences']}\n"
+            f"background facts (answers with any): all {s.get('extra_all', 0)}, some {s.get('extra_some', 0)}, "
+            f"none {s.get('extra_none', 0)} of {s.get('extra_questions', 0)}\n"
             f"latency p50 {s['latency_p50']:.1f}s max {s['latency_max']:.1f}s "
             f"({s['latency_over_budget']} over {BUDGET_SECONDS:.0f}s) | "
             f"cost ${s['actual_cost_mean']:.5f}/question actual, ${s['projected_cost_mean']:.5f} at hosted rates")

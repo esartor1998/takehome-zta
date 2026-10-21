@@ -28,6 +28,7 @@ CHAT_MODEL = os.environ.get('FOUNDER_MODEL', 'ollama:llama3.2:latest')
 EMBED_MODEL = os.environ.get('FOUNDER_EMBED_MODEL', 'nomic-embed-text')
 ANTHROPIC_KEY = os.environ.get('ANTHROPIC_API_KEY') or os.environ.get('ANTHROPIC_KEY', '')
 OPENAI_KEY = os.environ.get('OPENAI_API_KEY') or os.environ.get('OPENAI_KEY', '')
+OPENROUTER_KEY = os.environ.get('OPENROUTER_API_KEY') or os.environ.get('OPENROUTER_KEY', '')
 
 
 def model_slug(spec):
@@ -40,7 +41,7 @@ def model_slug(spec):
 def use_model(spec):
     """Point the module-level paths at the state for one model"""
     global CHAT_MODEL, STATE_DIR, DB_PATH, CHROMA_PATH, LLM_CACHE_PATH
-    CHAT_MODEL = spec if ':' in spec and spec.split(':')[0] in ('ollama', 'anthropic', 'openai') \
+    CHAT_MODEL = spec if ':' in spec and spec.split(':')[0] in ('ollama', 'anthropic', 'openai', 'openrouter') \
         else f'ollama:{spec}'
     STATE_DIR = Path(os.environ.get('FOUNDER_STATE', ROOT / '.state')) / model_slug(CHAT_MODEL)
     DB_PATH = STATE_DIR / 'context.db'
@@ -76,6 +77,9 @@ KEEP_ALIVE = '30m'  # keeps the model warm so load time is not charged to answer
 # on a hosted model. add a line here when a new hosted model is wired in
 PRICES = {
     'claude-haiku-4-5-20251001': (1.0, 5.0),
+    'xiaomi/mimo-v2.6-pro': (0.435, 0.87),
+    'deepseek/deepseek-v4.1-flash-1017': (0.15, 0.60),
+    'minimax/minimax-m3.1-flash:free': (0.0, 0.0),
 }
 # the grader is never the model being graded: a model scores its own wording higher than a
 # different model does. override with FOUNDER_JUDGE

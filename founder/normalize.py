@@ -79,7 +79,9 @@ def split_quote(body):
         if not QUOTED_LINE_RE.search(body):
             return body.strip(), '', ''
         own = [l for l in body.splitlines() if not l.startswith('>')]
-        return '\n'.join(own).strip(), '\n'.join(l for l in body.splitlines() if l.startswith('>')), 'reply'
+        # the quoted lines keep the writer's lines between them, so an answer can be shown under the line
+        # it answers (inline_replies). with the answers pulled out, 'cut this slide' lost the slide it was about
+        return '\n'.join(own).strip(), body.strip(), 'reply'
     own, tail = body[:cut].strip(), body[cut:].strip()
     if kind == 'reply' and QUOTED_LINE_RE.search(tail):
         inline = [l for l in tail.splitlines()
@@ -87,6 +89,25 @@ def split_quote(body):
         if inline:
             own = (own + '\n' + '\n'.join(inline)).strip()
     return own, tail, kind
+
+
+def inline_replies(quoted):
+    """A reply written between the lines of what it answers, as 'quoted: ...' then 'answer: ...', or ''
+    when the writer only quoted. The answer under each quoted line is what makes it a reply to that line"""
+    lines = [l.strip() for l in quoted.splitlines() if l.strip()]
+    answers = [l for l in lines if not l.startswith('>') and not HEADER_LINE_RE.match(l)]
+    # no '>' line means no inline reply: a header with unquoted text under it (html mail drops its blockquote
+    # markers) is the sender being quoted, and would be shown as an answer
+    if not any(l.startswith('>') for l in lines) or not answers or len(answers) == len(lines):
+        return ''
+    out = []
+    for line in lines:
+        if line.startswith('>'):
+            text = line.lstrip('> ').strip()
+            out += [f'quoted: {text}'] if text else []
+        elif not HEADER_LINE_RE.match(line):
+            out.append(f'answer: {line}')
+    return '\n'.join(out)
 
 
 def html_to_text(markup):

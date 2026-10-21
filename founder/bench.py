@@ -215,7 +215,7 @@ def rejudge_all(judge):
         llm.reset_usage()
         for row in data['rows']:
             q = questions[row['id']]
-            row['correct'], row['judge_reason'] = evaluate.judge(q['question'], q['reference'], row['answer'], judge)
+            row['correct'], row['judge_reason'] = evaluate.judge(q['question'], evaluate.reference_text(q), row['answer'], judge)
         kept = {k: data['ask'][k] for k in ('wall_seconds', 'warm_seconds') if k in data['ask']}
         data['ask'] = {**evaluate.summarize(data['rows'], judge), **kept}
         data['judge'] = judge
@@ -236,7 +236,7 @@ def judge_agreement(judges, path=None):
     verdicts = {}
     for label, judge in [(f'{judges[0]} (first pass)', judges[0]), (f'{judges[0]} (second pass)', judges[0])] + \
             [(j, j) for j in judges[1:]]:
-        verdicts[label] = [evaluate.judge(questions[r['id']]['question'], questions[r['id']]['reference'], r['answer'], judge)[0]
+        verdicts[label] = [evaluate.judge(questions[r['id']]['question'], evaluate.reference_text(questions[r['id']]), r['answer'], judge)[0]
                            for r in data['rows']]
     labels = list(verdicts)
     saved = [r['correct'] for r in data['rows']]

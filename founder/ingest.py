@@ -116,6 +116,7 @@ def run(skip_decisions=False):
         decisions = extract.merge_stale(decisions, stale_rows, items)
         extract.resolve(decisions)
         extract.mark_stale(decisions, stale_rows)
+        stale_rows = stale_rows + extract.retraction_rows(decisions, stale_rows)
         print(f'{len(stale_rows)} records still state an outdated plan')
         follow_rows = followups.find_followups(items, ident)
         print(f'{len(follow_rows)} follow-ups ({sum(r["status"] == "open" for r in follow_rows)} open)')
@@ -123,7 +124,7 @@ def run(skip_decisions=False):
     conn = store.reset()
     store.write_items(conn, items, ident.people)
     conn.execute("INSERT OR REPLACE INTO settings VALUES ('slash_order', ?)", (order,))
-    vocab = {r['term']: r['doc'] for r in conn.execute('SELECT term, doc FROM vocab')}
+    vocab = {r['term']: r['doc'] for r in conn.execute('SELECT term, doc FROM vocab ORDER BY term')}
     terms = glossary.build(items, vocab, retrieve.STOP | route.FILLER)
     glossary.write(conn, terms)
     print(f'{len(terms)} words have related words in the search glossary')

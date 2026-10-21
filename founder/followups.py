@@ -16,7 +16,7 @@ date, so 'by Friday' sent on a Friday means that day
 import re
 from datetime import datetime, timedelta, timezone
 
-from . import config, dates, llm
+from . import config, dates, llm, stale
 from .normalize import issue_refs
 
 ASK_RE = re.compile(r"\b(can you|could you|would you|can u|could u|please|pls|plz|need you|need this|any update|"
@@ -101,6 +101,13 @@ def _due(due_phrase, body, base):
     return parse_due(match.group(0), base) if match else ''
 
 
+# the founder saying a thing was done, in the first person. 'on it' and 'will send' are not here: they
+# promise again. a promise closes only when a sentence says so and names what it was about
+DONE_RE = re.compile(r"\bi(?:'ve| have)? (?:just |now )?(?:sent|shared|attached|uploaded|finished|completed|forwarded)\b|"
+                     r"\bjust sent\b|\b(?:sent|shared|uploaded) (?:it|them|over)\b|\bas promised\b", re.I)
+NOT_DONE_RE = re.compile(r"\b(?:not|n't|never|yet to|still need|haven't|hasn't|won't|will|'ll|before|once|when|if)\b|\?", re.I)
+KEPT_MIN_SHARED = 2        # words a sentence must share with the promise it closes. one is often incidental
+
 ACK_ONLY_RE = re.compile(r"^\W*(ok(ay)?|ack|\+1|thanks?|thx|ty|sgtm|lgtm|got it|noted|on it|will do|looks good|nice|same here)\W*$", re.I)
 MIN_REPLY_WORDS = 8
 
@@ -151,6 +158,23 @@ def _label(item, text):
         sentence = next((s for s in re.split(r'(?<=[.!?])\s+|\n', text) if ASK_RE.search(s) or PROMISE_RE.search(s)), text)
         what = sentence.strip()[:120]
     return what, due
+
+
+def kept_by(promise, what, live, founder):
+    """The id of a later message of the founder's that says the promise was kept, or ''. 'sent the access
+    to Caroline' is often posted in slack or another thread, so any later message counts, but the sentence
+    has to say it was done (not asked, not negated, not planned) and name the thing: it shares words with
+    what was promised, so 'done' about something else closes nothing. Only the founder closing their own
+    promise counts. A reply from the person promised, even a thank-you, is not the founder noting it done"""
+    wanted = f"{what} {promise['title']}"
+    for item in sorted(live, key=lambda m: m['ts']):
+        if item['ts'] <= promise['ts'] or item['author'] != founder or item['kind'] not in ('email', 'message'):
+            continue
+        for sentence in re.split(r'(?<=[.!?])\s+|\n', item['body']):
+            if DONE_RE.search(sentence) and not NOT_DONE_RE.search(sentence) \
+                    and len(stale.shared_words(wanted, sentence)) >= KEPT_MIN_SHARED:
+                return item['id']
+    return ''
 
 
 def find_followups(items, ident):
@@ -204,9 +228,10 @@ def find_followups(items, ident):
         what, due = _label(last, last['body'])
         theirs = [m for m in group if m['author'] not in (None, founder) and m['ts'] > last['ts']]
         recipients = [p for p in last['people'] if p != founder] or ([theirs[0]['author']] if theirs else [])
+        evidence = kept_by(last, what, live, founder)
         rows.append({'item_id': last['id'], 'kind': 'promise', 'who': founder,
                      'whom': ','.join(recipients), 'what': what, 'due': parse_due(due or last['body'], _ts(last)),
-                     'status': 'open', 'evidence': '', 'ts': last['ts']})
+                     'status': 'kept' if evidence else 'open', 'evidence': evidence, 'ts': last['ts']})
     return rows
 
 

@@ -29,7 +29,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS items_fts USING fts5(
 );
 CREATE TABLE IF NOT EXISTS people (
     id TEXT PRIMARY KEY, name TEXT, emails TEXT, slack_handle TEXT, linear_name TEXT,
-    org TEXT, external INTEGER, aliases TEXT, role TEXT
+    org TEXT, external INTEGER, aliases TEXT, role TEXT, title TEXT DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS links (a TEXT, b TEXT, reason TEXT);
 CREATE TABLE IF NOT EXISTS vocab (term TEXT PRIMARY KEY, doc INTEGER);
@@ -100,10 +100,10 @@ def row_to_item(row):
 
 def write_items(conn, items, people):
     for person in people.values():
-        conn.execute('INSERT OR REPLACE INTO people VALUES (?,?,?,?,?,?,?,?,?)',
+        conn.execute('INSERT OR REPLACE INTO people VALUES (?,?,?,?,?,?,?,?,?,?)',
                      (person.id, person.name, json.dumps(sorted(person.emails)),
                       person.slack_handle, person.linear_name, person.org, int(person.external),
-                      json.dumps(sorted(person.aliases())), person.role))
+                      json.dumps(sorted(person.aliases())), person.role, person.title))
     for item in items:
         row = dict(item)
         for key in JSON_FIELDS:

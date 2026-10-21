@@ -8,7 +8,7 @@ import json
 import tempfile
 from pathlib import Path
 
-from founder import answer, dates, followups, stale
+from founder import answer, dates, extract, followups, stale
 from founder.identity import IdentityResolver, Person, parse_addresses
 from founder.names import NameSense
 from founder.normalize import calendar_items, html_to_text, issue_refs, split_quote
@@ -283,6 +283,35 @@ class MentionAndWeightTests(unittest.TestCase):
         two = sum(stale.word_weight(w, df) for w in ['beta', 'timeline'])
         self.assertGreater(two, one)
         self.assertGreater(stale.word_weight('beta', df), stale.word_weight('plan', df))
+
+
+class Defects(unittest.TestCase):
+    def test_refusal_only_when_it_is_the_whole_answer(self):
+        self.assertTrue(answer.is_refusal("I can't find that in the available data."))
+        self.assertFalse(answer.is_refusal("Jordan is a partner [1]. I can't find that in the available data."))
+
+    def test_inline_reply_sits_under_its_quoted_line(self):
+        _, quoted, _ = split_quote('> Keep the churn slide?\ncut this slide\n> Cohort chart?\nadd it')
+        self.assertEqual(normalize_inline(quoted).splitlines()[:2], ['quoted: Keep the churn slide?', 'answer: cut this slide'])
+
+    def test_header_without_quote_marks_is_not_an_inline_reply(self):
+        self.assertEqual(normalize_inline('On Mon, Jordan wrote:\nthe plan is May 15'), '')
+
+    def test_retraction_why_gives_the_correcting_item(self):
+        found = extract.RETRACTED_RE.match("value 'Mar 20' was retracted in slack:C02PROD:1773.5")
+        self.assertEqual(found.group(1), 'slack:C02PROD:1773.5')
+
+    def test_promise_is_kept_only_by_the_founders_own_statement(self):
+        promise = {'ts': '2026-03-10T10:00:00Z', 'title': 'Data room'}
+        def msg(body, author):
+            return {'id': 'x', 'ts': '2026-03-11T10:00:00Z', 'author': author, 'kind': 'message', 'body': body, 'flags': []}
+        what = 'send data room access'
+        self.assertEqual(followups.kept_by(promise, what, [msg("I've sent the data room access to Caroline.", 'P1')], 'P1'), 'x')
+        self.assertEqual(followups.kept_by(promise, what, [msg('Did you send the data room access?', 'P1')], 'P1'), '')
+        self.assertEqual(followups.kept_by(promise, what, [msg("I've sent the data room access.", 'P2')], 'P1'), '')
+
+
+from founder.normalize import inline_replies as normalize_inline  # noqa: E402
 
 
 if __name__ == '__main__':

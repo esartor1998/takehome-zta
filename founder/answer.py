@@ -9,7 +9,7 @@ import re
 import time
 from datetime import datetime
 
-from . import brief, config, llm, retrieve, route, stale, store
+from . import brief, config, llm, normalize, retrieve, route, stale, store
 
 BODY_CHARS = 450
 CANT_FIND = "I can't find that in the available data."
@@ -25,7 +25,7 @@ Rules:
 4. If the context does not contain the answer, reply exactly: {CANT_FIND}
 5. Do not add names, numbers or dates that are not in the context. Say what is missing instead of guessing.
 6. For lists, give the identifier, the title and the owner of each entry.
-7. Be concise: at most 120 words. Write plain sentences. Do not copy the item headers.
+7. Be concise: at most 120 words. Write plain sentences. Do not copy the item headers. Answer what was asked first, then add background (reasons, history, what else is affected) only if it fits in the word limit.
 
 Example
 Question: Who owns the billing migration?
@@ -88,6 +88,14 @@ SCHEDULE_LIMIT = 14
 CODE_DIGESTS = ('schedule', 'followups', 'customers', 'decisions', 'blocked', 'meeting_emails', 'prep', 'company', 'catchup')
 
 CITE_RE = re.compile(r'\[(\d+(?:\s*,\s*\d+)*)\]')
+
+
+def is_refusal(text):
+    """True when the answer is nothing but the refusal. A model that says 'I can't find that in the
+    available data' after a paragraph that does answer it used to have the whole answer thrown away,
+    its citations with it"""
+    bare = re.sub(r'\[[^\]]*\]', '', text).strip().lower().rstrip('.! \n')
+    return bare == CANT_FIND.lower().rstrip('.')
 
 
 def _when(iso_text):
@@ -170,6 +178,12 @@ def render_item(conn, item, label, people_names):
         body += '\n    dates in this message: ' + '; '.join(f"'{p}' is {d.strftime('%a %b %-d')}" for p, d in resolved)
     if 'forwarded' in row['flags'] and row['quoted']:
         body += f"\n    forwarded message: {row['quoted'][:BODY_CHARS]}"
+    if kind == 'email' and row['quoted'] and 'forwarded' not in row['flags']:
+        threaded = normalize.inline_replies(row['quoted'])
+        if threaded:
+            # the writer answered between the lines of the message they were replying to. each answer sits
+            # under its line here and nowhere else (the stored body keeps only the writer's words)
+            body += '\n    reply line by line:\n    ' + threaded[:BODY_CHARS * 2].replace('\n', '\n    ')
     if kind == 'event' and body:
         body = f'calendar note: {body}'
     return f"{line}\n    {body}"
@@ -252,6 +266,33 @@ def decision_timelines(conn, topics, limit=2):
             if r['status'] == 'stale':
                 out.append((f"The record {r['item_id'].split('@')[0].split(':')[1]} is NOT up to date ({label}). "
                             f"It still says: {r['value']}. The plan was corrected after it was written", r['item_id']))
+    return out
+
+
+WHO_IS_RE = re.compile(r"^\s*who(?:'s|s| is| was)\b", re.I)
+
+
+def directory_facts(conn, plan, question):
+    """(text, cite id) for each outside contact a 'who is X' question names: their title, company and
+    status in the crm. Mail says what a person did and rarely what they are, so the model was left to
+    guess a job title from signatures. A contact is not an item, so the line cites the contact's most
+    recent deal, which is where the crm ties them to an account"""
+    if plan.kind != 'person' or plan.group or not WHO_IS_RE.match(question):
+        return []
+    out = []
+    for pid in plan.people:
+        try:
+            row = conn.execute('SELECT name, org, title, role, external FROM people WHERE id=?', (pid,)).fetchone()
+        except Exception:
+            return []            # a database from before titles were stored
+        if not row or not row['external'] or not (row['title'] or row['org']):
+            continue
+        deal = conn.execute("SELECT id FROM items WHERE kind='deal' AND people LIKE ? ORDER BY ts DESC LIMIT 1",
+                            (f'%"{pid}"%',)).fetchone()
+        if not deal:
+            continue
+        job = f"{row['title']} at {row['org']}" if row['title'] and row['org'] else row['title'] or f"a contact at {row['org']}"
+        out.append((f"{row['name']} is {job}" + (f", listed in the CRM as {row['role']}" if row['role'] else ''), deal['id']))
     return out
 
 
@@ -565,7 +606,7 @@ def ask(conn, question, k=10):
         # a question about emails gets emails and the events they relate to,
         # slack chatter in the list was presented as email
         ids = [i for i in ids if i.startswith(('gmail:', 'calendar:'))]
-    labels, context = build_context(conn, ids, decision_timelines(conn, found['decision_topics']))
+    labels, context = build_context(conn, ids, directory_facts(conn, plan, question) + decision_timelines(conn, found['decision_topics']))
     result = llm.chat(SYSTEM, f'Context items:\n\n{context}\n\nQuestion: {question}\n{hints}', max_tokens=300)
     blocks = {n: context_block(context, n) for n in labels}
     current = [n for n, block in blocks.items() if not re.search(
@@ -576,7 +617,7 @@ def ask(conn, question, k=10):
         flags, repairs, extra = investigate(issues, blocks, labels, labels)
         repaired = apply_repairs(repaired, repairs)
     text, cited, ungrounded = verify(repaired, labels)
-    cant = CANT_FIND.lower().rstrip('.') in text.lower()
+    cant = is_refusal(text)
     return {
         'question': question, 'answer': text, 'cited': [] if cant else cited,
         'found': not cant, 'cites_dropped': dropped, 'cites_added': added, 'ungrounded_sentences': [] if cant else ungrounded,
@@ -678,7 +719,7 @@ def ask_digest(conn, question, digest, started, plan=None):
         flags, repairs, extra = investigate(issues, blocks, labels, labels)
         text = apply_repairs(text, repairs)
     text, cited, ungrounded = verify(text, labels)
-    cant = CANT_FIND.lower().rstrip('.') in text.lower()
+    cant = is_refusal(text)
     return {
         'question': question, 'answer': text, 'cited': [] if cant else cited, 'found': not cant,
         'cites_dropped': dropped, 'cites_added': added, 'flags': [] if cant else flags,

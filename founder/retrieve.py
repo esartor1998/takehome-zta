@@ -149,8 +149,39 @@ def pull_vector(conn, question):
     return [i for i in ids if rows[i]['kind'] == 'event' or rows[i]['ts'] <= _iso(config.NOW)]
 
 
-def source_kinds(question):
-    return sorted({SOURCE_WORDS[w] for w in re.findall(r'[a-z]+', question.lower()) if w in SOURCE_WORDS})
+# a source word names where to look only when it cannot be read some other way. 'notion' and 'crm' are
+# nowhere else in a sentence. 'deal' and 'issue' are also plain English ('what is the deal with sso',
+# 'any issues with the launch'), and filtering to CRM deals for those dropped the issue and PR the
+# question was about. a word of the second kind filters only when the rest of the question finds
+# something of that kind, which is a guess from context and not a rule about phrasing
+NAMED_SOURCES = frozenset({'notion', 'crm', 'linear', 'github', 'slack', 'calendar', 'wiki'})
+
+
+def source_kinds(question, conn=None):
+    """Item kinds a question restricts itself to, and the question's words left once the source
+    words are removed. Without conn every source word counts, which is what machine_senders needs"""
+    words = re.findall(r'[a-z]+', question.lower())
+    named = {SOURCE_WORDS[w] for w in words if w in NAMED_SOURCES}
+    plain = {SOURCE_WORDS[w] for w in words if w in SOURCE_WORDS and w not in NAMED_SOURCES}
+    rest = ' '.join(t for t in _terms(question) if t.lower() not in SOURCE_WORDS)
+    if conn is None:
+        return sorted(named | plain), rest
+    if rest:
+        plain = {k for k in plain if pull_fts(conn, rest, kinds=[k])}
+    return sorted(named | plain), rest
+
+
+def pull_source(conn, search_text):
+    """Items of the kind the question names, ranked on the rest of its words. The source word itself
+    is not searched for: 'deal' matches every CRM deal and says nothing about which one"""
+    kinds, rest = source_kinds(search_text, conn)
+    if not kinds:
+        return []
+    if rest:
+        return pull_fts(conn, rest, kinds=kinds)
+    # nothing but the source: 'what does the crm say' lists its newest, an ambiguous word lists nothing
+    named = [w for w in re.findall(r'[a-z]+', search_text.lower()) if w in NAMED_SOURCES]
+    return pull_fts(conn, search_text, kinds=kinds) if named else []
 
 
 PLUMBING = frozenset({'noreply', 'reply', 'mailer', 'daemon', 'info'})
@@ -333,6 +364,19 @@ def meeting_prep(conn, event_id):
     return [i for i in linked if i != event_id] + recent
 
 
+ORG_ACTIVITY_HEAD = 6   # items of a company's people shown before its issues. the cut at k would drop the issues otherwise
+
+
+def org_issues(conn, orgs):
+    """Open linear issues that name a company, newest first, a few per company"""
+    out = []
+    for org in orgs:
+        out += [r['id'] for r in conn.execute(
+            "SELECT id FROM items WHERE source='linear' AND state='current' AND status != 'Done' "
+            'AND (title LIKE ? OR body LIKE ?) ORDER BY ts DESC LIMIT 4', (f'%{org}%', f'%{org}%'))]
+    return out
+
+
 def pull_structured(conn, question, intents, window, people, extras=None):
     ids = []
     now = _iso(config.NOW)
@@ -437,7 +481,7 @@ def retrieve(conn, question, k=10, plan=None, disable=None, weights=None):
         'fts': [] if 'fts' in disable else pull_fts(conn, search_text),
         'vector': vector,
         'window': pull_fts(conn, search_text, window) if window and 'window' not in disable else [],
-        'source': pull_fts(conn, search_text, kinds=source_kinds(question)) if source_kinds(question) and 'source' not in disable else [],
+        'source': [] if 'source' in disable else pull_source(conn, search_text),
         'machine': [] if 'machine' in disable else pull_machine(conn, question),
         # the glossary's words get a pull of their own, so they add recall without blurring the question's own words
         'related': pull_fts(conn, ' '.join(plan.related)) if plan and plan.related and 'related' not in disable else [],
@@ -447,16 +491,15 @@ def retrieve(conn, question, k=10, plan=None, disable=None, weights=None):
     named = pull_named_events(conn, question) if 'structured' not in disable else []
     refs = pull_named_refs(conn, question) if 'structured' not in disable else []
     pulls['structured'] = list(dict.fromkeys(refs + named + pulls['structured']))
-    if plan and plan.org_people and plan.kind != 'person' and 'structured' not in disable:
+    if plan and plan.org_people and 'structured' not in disable:
         # a question about a company: what its people wrote, then the open issues that name it. the text
-        # search alone returned 30 template emails that mention the company in passing
-        mentions = []
-        for org in plan.orgs:
-            mentions += [r['id'] for r in conn.execute(
-                "SELECT id FROM items WHERE source='linear' AND state='current' AND status != 'Done' "
-                'AND (title LIKE ? OR body LIKE ?) ORDER BY ts DESC LIMIT 4', (f'%{org}%', f'%{org}%'))]
-        pulls['structured'] = list(dict.fromkeys(pull_person_activity(conn, plan.org_people) + mentions + pulls['structured']))
-    if plan and plan.kind == 'person' and 'structured' not in disable:
+        # search alone returned 30 template emails that mention the company in passing. a 'person' plan
+        # built from a company name ('what is hooli saying') gets the same issues, since the person
+        # branch used to replace this list and the issue the question was about never arrived
+        activity = pull_person_activity(conn, plan.org_people)
+        pulls['structured'] = list(dict.fromkeys(activity[:ORG_ACTIVITY_HEAD] + org_issues(conn, plan.orgs)
+                                                 + activity[ORG_ACTIVITY_HEAD:] + pulls['structured']))
+    if plan and plan.kind == 'person' and 'structured' not in disable and not plan.org_people:
         pulls['structured'] = pull_person_activity(conn, [p for p in plan.people])
     ranked = fuse(pulls, weights)
 
