@@ -35,6 +35,8 @@ python3 -m venv .venv && .venv/bin/pip install -e .
 .venv/bin/python -m unittest discover -s tests   # model-free unit tests
 ```
 
+`python -m founder` runs the same commands without installing a script. `scripts/build_pyz.sh` builds `dist/founder.pyz`, one 105MB file that carries the code and its dependencies (chromadb, numpy, onnxruntime). It needs the same Python minor version, OS and CPU as the machine that built it, unpacks itself into `~/.shiv` on the first run (a few seconds), and looks for `data/`, `.state/` and `.env` in `FOUNDER_HOME` or the current directory, not inside the file. A native binary (PyInstaller) was not tried: with those dependencies it would be very large.
+
 `data/` is gitignored because it is a symlink on my dev machine. `founder ingest` regenerates it from `synthetic_data_generator.py`, which is seeded and byte-for-byte reproducible.
 
 ## Swapping models
@@ -96,7 +98,7 @@ The answer key (`data/answer_key.json`) has a fragment for every scenario. The i
 
 ## Vague questions
 
-`founder/route.py` turns 'tomorrow?' or 'dk?' into a plan before any model runs: what kind of answer is wanted, who is meant, which day, and which words stand for a family of words. It is plain rules, so the same question gets the same plan whichever model answers.
+`founder/route.py` turns 'tomorrow?' or 'dk?' into a plan before the answering model runs: what kind of answer is wanted, who is meant, which day, which tool was named, and which words stand for a family of words. Plain rules choose the kind of answer, so the same question gets the same kind whichever model answers. A small local model (Llama 3B by default, `FOUNDER_PLAN_MODEL` changes it, `FOUNDER_PLAN=code` turns it off) names the people, company, role and tool a question mentions, quoting the words it read them from, and code keeps a mention only if those words are in the question and the name is in the data. Rules alone could not tell 'what's the deal with sso' (a question about sso) from a question about a deal or an investor, because the word 'deal' decides nothing without the sentence around it. Asking the model for the kind of answer as well was tried and rejected: 31 of 70 plans changed, including the customer webinar question going to the calendar digest. It costs about 0.4s a question locally and is skipped for questions that name nothing ('what is on today').
 
 - `schedule`: what is on, in time order, with cancelled, tentative, all-day, already-happened and other-timezone events marked, and prep for meetings with outsiders (their open asks of you, their open issues)
 - `followups` (and 'anything overdue', 'what did I promise hooli'), `blocked`, `customers`, `decisions`, `catchup`, `meeting emails`: lists of facts the database already holds, rendered by code from the same facts as the brief
@@ -165,43 +167,45 @@ The judge is `openai:gpt-6-luna` for every column (`FOUNDER_JUDGE` or `--judge` 
 | metric | anthropic:claude-haiku-4-5-20251001 | ollama:llama3.2:latest | openrouter:deepseek/deepseek-v4.1-flash-1017 | openrouter:minimax/minimax-m3.1-flash:free | openrouter:xiaomi/mimo-v2.6-pro |
 | --- | --- | --- | --- | --- | --- |
 | where it runs | hosted | 3.1 GB, 100% on gpu | hosted | hosted | hosted |
-| first call incl. load (s) | 4.7 | 9.8 | 0.7 | 6.3 | 0.8 |
-| **ingest** wall (s) | 258.0 | 360.7 | 220.8 | 1294.4 | 563.4 |
-| ingest model calls | 175 | 174 | 175 | 175 | 175 |
-| ingest tokens in/out | 171785/24581 | 51568/31175 | 52919/12870 | 81604/103564 | 50254/10823 |
-| ingest cost ($) | 0.2947 | 0.0000 | 0.0157 | 0.0000 | 0.0313 |
+| first call incl. load (s) | 0.6 | 0.1 | 0.7 | 6.3 | 0.8 |
+| **ingest** wall (s) | 257.3 | 307.9 | 220.8 | 1294.4 | 563.4 |
+| ingest model calls | 177 | 176 | 175 | 175 | 175 |
+| ingest tokens in/out | 173651/24834 | 52015/30592 | 52919/12870 | 81604/103564 | 50254/10823 |
+| ingest cost ($) | 0.2978 | 0.0000 | 0.0157 | 0.0000 | 0.0313 |
 | ingest checks passed (decisions, stale, follow-ups) | 51/51 | 50/51 | 51/51 | 51/51 | 51/51 |
-| **brief** wall (s) | 1.8 | 1.2 | 1.0 | 12.8 | 12.4 |
+| **brief** wall (s) | 1.8 | 0.8 | 1.0 | 12.8 | 12.4 |
 | brief cost ($) | 0.00103 | 0.00000 | 0.00014 | 0.00000 | 0.00030 |
 | brief invalid ids | 0 | 0 | 0 | 0 | 0 |
 | brief stale record called out | yes | yes | yes | yes | yes |
 | brief meeting in focus | yes | yes | yes | yes | yes |
-| **ask** accuracy (judge) | 83% | 71% | 79% | 69% | 79% |
-| ask accuracy, original questions (q*) | 15/18 | 16/18 | 17/18 | 13/18 | 13/18 |
-| ask accuracy, vague questions (v*) | 17/23 | 13/23 | 18/23 | 14/23 | 19/23 |
-| ask citation recall | 91% | 84% | 92% | 77% | 89% |
-| ask citation recall, vague (v*) | 89% | 79% | 92% | 70% | 93% |
+| **ask** accuracy (judge) | 83% | 63% | 79% | 69% | 79% |
+| ask accuracy, original questions (q*) | 15/18 | 14/18 | 17/18 | 13/18 | 13/18 |
+| ask accuracy, vague questions (v*) | 16/23 | 12/23 | 18/23 | 14/23 | 19/23 |
+| ask citation recall | 91% | 85% | 92% | 77% | 89% |
+| ask citation recall, vague (v*) | 91% | 83% | 92% | 70% | 93% |
 | ask citation precision | 53% | 44% | 53% | 50% | 48% |
 | ask answers with a citation flag | 10 | 9 | 3 | 1 | 1 |
-| ask flag precision (flagged and judged wrong) | 30% | 22% | 0% | 0% | 100% |
-| ask flag recall (wrong answers that were flagged) | 25% | 10% | 0% | 0% | 7% |
+| ask flag precision (flagged and judged wrong) | 20% | 56% | 0% | 0% | 100% |
+| ask flag recall (wrong answers that were flagged) | 17% | 19% | 0% | 0% | 7% |
 | ask forbidden cites | 0 | 2 | 0 | 1 | 0 |
-| ask uncited sentences | 30 | 24 | 16 | 6 | 5 |
-| ask latency p50 (s) | 1.6 | 1.3 | 1.2 | 6.3 | 2.7 |
-| ask latency p95 (s) | 3.3 | 3.9 | 2.4 | 26.8 | 9.3 |
-| ask latency max (s) | 4.7 | 5.6 | 9.8 | 32.1 | 21.7 |
-| ask questions over 5s | 0 | 2 | 1 | 36 | 8 |
-| ask output tokens per second | 62 | 68 | 66 | 84 | 31 |
-| ask latency mean (s) | 1.5 | 1.5 | 1.2 | 9.0 | 3.0 |
+| ask uncited sentences | 30 | 22 | 16 | 6 | 5 |
+| ask latency p50 (s) | 1.9 | 1.6 | 1.2 | 6.3 | 2.7 |
+| ask latency p95 (s) | 4.0 | 4.0 | 2.4 | 26.8 | 9.3 |
+| ask latency max (s) | 4.7 | 4.9 | 9.8 | 32.1 | 21.7 |
+| ask questions over 5s | 0 | 0 | 1 | 36 | 8 |
+| ask output tokens per second | 67 | 81 | 66 | 84 | 31 |
+| ask latency mean (s) | 1.8 | 1.7 | 1.2 | 9.0 | 3.0 |
 | ask questions answered without a model call | 23 | 23 | 23 | 23 | 23 |
-| ask tokens in/out (mean) | 996/94 | 755/100 | 689/79 | 809/756 | 711/91 |
-| ask cost per question ($) | 0.00147 | 0.00000 | 0.00015 | 0.00000 | 0.00039 |
+| ask tokens in/out (mean) | 1535/123 | 1268/134 | 689/79 | 809/756 | 711/91 |
+| ask cost per question ($) | 0.00149 | 0.00000 | 0.00015 | 0.00000 | 0.00039 |
 | ask refusals | 0 | 0 | 4 | 1 | 7 |
 | judge verdicts that failed (counted wrong) | 0 | 0 | 0 | 0 | 0 |
 | schema failures (ask+judge) | 0 | 0 | 0 | 0 | 0 |
 | http retries (rate limits, 5xx) | 0 | 0 | 0 | 0 | 0 |
-| whole benchmark wall time (s) | 576 | 663 | 487 | 2150 | 962 |
-| judge cost for this run ($) | 0.1458 | 0.1515 | 0.1520 | 0.1350 | 0.1409 |
+| whole benchmark wall time (s) | 595 | 628 | 487 | 2150 | 962 |
+| judge cost for this run ($) | 0.1427 | 0.1492 | 0.1520 | 0.1350 | 0.1409 |
+
+**The columns are not from one commit.** Haiku and Llama were re-run on the latest code (the model-read router, 68 generic gate prototypes, a 15% gate share, no one-hour stale gap). DeepSeek, MiMo and MiniMax are from the code one step earlier and have not been re-run. The planner's tokens (about 620 per question, on local Llama) are inside every Haiku and Llama row's token counts and make the 'answered without a model call' row read 23 only because the planner is excluded from it.
 
 The judge's cost uses a placeholder rate (1.0 and 5.0 dollars per million tokens), because the price of `gpt-6-luna` is not in `config.PRICES`. Chat-model spend is costed at each model's listed rate. The OpenRouter models were run with reasoning requested off. MiMo and DeepSeek honoured it (91 and 79 output tokens per answer on average). MiniMax M3.1 Flash cannot turn thinking off: its endpoint answers 400 'Reasoning is mandatory', so the provider learns that from the first refusal and gives it 1,500 tokens of thinking room. It averaged 756 output tokens per answer, took 1,294s to ingest, and **returned a blank answer on 13 of 70 questions** because the thinking used the whole budget. Those count as wrong. On the 57 it did answer it got 48 right (84%). MiniMax ran on the free, rate-limited endpoint, so its latency says little about the model. There were no rate-limit retries.
 
@@ -209,15 +213,15 @@ The judge's cost uses a placeholder rate (1.0 and 5.0 dollars per million tokens
 
 What the numbers say:
 
-- **Haiku 4.5 leads at 83%, and is the only column that is accurate, fast and cheap together:** 1.6s median, 4.7s slowest, 0 refusals, 51 of 51 ingest checks, $0.0015 per question and $0.29 to ingest. DeepSeek V4.1 Flash and MiMo V2.6 Pro are level at 79%, which with one run each is a tie with Haiku within the spread
+- **Haiku 4.5 leads at 83%, and is the only column that is accurate, fast and cheap together:** 1.9s median, 4.7s slowest, 0 refusals, 51 of 51 ingest checks, $0.0015 per question and $0.29 to ingest. DeepSeek V4.1 Flash and MiMo V2.6 Pro are level at 79%, which with one run each is a tie with Haiku within the spread
 - **DeepSeek V4.1 Flash is the value pick.** 79%, 1.2s median, 51 of 51 checks, about $0.016 to ingest and $0.00015 per question: a tenth of Haiku's cost for four points. It has the best citation recall (92%) and four refusals
 - **MiMo V2.6 Pro refuses more (7) and is slower** (2.7s median, 8 questions over 5s, 563s to ingest), and fails `v16` by saying it cannot find anything. It leads the field on carrying background facts (27 answers with all of it)
-- **Llama 3B is the local model that stays, and it is better than it was:** 71%, 1.3s median, free. It is weakest on questions a model has to write (31 of 47 right), fails an unanswerable question by inventing a runway of '35 seats', and passes 50 of 51 ingest checks
+- **Llama 3B is the local model that stays, with a wide spread:** 71% in the earlier run and 63% in the latest, with the pipeline structurally the same, so read it as 63% to 71%. 1.6s median, free. It is weakest on questions a model has to write (26 of 47 in the latest run), fails an unanswerable question by inventing a runway (35 seats, then 4 weeks), and passes 50 of 51 ingest checks
 - **MiniMax M3.1 Flash scores 69% and is not a fair speed or accuracy reading** because of the blank answers above
-- **5 questions fail on every model** (`v04`, `v05`, `v15`, `v16`, `t04`), down from 15 before the fixes. `v04`, `v05` and `t04` are the Daniel questions left alone on purpose (the message that carries the ask is neither the newest nor the most distinctive). `v16` ('what's the deal with sso') has a new cause: the glossary relates 'deal' to 'investor', so the router reads the question as one about the two investors. `v15` is wording: the models say the round 'cannot close before May 15' and the reference says it 'closes' then. Of the earlier 15, `q15`, `v17`, `v21` and `n08` now pass on Haiku, and `q01`, `q09`, `n01`, `n02` and `t03` pass on Haiku now that the references are split into core and extra facts
+- **6 questions fail on every model** (`q14`, `v04`, `v05`, `v15`, `v16`, `t04`), down from 15 before the fixes. `q14` is a code-rendered answer the judge fails for not saying 'today'. `v04`, `v05` and `t04` are the Daniel questions left alone on purpose (the message that carries the ask is neither the newest nor the most distinctive). `v16` ('what's the deal with sso') was misrouted to the two investors; that is fixed (see below) and Haiku now answers with the SSO story and PR 231, but the judge still fails it for not stating the Mar 10 fix, the Mar 12 Okta recurrence and the reopened ACME-431. `v15` is wording: the models say the round 'cannot close before May 15' and the reference says it 'closes' then. Of the earlier 15, `q15`, `v17`, `v21` and `n08` now pass on Haiku, and `q01`, `q09`, `n01`, `n02` and `t03` pass on Haiku now that the references are split into core and extra facts
 - **Ingest checks against the answer key** (51 checks): all pass on Haiku, DeepSeek, MiMo and MiniMax, and 50 on Llama
 - **Citation recall is 77% to 92%, precision 44% to 53%.** Recall is high because code checks and adds citations. Precision is low because the key lists the minimum and code-rendered lists are not cut
-- **Citation flags are rare and catch little.** Haiku raised 10 (30% of them on wrong answers), Llama 9 (22%), DeepSeek 3 (none), MiniMax 1 (none), MiMo 1 (a hit). Read them as a prompt to look
+- **Citation flags are rare and catch little.** In the latest runs Haiku raised 10 (20% of them on wrong answers) and Llama 9 (56%). Earlier: DeepSeek 3 (none), MiniMax 1 (none), MiMo 1 (a hit). Read them as a prompt to look
 - **The brief** names the meeting and calls out the stale record on every model, with no invalid ids
 
 **How trustworthy is the judge?** `founder bench --judge-check` re-grades answers with several judges and reports agreement and Cohen's kappa. It was last run with Haiku against Llama on the earlier 61-question set: Haiku agreed with itself on 100% of verdicts, and with Llama on 72% (kappa -0.06, no agreement beyond chance). It has not been run with Luna. The direct evidence is the one above: Luna disagreed with itself on 5 of 23 identical answers. At least `n01`, `t03` and `q01` read as correct to a person while failing. Treat accuracy as a rough ranking and read the per-question table before drawing a conclusion.
@@ -236,7 +240,7 @@ What the numbers say:
 - `v04`, `v05` and `t04` (Daniel's messages) were left alone on purpose.
 
 
-**A new defect found by the run (D9).** The glossary relates 'deal' to 'investor', and the router treats any word the glossary relates to a role as that role's group, so 'what's the deal with sso' becomes a question about Jordan Pryce and Caroline Ades. The search-filter fix for the same word worked; the router has the same weakness one layer up. Not fixed.
+**Changes after that run.** The glossary relates 'deal' to 'investor', and the router treated any word the glossary related to a role as that role's group, so 'what's the deal with sso' became a question about the two investors (D9). Fixed by the model-read router above: across the 70 questions only two plans changed (v16, and q10, which the glossary had also pointed at the investors). The gate prototypes were replaced by 68 generic sentences, and the stale-record rule that a newer item be an hour later was dropped after a replay showed it changed no record and no check. Net effect on scores: none that stands out from the noise (Haiku 83% both times, Llama 71% to 63%).
 
 ## Evaluation
 
