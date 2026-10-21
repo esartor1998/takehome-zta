@@ -236,16 +236,22 @@ def pull_person_activity(conn, people, days=ACTIVITY_DAYS):
         rows = conn.execute(
             "SELECT id, thread_key, author, title, body, ts, novelty FROM items WHERE state='current' AND ts >= ? AND ts <= ? "
             f"AND kind IN ({','.join('?' * len(ACTIVITY_KINDS))}) ORDER BY ts DESC", [since, _iso(config.NOW), *ACTIVITY_KINDS])
-        seen, picked = set(), []
+        threads = {}
         for r in rows:
             # a bare first name in text is not enough: everyone says 'daniel'. the
             # author field or the full name has to agree
             if r['author'] != pid and row['name'].lower() not in f"{r['title']} {r['body']}".lower():
                 continue
-            if r['thread_key'] in seen:
-                continue
-            seen.add(r['thread_key'])
-            picked.append(r)
+            threads.setdefault(r['thread_key'], []).append(r)
+        picked = []
+        for thread in threads.values():
+            # rows are newest first. the newest message says where a conversation is, and the most
+            # distinctive one often says what it is about ('it is back, confirm a fix before Mar 20'
+            # sat under a later 'still looping'), so a thread contributes both
+            picked.append(thread[0])
+            lead = max(thread, key=lambda r: r['novelty'])
+            if lead is not thread[0]:
+                picked.append(lead)
         # the most distinctive items, shown newest first. recency alone gave a
         # list of template status mail and buried the one message about a deal
         top = sorted(sorted(picked, key=lambda r: -r['novelty'])[:ACTIVITY_PER_PERSON], key=lambda r: r['ts'], reverse=True)

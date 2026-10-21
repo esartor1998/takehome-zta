@@ -168,7 +168,7 @@
   },
   {
     "id": "q12",
-    "category": "unanswerable",
+    "category": "topic_summary",
     "question": "Summarize investor-related activity this week.",
     "reference": "Jordan Pryce (Northwind Ventures) followed up on Mar 13 asking for cohort ARR before the Tuesday Mar 17 partner meeting. Caroline Ades (Blue Harbor Capital) asked on Mar 12 about data room access. On Mar 13 Priya said Northwind cannot close before May 15.",
     "answerable": true,

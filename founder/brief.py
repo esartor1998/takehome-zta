@@ -133,14 +133,16 @@ def event_line(e):
 def meeting_prep(conn, event, names):
     """What to have in your head before a meeting with outsiders: their open
     asks of you, and customer issues for their company that are not closed"""
-    notes, ids = [], []
+    notes, ids, orgs = [], [], set()
     for pid in event['external']:
         for row in conn.execute("SELECT item_id, what FROM followups WHERE who=? AND kind='ask' AND status='open'",
                                 (pid,)):
             notes.append(f"{names[pid]} is waiting on you: {row['what']}")
             ids.append(row['item_id'])
         org = conn.execute('SELECT org FROM people WHERE id=?', (pid,)).fetchone()['org']
-        if org:
+        # two guests from one company would list that company's issues twice
+        if org and org not in orgs:
+            orgs.add(org)
             for row in conn.execute(
                     "SELECT id, title, status FROM items WHERE source='linear' AND state='current' "
                     "AND status IN ('Reopened','Blocked','In Progress') AND (title LIKE ? OR body LIKE ?) "
@@ -307,7 +309,7 @@ def build_facts(conn, names):
     for r in stale_records(conn):
         fact = f", but the newer information says: {r['fact']}" if r['fact'] else ''
         add(72, f"{r['title']} ({r['source']}) still says '{r['says']}'{fact}. It is out of date and needs updating",
-            [r['item_id'], r['newer_id']], 'stale')
+            [r['item_id'], r['newer_id']], 'stale', name=r['title'])
     for d in recent_decisions(conn):
         short = f"{d['current']['ts'][5:10]} {d['label']}: {d['current']['value']}"
         if d['history']:
@@ -516,7 +518,22 @@ def meeting_email_facts(conn):
 
 # ---- narrative --------------------------------------------------------------------
 
-def focus_section(facts):
+def also_open(rest):
+    """The docket below the top priorities, all of it. Records that state an old plan are many and
+    alike, so they share a line of names; everything else keeps its own line"""
+    stale = [f for f in rest if f['cat'] == 'stale']
+    lines = []
+    for f in rest:
+        if f['cat'] != 'stale':
+            lines.append((f['text'], f['ids'][:2]))
+    out = [f"- {text} " + ''.join(f'[{i}]' for i in ids) for text, ids in lines]
+    if stale:
+        names = '; '.join(f"{f.get('name') or f['text'][:40]} " + ''.join(f'[{i}]' for i in f['ids'][:2]) for f in stale)
+        out.append(f"- {len(stale)} records still state an old plan and need updating: {names}")
+    return out, [i for f in rest for i in f['ids'][:2]]
+
+
+def focus_section(facts, whole_docket=False):
     """Top facts by score, phrased by the model as action lines. We hand it
     exactly the facts to phrase so it has nothing to rank, and nothing to
     invent a link between: an earlier version given all facts joined two
@@ -542,7 +559,14 @@ def focus_section(facts):
         # a model that ignored the format (headings, bullets, a title) gets no say:
         # the facts themselves are the numbered lines
         lines = [f"{n}. {f['text']} [{n}]" for n, f in enumerate(top, 1)]
-    return answer.CITE_RE.sub(swap, '\n'.join(lines)), cited, result
+    text = answer.CITE_RE.sub(swap, '\n'.join(lines))
+    if whole_docket:
+        rest = [f for f in facts if not f['handled']][FOCUS_COUNT:]
+        if rest:
+            extra, extra_ids = also_open(rest)
+            text += f'\n\nAlso open ({len(rest)}):\n' + '\n'.join(extra)
+            cited.extend(extra_ids)
+    return text, cited, result
 
 
 def generate(conn):

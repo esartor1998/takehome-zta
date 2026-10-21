@@ -7,7 +7,7 @@
 | full | 92% | 83% | 27% | 0.65 | 8.7 |
 | no_vector | 87% | 79% | 26% | 0.59 | 8.6 |
 | vector_only | 74% | 69% | 12% | 0.45 | 10.8 |
-| no_fts | 88% | 79% | 26% | 0.64 | 8.6 |
+| no_fts | 88% | 79% | 26% | 0.63 | 8.6 |
 | fts_only | 68% | 64% | 12% | 0.34 | 10.4 |
 | no_structured | 85% | 81% | 15% | 0.54 | 11.2 |
 | vector_x0.5 | 90% | 83% | 26% | 0.62 | 8.6 |
@@ -82,4 +82,4 @@ The vector pull alone reaches 63% recall (every group on 60% of questions), agai
 
 ## What each pull costs
 
-Mean milliseconds per question: fts 0, vector 19, person 0, structured 0.
+Mean milliseconds per question: fts 0, vector 18, person 0, structured 0.

@@ -124,7 +124,7 @@
         "recall": 0.5,
         "complete": false,
         "precision": 0.1111111111111111,
-        "mrr": 0.25,
+        "mrr": 0.2,
         "size": 9,
         "present": [
           "gmail:469b8c07901db7d8"
@@ -268,7 +268,7 @@
         "recall": 0.5,
         "complete": false,
         "precision": 0.1111111111111111,
-        "mrr": 0.2,
+        "mrr": 0.16666666666666666,
         "size": 9,
         "present": [
           "gmail:469b8c07901db7d8"
@@ -451,9 +451,9 @@
       "k02": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.25,
+        "precision": 0.2222222222222222,
         "mrr": 1.0,
-        "size": 8,
+        "size": 9,
         "present": [
           "gmail:49670ab720e678cb",
           "gmail:4dd6e4165f18c195"
@@ -579,7 +579,7 @@
         "recall": 0.5,
         "complete": false,
         "precision": 0.1111111111111111,
-        "mrr": 0.2,
+        "mrr": 0.16666666666666666,
         "size": 9,
         "present": [
           "gmail:469b8c07901db7d8"
@@ -722,7 +722,7 @@
         "recall": 0.5,
         "complete": false,
         "precision": 0.1111111111111111,
-        "mrr": 0.2,
+        "mrr": 0.16666666666666666,
         "size": 9,
         "present": [
           "gmail:469b8c07901db7d8"
@@ -903,9 +903,9 @@
       "k02": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.25,
+        "precision": 0.2222222222222222,
         "mrr": 1.0,
-        "size": 8,
+        "size": 9,
         "present": [
           "gmail:49670ab720e678cb",
           "gmail:4dd6e4165f18c195"
@@ -1463,7 +1463,7 @@
         "recall": 0.5,
         "complete": false,
         "precision": 0.1111111111111111,
-        "mrr": 0.25,
+        "mrr": 0.2,
         "size": 9,
         "present": [
           "gmail:469b8c07901db7d8"
@@ -1609,7 +1609,7 @@
         "recall": 0.5,
         "complete": false,
         "precision": 0.1111111111111111,
-        "mrr": 0.3333333333333333,
+        "mrr": 0.25,
         "size": 9,
         "present": [
           "gmail:469b8c07901db7d8"
@@ -1788,9 +1788,9 @@
       "k02": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.25,
+        "precision": 0.2222222222222222,
         "mrr": 1.0,
-        "size": 8,
+        "size": 9,
         "present": [
           "gmail:49670ab720e678cb",
           "gmail:4dd6e4165f18c195"
@@ -2786,7 +2786,7 @@
         "recall": 0.5,
         "complete": false,
         "precision": 0.1111111111111111,
-        "mrr": 0.2,
+        "mrr": 0.16666666666666666,
         "size": 9,
         "present": [
           "gmail:469b8c07901db7d8"
@@ -2930,7 +2930,7 @@
         "recall": 0.5,
         "complete": false,
         "precision": 0.1111111111111111,
-        "mrr": 0.2,
+        "mrr": 0.16666666666666666,
         "size": 9,
         "present": [
           "gmail:469b8c07901db7d8"
@@ -3111,9 +3111,9 @@
       "k02": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.25,
+        "precision": 0.2222222222222222,
         "mrr": 1.0,
-        "size": 8,
+        "size": 9,
         "present": [
           "gmail:49670ab720e678cb",
           "gmail:4dd6e4165f18c195"
@@ -3389,7 +3389,7 @@
         "recall": 0.5,
         "complete": false,
         "precision": 0.1111111111111111,
-        "mrr": 0.16666666666666666,
+        "mrr": 0.14285714285714285,
         "size": 9,
         "present": [
           "gmail:469b8c07901db7d8"
@@ -3573,9 +3573,9 @@
       "k02": {
         "recall": 1.0,
         "complete": true,
-        "precision": 0.2857142857142857,
+        "precision": 0.25,
         "mrr": 1.0,
-        "size": 7,
+        "size": 8,
         "present": [
           "gmail:49670ab720e678cb",
           "gmail:4dd6e4165f18c195"
@@ -4789,9 +4789,9 @@
     }
   },
   "ms": {
-    "fts": 0.2214920518565036,
-    "vector": 18.51040851657412,
-    "person": 0.17167225347033568,
-    "structured": 0.174708908335084
+    "fts": 0.22546397078604924,
+    "vector": 18.331884578358206,
+    "person": 0.17940391609001727,
+    "structured": 0.18698014762429965
   }
 }

@@ -3,82 +3,82 @@
 model `anthropic:claude-haiku-4-5-20251001`, judge `anthropic:claude-haiku-4-5-20251001`
 
 ```
-accuracy 81% | citation recall 90% precision 55% | forbidden cites 0 | ungrounded sentences 18
-latency p50 1.6s max 4.4s (0 over 5s) | cost $0.00136/question actual, $0.00136 at hosted rates
+accuracy 84% | citation recall 90% precision 54% | forbidden cites 0 | ungrounded sentences 18
+latency p50 1.7s max 8.5s (1 over 5s) | cost $0.00137/question actual, $0.00137 at hosted rates
 ```
 
 | id | category | correct | cite recall | cite precision | forbidden | sec |
 | --- | --- | --- | --- | --- | --- | --- |
-| q01 | identity | yes | 1.00 | 1.00 | 0 | 1.1 |
+| q01 | identity | yes | 1.00 | 1.00 | 0 | 1.2 |
 | q02 | decision_reversal | yes | 1.00 | 0.75 | 0 | 1.9 |
-| q03 | reschedule | yes | 1.00 | 1.00 | 0 | 4.1 |
+| q03 | reschedule | yes | 1.00 | 1.00 | 0 | 4.2 |
 | q04 | duplicate_conflict | yes | 1.00 | 0.67 | 0 | 2.1 |
 | q05 | unanswerable | yes | 1.00 | 1.00 | 0 | 1.7 |
-| q06 | cancelled_meeting | yes | 1.00 | 1.00 | 0 | 2.6 |
-| q07 | cancelled_meeting | yes | 1.00 | 0.50 | 0 | 1.7 |
-| q08 | history | yes | 1.00 | 0.20 | 0 | 1.7 |
+| q06 | cancelled_meeting | yes | 1.00 | 1.00 | 0 | 2.7 |
+| q07 | cancelled_meeting | yes | 1.00 | 0.50 | 0 | 1.8 |
+| q08 | history | yes | 1.00 | 0.20 | 0 | 1.8 |
 | q09 | identity | NO | 1.00 | 1.00 | 0 | 1.0 |
 | q10 | tasks | yes | 1.00 | 1.00 | 0 | 0.0 |
-| q11 | shared_inbox | yes | 1.00 | 0.25 | 0 | 2.6 |
-| q12 | unanswerable | NO | 0.67 | 0.50 | 0 | 2.0 |
-| q13 | decisions | yes | 1.00 | 0.43 | 0 | 0.1 |
+| q11 | shared_inbox | yes | 1.00 | 0.25 | 0 | 2.7 |
+| q12 | topic_summary | NO | 0.67 | 0.50 | 0 | 2.1 |
+| q13 | decisions | yes | 1.00 | 0.43 | 0 | 0.0 |
 | q14 | meeting_prep | yes | 0.50 | 0.20 | 0 | 0.0 |
-| q15 | stale_record | yes | 0.50 | 1.00 | 0 | 1.7 |
-| q16 | daily_priorities | yes | 1.00 | 0.67 | 0 | 2.3 |
-| q17 | followups | yes | 1.00 | 0.38 | 0 | 0.1 |
+| q15 | stale_record | yes | 0.50 | 1.00 | 0 | 1.8 |
+| q16 | daily_priorities | yes | 1.00 | 0.11 | 0 | 2.4 |
+| q17 | followups | yes | 1.00 | 0.38 | 0 | 0.0 |
 | q18 | meeting_prep | yes | 1.00 | 0.16 | 0 | 0.1 |
 | v01 | vague_schedule | yes | 1.00 | 0.88 | 0 | 0.0 |
 | v02 | vague_schedule | yes | 1.00 | 0.50 | 0 | 0.0 |
 | v03 | vague_schedule | yes | 1.00 | 1.00 | 0 | 0.0 |
-| v04 | vague_person | NO | 0.50 | 0.25 | 0 | 1.5 |
-| v05 | vague_person | NO | 1.00 | 0.25 | 0 | 1.5 |
+| v04 | vague_person | yes | 0.50 | 0.25 | 0 | 1.8 |
+| v05 | vague_person | NO | 1.00 | 0.25 | 0 | 1.8 |
 | v06 | vague_person | NO | 1.00 | 0.67 | 0 | 1.6 |
 | v07 | vague_followups | yes | 1.00 | 0.38 | 0 | 0.0 |
 | v08 | vague_followups | yes | 1.00 | 0.10 | 0 | 0.0 |
-| v09 | vague_focus | NO | 1.00 | 0.67 | 0 | 2.4 |
-| v10 | vague_catchup | yes | 1.00 | 0.12 | 0 | 0.1 |
+| v09 | vague_focus | yes | 1.00 | 0.11 | 0 | 2.4 |
+| v10 | vague_catchup | yes | 1.00 | 0.12 | 0 | 0.0 |
 | v11 | vague_tasks | yes | 1.00 | 0.21 | 0 | 0.0 |
-| v12 | vague_topic | NO | 0.67 | 0.50 | 0 | 3.0 |
+| v12 | vague_topic | NO | 0.67 | 0.50 | 0 | 3.1 |
 | v13 | vague_topic | yes | 1.00 | 0.67 | 0 | 1.9 |
-| v14 | vague_topic | yes | 1.00 | 0.67 | 0 | 2.5 |
-| v15 | vague_topic | yes | 1.00 | 0.20 | 0 | 4.4 |
-| v16 | vague_topic | NO | 0.33 | 0.17 | 0 | 3.1 |
-| v17 | vague_topic | yes | 0.50 | 0.33 | 0 | 1.2 |
-| v18 | vague_person | yes | 1.00 | 0.50 | 0 | 2.2 |
+| v14 | vague_topic | yes | 1.00 | 0.67 | 0 | 3.5 |
+| v15 | vague_topic | yes | 1.00 | 0.20 | 0 | 4.7 |
+| v16 | vague_topic | NO | 0.33 | 0.17 | 0 | 3.2 |
+| v17 | vague_topic | yes | 0.50 | 0.33 | 0 | 1.7 |
+| v18 | vague_person | yes | 1.00 | 0.50 | 0 | 2.3 |
 | v19 | vague_stale | yes | 1.00 | 1.00 | 0 | 1.7 |
 | v20 | vague_schedule | yes | 1.00 | 0.50 | 0 | 0.0 |
 | v21 | vague_person | yes | 1.00 | 0.33 | 0 | 1.5 |
-| v22 | unanswerable | yes | 1.00 | 1.00 | 0 | 1.4 |
-| v23 | unanswerable | yes | 1.00 | 1.00 | 0 | 3.4 |
+| v22 | unanswerable | yes | 1.00 | 1.00 | 0 | 1.5 |
+| v23 | unanswerable | yes | 1.00 | 1.00 | 0 | 8.5 |
 | s01 | spec_company_week | yes | 1.00 | 0.14 | 0 | 0.1 |
-| s02 | spec_customer_issues | yes | 0.50 | 0.50 | 0 | 0.1 |
+| s02 | spec_customer_issues | yes | 0.50 | 0.50 | 0 | 0.0 |
 | s03 | spec_blocked | yes | 1.00 | 0.21 | 0 | 0.0 |
 | t01 | typo | yes | 1.00 | 0.50 | 0 | 0.0 |
 | t02 | typo | yes | 1.00 | 0.38 | 0 | 0.1 |
 | t03 | typo | NO | 1.00 | 0.67 | 0 | 1.9 |
-| t04 | typo | NO | 0.50 | 0.20 | 0 | 1.5 |
-| t05 | typo | NO | 0.00 | 0.00 | 0 | 2.6 |
-| t06 | typo | yes | 1.00 | 0.25 | 0 | 2.0 |
+| t04 | typo | NO | 0.50 | 0.20 | 0 | 1.7 |
+| t05 | typo | NO | 0.00 | 0.00 | 0 | 3.7 |
+| t06 | typo | yes | 1.00 | 0.25 | 0 | 2.1 |
 | t07 | typo | NO | 1.00 | 0.60 | 0 | 2.1 |
 | t08 | typo | yes | 1.00 | 0.21 | 0 | 0.0 |
-| n01 | renewal | yes | 1.00 | 0.50 | 0 | 2.1 |
+| n01 | renewal | yes | 1.00 | 0.50 | 0 | 2.3 |
 | n02 | renewal_stale | yes | 1.00 | 1.00 | 0 | 2.7 |
 | n03 | renewal_decision | yes | 0.00 | 0.00 | 0 | 3.4 |
 | n04 | promise_informal | yes | 1.00 | 1.00 | 0 | 0.0 |
-| n05 | fact_slash_date | yes | 1.00 | 0.33 | 0 | 3.1 |
-| n06 | inline_reply | NO | 1.00 | 1.00 | 0 | 1.1 |
+| n05 | fact_slash_date | yes | 1.00 | 0.33 | 0 | 3.2 |
+| n06 | inline_reply | NO | 1.00 | 1.00 | 0 | 1.2 |
 | n08 | customer_topic | yes | 1.00 | 0.67 | 0 | 0.0 |
 | h01 | multi_hop | yes | 1.00 | 0.30 | 0 | 0.0 |
-| h02 | overdue | yes | 1.00 | 1.00 | 0 | 0.1 |
-| w01 | soft_change | yes | 1.00 | 0.50 | 0 | 3.0 |
-| w02 | soft_change | yes | 1.00 | 1.00 | 0 | 2.9 |
-| w03 | soft_change | yes | 1.00 | 1.00 | 0 | 1.6 |
-| w04 | soft_change | yes | 1.00 | 1.00 | 0 | 1.5 |
-| w05 | soft_change | yes | 1.00 | 1.00 | 0 | 1.6 |
-| w06 | still_current | yes | 0.00 | 0.00 | 0 | 1.5 |
-| w07 | still_current | yes | 1.00 | 0.50 | 0 | 2.0 |
-| k01 | nickname | yes | 1.00 | 0.33 | 0 | 1.6 |
-| k02 | nickname | yes | 1.00 | 0.40 | 0 | 2.0 |
+| h02 | overdue | yes | 1.00 | 1.00 | 0 | 0.0 |
+| w01 | soft_change | yes | 1.00 | 0.50 | 0 | 3.1 |
+| w02 | soft_change | yes | 1.00 | 1.00 | 0 | 3.2 |
+| w03 | soft_change | yes | 1.00 | 1.00 | 0 | 1.7 |
+| w04 | soft_change | yes | 1.00 | 1.00 | 0 | 1.6 |
+| w05 | soft_change | yes | 1.00 | 1.00 | 0 | 1.7 |
+| w06 | still_current | yes | 0.00 | 0.00 | 0 | 1.6 |
+| w07 | still_current | yes | 1.00 | 0.50 | 0 | 2.1 |
+| k01 | nickname | yes | 1.00 | 0.33 | 0 | 1.7 |
+| k02 | nickname | yes | 1.00 | 0.29 | 0 | 2.7 |
 
 ## Answers
 
@@ -177,7 +177,31 @@ judge: pass (ref: ACME-231 not up to date; ship date corrected to Mar 22 | cand:
 > 1. Confirm a fix ships before Mar 20 and get someone on a call thurs with Daniel Foster (Globex) before the 17:30-18:00 UTC check-in today about SSO and the Mar 23 rollout, because Globex SSO redirect loop is Reopened and Globex integration is Blocked. [calendar:bbeda5b103cb82876dd4651501]
 2. Send the summary to Sam Okafor (Hooli) immediately, because it was due 2026-03-12 and is still open. [gmail:c81c70603acf1120]
 3. Deliver the cohort metrics to Jordan Pryce (Northwind Ventures) immediately, because it was due 2026-03-09 and is still open. [gmail:ccd9c787ded3995d]
-judge: pass (ref: Priorities: Globex check-in 17:30 UTC (SSO fix before Mar 20), cohort ARR to Jordan Pryce before Tuesday meeting, stale records with old plans | cand: Confirm SSO fix ships before Mar 20, Globex check-in 17:30-18:00 UTC with Daniel Foster; deliver cohort metrics to Jordan Pryce immediately; send summary to Sam Okafor)
+
+Also open (38):
+- You promised Caroline Ades (Blue Harbor Capital): send data room access, due 2026-03-10 (overdue), and it is still open [gmail:3794ed2c45e9c301]
+- Priya Nair asked you: @Alex Chen Northwind wants cohort ARR by Mon, can you send?, due 2026-03-16 (nobody has handled it) [slack:C07FUND:1773419400.449808]
+- Jordan Pryce (Northwind Ventures) asked you: send cohort ARR before Tuesday's partner meeting, due 2026-03-16 (nobody has handled it) [gmail:75d73520ec4c68f3]
+- Globex login loop reported again: 8 reports on 4 days across gmail, linear, slack, and a fix that was marked done came back [slack:C04INC:1773339300.924615][gmail:4dd6e4165f18c195]
+- Priya Nair asked you: approve the data room request for Blue Harbor (nobody has handled it) [slack:C07FUND:1773500400.415602]
+- Rebecca Liu asked you: sign-off on the redline, due 2026-03-19 (nobody has handled it) [gmail:2160a6b4c5ac5bdf]
+- Daniel Foster (Globex) asked you: can we get someone on a call thurs? (nobody has handled it) [gmail:4dd6e4165f18c195]
+- Marcus Webb asked you: review acme/api PR #231: fix: SSO redirect loop for Okta (ACME-431) (nobody has handled it) [github:acme/api#231]
+- Rebecca Liu asked you: push the docs migration back a week (nobody has handled it) [gmail:a8bee2a3cdcd15eb]
+- Daniel Foster (Globex) asked you: Can you confirm a fix ships before Mar 20?, due 2026-03-20 (nobody has handled it) [gmail:bee95ff7ca51c987]
+- Caroline Ades (Blue Harbor Capital) asked you: update on the data room access (nobody has handled it) [gmail:012ce504e5a045e9]
+- Hannah Park asked you: add a risks slide (nobody has handled it) [gmail:6a959648587ee4e0]
+- Omar Haddad asked you: review acme/billing PR #230: billing: webhook retry (ACME-316) (nobody has handled it) [github:acme/billing#230]
+- Meeting today: 16:00-17:00 UTC Weekly Product Sync with Priya Nair, Marcus Webb, Hannah Park (rescheduled from Fri Mar 13) [calendar:2ded3454537257a5518fa9905e]
+- Blocked, owned by you: ACME-365 Rate limit tuning [linear:ACME-365@20260222T0500]
+- Blocked, owned by you: ACME-349 Rate limit tuning [linear:ACME-349@20260307T0900]
+- Blocked, owned by you: ACME-352 Update dependency [linear:ACME-352@20260225T1100]
+- Blocked, owned by you: ACME-342 Add pagination [linear:ACME-342@20260225T0900]
+- Hooli timeout reported again: 3 reports on 2 days across gmail, linear [gmail:93c4a504d87495b9][gmail:805093022b56ece6]
+- Blocked, owned by you: ACME-316 Billing webhook retry [linear:ACME-316@20260219T1200]
+- Meeting today: 19:00-20:00 UTC Board prep with Priya Nair (tentative) [calendar:de4afcd47267780be961f09a4f]
+- 17 records still state an old plan and need updating: Seed extension plan [notion:d66e87731f6d486a58818da6ad1da108][slack:C07FUND:1773421200.357681]; Partner API v2 [linear:ACME-481@20260306T1700][slack:C01ENG:1773338400.739782]; Audit log export [linear:ACME-480@20260306T1600][slack:C01ENG:1773334800.910984]; Update pricing page to $49/seat [linear:ACME-440@20260306T1500][gmail:7d0d75121cdeaac6]; Customer webinar plan [notion:1d661025d9081de511d174c8a6871148][gmail:32a980202cbd8f93]; Northwind Ventures - seed extension [crm:deal:23a551d6fe][slack:C07FUND:1773421200.357681]; CloudHost renewal [notion:32c79bea43b658e1eea8a977aa70b0e4][gmail:2dbbf43ced346885]; Pricing v3 [notion:5b97d1fb3cdcf59ddcfe591d5807d0dc][gmail:7d0d75121cdeaac6]; Initech renewal paperwork [linear:ACME-460@20260304T1800][slack:C03GEN:1773414000.655032]; Initech - renewal [crm:deal:feeb461b12][slack:C03GEN:1773414000.655032]; Initech renewal terms [notion:fdfd76a06532aec244da50d79fa1676a][slack:C03GEN:1773414000.655032]; Mobile beta plan [notion:a005e60800e96d471e9ea49de3f49c3e][notion:bb99d013de107fd46b9c6b77b725b4f7]; Hiring - Senior Backend [notion:0f72e0247be2673ff5388bb55ebd12b3][gmail:e98c5b9d26b114a1]; Billing migration plan [notion:0f8a538c21e4ef3f1024c7d25666cd47][gmail:bfda57e5a3e21af0]; Roadmap (Q1) [notion:4324f4a965bc64d11787c2369776502e][slack:C02PROD:1772640000.222201]; Blue Harbor Capital - seed extension [crm:deal:5916d3104d][notion:d66e87731f6d486a58818da6ad1da108]; Q1 roadmap dates [linear:ACME-231@20260304T1800][slack:C02PROD:1772640000.222201]
+judge: pass (ref: Priorities: Globex check-in 17:30 UTC (SSO fix before Mar 20), cohort ARR to Jordan Pryce before Tuesday meeting, stale records with old plans | cand: Confirm SSO fix ships before Mar 20, call with Daniel Foster before 17:30-18:00 UTC check-in; send cohort metrics to Jordan Pryce; stale records need updating)
 
 **q17** What follow-ups am I missing?
 > Waiting on you:
@@ -270,10 +294,14 @@ judge: pass (ref: Today (Sunday Mar 15): all-day Offsite travel; 09:30 Standup (
 judge: pass (ref: Tomorrow Monday Mar 16: three meetings at 14:00, 15:00, 16:00 UTC | cand: Tomorrow Monday Mar 16: three meetings at 14:00, 15:00, 16:00 UTC with same titles and times)
 
 **v04** what is daniel saying
-> **Daniel Kim:** Data retention review timeline unchanged, due Mar 30 [slack:C01ENG:1773352800.648477]. He was OOO Mar 10-14 with Priya handling billing context [gmail:469b8c07901db7d8].
+> **Daniel Kim:**
+- Mon 2026-03-09: Out of office Mar 10-14; Priya has billing context [gmail:469b8c07901db7d8]
+- Thu 2026-03-12: Data retention review timeline unchanged, still Mar 30 [slack:C01ENG:1773352800.648477]
 
-**Daniel Foster (Globex):** SSO login loops persist for two admins; Okta redirect fails on Safari only [gmail:49670ab720e678cb] [gmail:4dd6e4165f18c195]. He requested a call for Thursday, Mar 19 [gmail:4dd6e4165f18c195].
-judge: FAIL (ref: Daniel Kim asked to push billing migration a week, OOO Mar 10-14. Daniel Foster says SSO login loops are back, asks for fix confirmation before Mar 20. | cand: Daniel Kim: data retention review due Mar 30, OOO Mar 10-14. Daniel Foster: SSO loops persist, requested call for Mar 19.)
+**Daniel Foster (Globex):**
+- Fri 2026-03-13 17:00: Okta redirect fails on Safari only [gmail:49670ab720e678cb]
+- Fri 2026-03-13 16:00: SSO still looping for two admins; requested call for Thursday (Mar 19) [gmail:4dd6e4165f18c195]
+judge: pass (ref: Two Daniels: Kim asked to push billing migration a week, out Mar 10-14. Foster says SSO login loops are back, asks for fix confirmation before Mar 20. | cand: Daniel Kim: out of office Mar 10-14, billing context. Daniel Foster: Okta redirect fails Safari only, SSO looping for two admins, requested call Thursday Mar 19.)
 
 **v05** what's dk up to
 > Daniel Kim: Data retention review stays on track for Mar 30 [slack:C01ENG:1773352800.648477]. Security audit prep is in evidence collection phase, scheduled Mar 24-26 [notion:8c194cecb9a5a1d46e58108e2ae470cc]. He was OOO Mar 10-14 [gmail:469b8c07901db7d8].
@@ -355,7 +383,31 @@ judge: pass (ref: Promised Jordan Pryce cohort ARR (overdue Mar 9), Caroline Ade
 > 1. Confirm a fix ships before Mar 20 and get someone on a call thurs with Daniel Foster (Globex) before the 17:30-18:00 UTC check-in today about SSO and the Mar 23 rollout, because Globex SSO redirect loop is Reopened and Globex integration is Blocked. [calendar:bbeda5b103cb82876dd4651501]
 2. Send the summary to Sam Okafor (Hooli) immediately, because it was due 2026-03-12 and is still open. [gmail:c81c70603acf1120]
 3. Deliver the cohort metrics to Jordan Pryce (Northwind Ventures) immediately, because it was due 2026-03-09 and is still open. [gmail:ccd9c787ded3995d]
-judge: FAIL (ref: Urgent: Globex check-in 17:30 UTC today, SSO fix before Mar 20, cohort ARR to Northwind before Tuesday meeting, old plan records | cand: Confirm SSO fix before Mar 20, call with Daniel Foster before 17:30-18:00 UTC check-in today, send summary to Sam Okafor, deliver cohort metrics to Jordan Pryce)
+
+Also open (38):
+- You promised Caroline Ades (Blue Harbor Capital): send data room access, due 2026-03-10 (overdue), and it is still open [gmail:3794ed2c45e9c301]
+- Priya Nair asked you: @Alex Chen Northwind wants cohort ARR by Mon, can you send?, due 2026-03-16 (nobody has handled it) [slack:C07FUND:1773419400.449808]
+- Jordan Pryce (Northwind Ventures) asked you: send cohort ARR before Tuesday's partner meeting, due 2026-03-16 (nobody has handled it) [gmail:75d73520ec4c68f3]
+- Globex login loop reported again: 8 reports on 4 days across gmail, linear, slack, and a fix that was marked done came back [slack:C04INC:1773339300.924615][gmail:4dd6e4165f18c195]
+- Priya Nair asked you: approve the data room request for Blue Harbor (nobody has handled it) [slack:C07FUND:1773500400.415602]
+- Rebecca Liu asked you: sign-off on the redline, due 2026-03-19 (nobody has handled it) [gmail:2160a6b4c5ac5bdf]
+- Daniel Foster (Globex) asked you: can we get someone on a call thurs? (nobody has handled it) [gmail:4dd6e4165f18c195]
+- Marcus Webb asked you: review acme/api PR #231: fix: SSO redirect loop for Okta (ACME-431) (nobody has handled it) [github:acme/api#231]
+- Rebecca Liu asked you: push the docs migration back a week (nobody has handled it) [gmail:a8bee2a3cdcd15eb]
+- Daniel Foster (Globex) asked you: Can you confirm a fix ships before Mar 20?, due 2026-03-20 (nobody has handled it) [gmail:bee95ff7ca51c987]
+- Caroline Ades (Blue Harbor Capital) asked you: update on the data room access (nobody has handled it) [gmail:012ce504e5a045e9]
+- Hannah Park asked you: add a risks slide (nobody has handled it) [gmail:6a959648587ee4e0]
+- Omar Haddad asked you: review acme/billing PR #230: billing: webhook retry (ACME-316) (nobody has handled it) [github:acme/billing#230]
+- Meeting today: 16:00-17:00 UTC Weekly Product Sync with Priya Nair, Marcus Webb, Hannah Park (rescheduled from Fri Mar 13) [calendar:2ded3454537257a5518fa9905e]
+- Blocked, owned by you: ACME-365 Rate limit tuning [linear:ACME-365@20260222T0500]
+- Blocked, owned by you: ACME-349 Rate limit tuning [linear:ACME-349@20260307T0900]
+- Blocked, owned by you: ACME-352 Update dependency [linear:ACME-352@20260225T1100]
+- Blocked, owned by you: ACME-342 Add pagination [linear:ACME-342@20260225T0900]
+- Hooli timeout reported again: 3 reports on 2 days across gmail, linear [gmail:93c4a504d87495b9][gmail:805093022b56ece6]
+- Blocked, owned by you: ACME-316 Billing webhook retry [linear:ACME-316@20260219T1200]
+- Meeting today: 19:00-20:00 UTC Board prep with Priya Nair (tentative) [calendar:de4afcd47267780be961f09a4f]
+- 17 records still state an old plan and need updating: Seed extension plan [notion:d66e87731f6d486a58818da6ad1da108][slack:C07FUND:1773421200.357681]; Partner API v2 [linear:ACME-481@20260306T1700][slack:C01ENG:1773338400.739782]; Audit log export [linear:ACME-480@20260306T1600][slack:C01ENG:1773334800.910984]; Update pricing page to $49/seat [linear:ACME-440@20260306T1500][gmail:7d0d75121cdeaac6]; Customer webinar plan [notion:1d661025d9081de511d174c8a6871148][gmail:32a980202cbd8f93]; Northwind Ventures - seed extension [crm:deal:23a551d6fe][slack:C07FUND:1773421200.357681]; CloudHost renewal [notion:32c79bea43b658e1eea8a977aa70b0e4][gmail:2dbbf43ced346885]; Pricing v3 [notion:5b97d1fb3cdcf59ddcfe591d5807d0dc][gmail:7d0d75121cdeaac6]; Initech renewal paperwork [linear:ACME-460@20260304T1800][slack:C03GEN:1773414000.655032]; Initech - renewal [crm:deal:feeb461b12][slack:C03GEN:1773414000.655032]; Initech renewal terms [notion:fdfd76a06532aec244da50d79fa1676a][slack:C03GEN:1773414000.655032]; Mobile beta plan [notion:a005e60800e96d471e9ea49de3f49c3e][notion:bb99d013de107fd46b9c6b77b725b4f7]; Hiring - Senior Backend [notion:0f72e0247be2673ff5388bb55ebd12b3][gmail:e98c5b9d26b114a1]; Billing migration plan [notion:0f8a538c21e4ef3f1024c7d25666cd47][gmail:bfda57e5a3e21af0]; Roadmap (Q1) [notion:4324f4a965bc64d11787c2369776502e][slack:C02PROD:1772640000.222201]; Blue Harbor Capital - seed extension [crm:deal:5916d3104d][notion:d66e87731f6d486a58818da6ad1da108]; Q1 roadmap dates [linear:ACME-231@20260304T1800][slack:C02PROD:1772640000.222201]
+judge: pass (ref: Urgent: Globex check-in 17:30 UTC today, SSO fix before Mar 20, cohort ARR to Northwind before Tuesday meeting, old plan records | cand: Globex SSO fix before Mar 20 and call with Daniel Foster today; cohort metrics to Northwind immediately; old plan records still open)
 
 **v10** catch me up
 > What changed:
@@ -688,10 +740,10 @@ judge: pass (ref: 11 people waiting: Priya Nair, Jordan Pryce, Caroline Ades, Da
 judge: FAIL (ref: Jordan Pryce asked for cohort ARR by Mar 17 meeting; Caroline Ades asked about data room access | cand: Jordan Pryce requested cohort ARR; Caroline Ades asked for data room access update; Priya Nair made suggestions about figures and slides)
 
 **t04** whats dnaiel sayin
-> **Daniel Kim:** Data retention review timeline unchanged, due Mar 30 [slack:C01ENG:1773352800.648477]. Was OOO Mar 10-14 [gmail:469b8c07901db7d8]. Owns security audit prep (Mar 24-26, evidence collection phase) [notion:8c194cecb9a5a1d46e58108e2ae470cc].
+> **Daniel Kim:** Data retention review timeline unchanged at Mar 30 [slack:C01ENG:1773352800.648477]. Out of office Mar 10-14; Priya has billing context [gmail:469b8c07901db7d8]. Security audit prep in evidence collection phase, audit window Mar 24-26 [notion:8c194cecb9a5a1d46e58108e2ae470cc].
 
-**Daniel Foster (Globex):** Okta redirect fails on Safari only [gmail:49670ab720e678cb]. SSO still looping for two admins, requested call for Thu Mar 19 [gmail:4dd6e4165f18c195].
-judge: FAIL (ref: Two Daniels: Kim asked to push billing migration a week, OOO Mar 10-14. Foster says SSO login loops are back, asks for fix confirmation before Mar 20. | cand: Kim: data retention review due Mar 30, OOO Mar 10-14, owns security audit prep. Foster: Okta redirect fails Safari only, SSO looping for two admins, requested call Thu Mar 19.)
+**Daniel Foster (Globex):** SSO still looping for two admins; requested call for Thursday Mar 19 [gmail:4dd6e4165f18c195]. Okta redirect fails on Safari only [gmail:49670ab720e678cb].
+judge: FAIL (ref: Two Daniels: Kim asked to push billing migration a week, out Mar 10-14. Foster says SSO login loops are back, asks for fix confirmation before Mar 20. | cand: Kim: data retention review Mar 30, out Mar 10-14, Priya has billing context. Foster: SSO looping for two admins, requested call Thursday Mar 19, Okta redirect fails on Safari.)
 
 **t05** did we hire taylr
 > I can't find that in the available data.
@@ -741,7 +793,7 @@ judge: pass (ref: Five blocked issues yours: ACME-316, ACME-342, ACME-349, ACME-
 
 **n01** what are the initech renewal terms
 > The Initech renewal is 2 years at 15% discount [gmail:67d8c49f3e07178f]. Legal is currently redlining the agreement [slack:C03GEN:1773414000.655032].
-judge: pass (ref: Initech renewal: 2 years at 15% discount, approved by Alex on Mar 12, legal redlining | cand: Initech renewal is 2 years at 15% discount, legal is currently redlining)
+judge: pass (ref: Initech renewal: 2 years at 15% discount, approved by Alex on Mar 12, legal redlining | cand: Initech renewal is 2 years at 15% discount, legal is redlining the agreement)
 
 **n02** is the initech renewal page in notion current
 > No, the Initech renewal terms page in Notion is not current [notion:fdfd76a06532aec244da50d79fa1676a]. It shows a 1-year term at 10% discount, but the current terms are 2 years at 15% discount. Rebecca Liu updated the Slack channel on Friday 2026-03-13 with the current information, and legal is now redlining the agreement [slack:C03GEN:1773414000.655032].
@@ -842,10 +894,12 @@ judge: pass (ref: Rebecca Liu needs sign-off on Initech redline by Thursday, Mar
 **k02** what is dan f saying about sso
 > **Daniel Foster (Globex):**
 - Fri 2026-03-13 17:00: Okta redirect fails on Safari only [gmail:49670ab720e678cb]
-- Fri 2026-03-13 16:00: SSO still looping for two admins, requested call for Thursday [gmail:4dd6e4165f18c195]
-- Thu 2026-03-12 17:00: SSO looping again, needs fix before Mar 20 for Mar 23 rollout [gmail:bee95ff7ca51c987]
-- Tue 2026-03-03 16:00: Reported SSO redirect loop started Monday [gmail:c15f3037c23a7d15]
+- Fri 2026-03-13 16:00: SSO still looping for two admins, requested call for Thursday Mar 19 [gmail:4dd6e4165f18c195]
+- Thu 2026-03-12 17:00: SSO looping returned, needs fix before Mar 20 for Mar 23 rollout [gmail:bee95ff7ca51c987]
+- Tue 2026-03-10 18:00: Previous fix looked good [gmail:ef094c02c13dd962]
+- Tue 2026-03-03 16:00: Reported SSO redirect loop started Monday Mar 9 [gmail:c15f3037c23a7d15]
 
 **Daniel Kim (teammate):**
 - Thu 2026-03-12 22:00: Data retention review timeline unchanged, still Mar 30 [slack:C01ENG:1773352800.648477]
-judge: pass (ref: Daniel Foster: SSO looping for two admins, Okta redirect fails on Safari only | cand: Daniel Foster: SSO looping for two admins, Okta redirect fails on Safari only (Mar 13))
+- Mon 2026-03-09 15:00: Out of office Mar 10-14 [gmail:469b8c07901db7d8]
+judge: pass (ref: Daniel Foster: SSO looping for two admins, Okta redirect fails on Safari only | cand: SSO looping for two admins, Okta redirect fails on Safari only, plus earlier SSO issues)

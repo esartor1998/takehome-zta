@@ -524,6 +524,10 @@ def digest_facts(conn, plan, question):
             facts = [f for f in facts if set(f.get('people', [])) & set(plan.people)]
         if re.search(r'overdue|past due|late|slipp', question, re.I):
             facts = [f for f in facts if f.get('overdue')]
+    if kind == 'focus':
+        # the top priorities are phrased from the ranking and the rest of the docket is listed under them
+        plan.total = len(facts)
+        return kind, facts, instruction
     return kind, _shown(plan, kind, facts, FOLLOWUP_LIMIT if kind == 'followups' else DIGEST_LIMIT), instruction
 
 
@@ -649,7 +653,7 @@ def ask_digest(conn, question, digest, started, plan=None):
     if name == 'focus':
         # same ranking and phrasing as the brief's focus section, so the two
         # cannot disagree about what matters today
-        text, cited, result = brief.focus_section(facts)
+        text, cited, result = brief.focus_section(facts, whole_docket=True)
         if result is None:
             return ask_digest(conn, question, (name, [], instruction), started, plan)
         return {'question': question, 'answer': text, 'cited': cited, 'found': True,
