@@ -3,7 +3,17 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+def _find_root():
+    """Where data/, .state/, eval/ and .env live. FOUNDER_HOME names it. Otherwise the source checkout
+    when this runs from one. A packaged copy (founder.pyz, pipx) has no checkout around it, and the code
+    would look for them inside the archive or the site-packages directory, so it uses the current directory"""
+    if os.environ.get('FOUNDER_HOME'):
+        return Path(os.environ['FOUNDER_HOME']).expanduser().resolve()
+    checkout = Path(__file__).resolve().parent.parent
+    return checkout if (checkout / 'pyproject.toml').exists() else Path.cwd()
+
+
+ROOT = _find_root()
 RAW_DIR = Path(os.environ.get('FOUNDER_RAW', ROOT / 'data' / 'raw'))
 
 

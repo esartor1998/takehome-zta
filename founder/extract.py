@@ -39,25 +39,92 @@ HINT_RE = re.compile(
     r'\b(decision|decided|reversing|reverting|reopening|new plan|correction|corrected|'
     r'confirmed:|rescheduled|moving .{0,40} from|\(was )', re.I)
 
-# what a change of plan sounds like, in the words people use. the gate
-# takes the items most similar to any of these. wording here is deliberately
-# generic: tuning it to the planted cases would make the recall number meaningless
+# what a change of plan sounds like, in the words people use. the gate takes the items most similar to
+# any of these, and a missed candidate is a decision nobody ever sees, while an extra one costs a single
+# short model call. so the list is long and spread over the kinds of change a company has (a date, a
+# price, a scope, a person, a vendor, a status, an approval) and over the registers people write them in
+# (a formal notice, a chat aside, a one-line reply). it names no product, person, month or number, and
+# none of it is shaped like a case in the sample data: an earlier list had four sentences that were,
+# which made the gate's recall on the planted cases look better than it would be on anyone else's mail
 PROTOTYPES = (
+    # a decision is made
     'We decided to go with this option.',
     'Decision: the plan is now this.',
-    'The date has moved to a later date.',
-    'Correction: it is this value, not the one I said before.',
-    'We are reversing the earlier decision.',
-    'Updating the plan with the new target.',
-    'Putting this on hold until further notice.',
-    'They accepted another offer, so we are closing the loop.',
-    'The cutover moves to a different date.',
-    'New customers pay one price and existing customers keep the old price.',
-    'Rescheduled, moved from Friday to another day.',
     'Agreed, the new plan is to do this instead.',
-    'Target close date and amount for the deal.',
+    'After discussing it we are going ahead with the second approach.',
+    'Approved, please proceed.',
+    'Signed off. Go ahead and make it happen.',
+    'We have settled on this and will not revisit it.',
+    'The team voted and the answer is yes.',
+    'Final call: we are doing it this way.',
+    'Sounds good to me, go ahead.',
+    # a decision is reversed or corrected
+    'We are reversing the earlier decision.',
+    'Scratch that, we are going back to the original plan.',
+    'Correction: it is this value, not the one I said before.',
+    'Sorry, I had that wrong. The right figure is different.',
+    'Disregard my last message, this replaces it.',
+    'That is no longer the case. Things have changed.',
+    'We changed our minds after talking to them.',
+    'Update: the earlier number was a mistake and has been fixed.',
+    # a date or deadline moves
+    'The date has moved to a later date.',
+    'We are pushing the deadline back by a couple of weeks.',
+    'This will slip. The new target is further out.',
+    'Pulling the launch forward to an earlier date.',
+    'Rescheduled, moved from one day to another.',
+    'Can no longer make the original time, the new time is later.',
+    'The timeline is being moved out and there is no new date yet.',
+    'We will not make it by then, expect it later.',
+    'Delayed until further notice.',
+    'The cutover moves to a different date.',
+    # a price, amount, budget or term changes
+    'The price is now different from what we quoted.',
+    'We are changing the rate going forward, and existing arrangements stay as they were.',
+    'The budget has been cut, so we are scaling this down.',
+    'The terms of the agreement changed: longer commitment, different discount.',
+    'The offer was revised and the amount is now higher.',
+    'Updated the estimate with the new figures.',
+    'Renewal is now on different terms than before.',
+    # scope, priority and approach
+    'The scope has changed, we are dropping part of the work.',
+    'This is now the top priority and the other work waits.',
+    'Deprioritised. We are not doing this this quarter.',
+    'We are switching to a different vendor.',
+    'Replacing the old approach with a new one.',
+    'Updating the plan with the new target.',
+    'The roadmap changed: this moves out and that moves in.',
+    'We are cutting this feature from the release.',
+    # status: on hold, cancelled, closed, lost, withdrawn
+    'Putting this on hold until further notice.',
+    'This has been cancelled.',
+    'They decided to go with someone else, so we are closing this out.',
+    'The candidate withdrew and the role is open again.',
+    'We are pausing the work until the review is finished.',
+    'The deal fell through.',
+    'No longer going ahead with this.',
+    'Closing the loop: it is done and nothing further is needed.',
+    'The request was declined.',
+    # people, ownership, responsibility
+    'Handing this over to someone else, they own it now.',
+    'I am out from tomorrow, please talk to a colleague instead.',
+    'Reassigned to the other team.',
+    'We hired someone for this role and they start soon.',
+    'The owner of this has changed.',
+    # rules, policy and constraints
+    'From now on we do it this way.',
+    'New policy: this requires approval before it ships.',
+    'A new constraint came up that limits when we can do it.',
+    'The requirement changed after the customer review.',
+    'A review is still open, so the sign-off waits.',
+    # a short chat aside
+    'fyi plan changed, see the thread',
+    'heads up, this is not what we said earlier',
+    'actually it is later than that',
+    'ugh, moving it to next week',
+    'update: slipping',
 )
-GATE_FRACTION = 0.10      # share of the pool taken by similarity, on top of the regex
+GATE_FRACTION = 0.15      # share of the pool taken by similarity, on top of the regex. was 0.10: a missed candidate is a decision nobody sees, an extra one is a short call
 GATE_RECORD_FRACTION = 0.25   # tools of record get a wider net, since a stale
                               # record is what we are trying to find in them
 

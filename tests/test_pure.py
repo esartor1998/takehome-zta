@@ -8,7 +8,9 @@ import json
 import tempfile
 from pathlib import Path
 
-from founder import answer, dates, extract, followups, stale
+import sqlite3
+
+from founder import answer, dates, extract, followups, route, stale
 from founder.identity import IdentityResolver, Person, parse_addresses
 from founder.names import NameSense
 from founder.normalize import calendar_items, html_to_text, issue_refs, split_quote
@@ -309,6 +311,36 @@ class Defects(unittest.TestCase):
         self.assertEqual(followups.kept_by(promise, what, [msg("I've sent the data room access to Caroline.", 'P1')], 'P1'), 'x')
         self.assertEqual(followups.kept_by(promise, what, [msg('Did you send the data room access?', 'P1')], 'P1'), '')
         self.assertEqual(followups.kept_by(promise, what, [msg("I've sent the data room access.", 'P2')], 'P1'), '')
+
+
+class Grounding(unittest.TestCase):
+    def conn(self):
+        conn = sqlite3.connect(':memory:')
+        conn.row_factory = sqlite3.Row
+        conn.execute('CREATE TABLE people (id TEXT, name TEXT, org TEXT, role TEXT)')
+        conn.executemany('INSERT INTO people VALUES (?,?,?,?)', [
+            ('P2', 'Ann Lee', '', ''), ('X1', 'Bo Park', 'Acme Fund', 'investor'), ('X2', 'Cy Roe', 'Acme Fund', 'investor')])
+        return conn
+
+    def test_a_mention_must_quote_the_question(self):
+        said = {'mentions': [{'words': 'sam', 'refers_to': 'Ann Lee'}], 'source': ''}
+        got = route.ground(self.conn(), said, "what's the deal with sso", {})
+        self.assertEqual(got['people'], [])
+
+    def test_a_nickname_resolves_to_the_person_it_names(self):
+        said = {'mentions': [{'words': 'al', 'refers_to': 'ann lee'}], 'source': ''}
+        self.assertEqual(route.ground(self.conn(), said, 'what did al decide', {})['people'], ['P2'])
+
+    def test_a_role_and_a_company_resolve_and_an_invented_name_does_not(self):
+        said = {'mentions': [{'words': 'investors', 'refers_to': 'investor'}, {'words': 'acme fund', 'refers_to': 'Acme Fund'},
+                             {'words': 'investors', 'refers_to': 'Zed Nobody'}], 'source': ''}
+        got = route.ground(self.conn(), said, 'anything from the investors at acme fund', {})
+        self.assertEqual((got['role'], got['company'], got['people']), ('investor', 'Acme', []))
+
+    def test_a_tool_needs_a_word_for_it_in_the_question(self):
+        said = {'mentions': [], 'source': 'notion'}
+        self.assertEqual(route.ground(self.conn(), said, 'is the plan current', {})['source'], '')
+        self.assertEqual(route.ground(self.conn(), said, 'is the notion page current', {})['source'], 'notion')
 
 
 from founder.normalize import inline_replies as normalize_inline  # noqa: E402

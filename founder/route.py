@@ -21,6 +21,8 @@ import re
 from dataclasses import dataclass, field
 from datetime import timedelta
 
+import os
+
 from . import config, llm
 from .names import NameSense
 
@@ -75,6 +77,9 @@ class Plan:
     org_people: list = field(default_factory=list)    # the contacts of a company the question names
     orgs: list = field(default_factory=list)          # the company names themselves
     mine: bool = False                                # 'I', 'my', 'me' in the question
+    source: tuple = ()                                # item kinds the founder named a tool for ('doc' for notion)
+    planned: bool = False                             # a model read the question (see understand)
+    usage: dict = field(default_factory=dict)         # tokens and cost of that reading
 
 
 _vocab_cache = {}
@@ -254,6 +259,121 @@ def unseen_nicknames(conn, q, vocab, known):
     return hits
 
 
+# ---- reading the question with a model --------------------------------------
+#
+# plain rules cannot tell 'the deal with sso' (a question about sso) from 'the deal with northwind' (a
+# question about a company), because the difference is what the sentence means. an earlier version let
+# the word 'deal' choose the tool to search and then let the glossary relate 'deal' to 'investor', so a
+# question about a login problem became a question about two investors. a small model reads the sentence
+# once and names who and what is meant (people, company, role, tool), code finds them in the data, and
+# anything it names that is not in the data is dropped. Without a model (FOUNDER_PLAN=code, or a call
+# that fails) the rules below still run, as they always did
+
+PLAN_MODE = os.environ.get('FOUNDER_PLAN', 'model')
+# the planner is a small local model by default: it names people from a short list and quotes the question,
+# which a 3B model does as well as a hosted one did here (the same 2 of 70 plans changed, 0.4s against 0.8s, no
+# cost). 'chat' uses whichever model answers the questions
+PLAN_MODEL = os.environ.get('FOUNDER_PLAN_MODEL', 'ollama:llama3.2:latest')
+SOURCES = {'email': 'email', 'slack': 'message', 'notion': 'doc', 'crm': 'deal', 'linear': 'issue', 'github': 'pr',
+           'calendar': 'event'}
+PLAN_SCHEMA = {'type': 'object',
+               'properties': {'mentions': {'type': 'array', 'items': {
+                                  'type': 'object',
+                                  'properties': {'words': {'type': 'string'}, 'refers_to': {'type': 'string'}},
+                                  'required': ['words', 'refers_to']}},
+                              'source': {'type': 'string', 'enum': [''] + list(SOURCES)}},
+               'required': ['mentions', 'source']}
+# the model is asked who and what, and not what kind of answer. asked for the kind as well, it sent 'when is
+# the customer webinar' and 'has the docs migration moved' to the calendar and the weekly digest, where the
+# rules (which only name a digest for wording that plainly asks for one) answer them as questions about a
+# subject. it is also made to quote: every mention carries the words of the question it comes from, and a
+# mention whose words are not in the question is dropped. given only a closed list to choose from, Haiku
+# answered 'what's the deal with sso' with a customer and their company, because the fields wanted filling
+PLAN_SYSTEM = (
+    'You read one question from a startup founder to their assistant. Reply with JSON only.\n'
+    'mentions: each person, company or group of people the question refers to. words = the exact words of the '
+    'question that refer to it. refers_to = exactly one name from KNOWN PEOPLE, KNOWN COMPANIES or KNOWN ROLES '
+    'that those words mean (a first name, initials, a nickname or a plural like investors are all fine). '
+    'I, me and my are the founder and are not mentions. Most questions mention nobody: then mentions is empty. '
+    'Never add a mention whose words are not in the question. A subject that merely sounds related to a person '
+    'or role (a deal, a hire, a login problem) is not a mention.\n'
+    'Examples, with KNOWN ROLES: vendor and KNOWN PEOPLE including Ann Lee (also al):\n'
+    '"anything from the vendors?" -> {"mentions": [{"words": "vendors", "refers_to": "vendor"}], "source": ""}\n'
+    '"what did al decide" -> {"mentions": [{"words": "al", "refers_to": "Ann Lee"}], "source": ""}\n'
+    '"what is the story with the printer" -> {"mentions": [], "source": ""}\n'
+    '"is the notion page current" -> {"mentions": [], "source": "notion"}\n'
+    'source: only when the founder says which tool to look in (email, slack, notion, crm, linear, github, '
+    'calendar), otherwise an empty string. Everyday words are not tools: in "what is the deal with X" and '
+    '"any issues with X" the words deal and issue are plain English, and the question is about X.')
+PLAN_MAX_PEOPLE = 80
+
+
+def _directory(conn):
+    """The people, companies and roles this mailbox knows, as a block for the planner to choose from"""
+    rows = [dict(r) for r in conn.execute('SELECT name, org, role, aliases FROM people ORDER BY external, name')]
+    lines = []
+    for r in rows[:PLAN_MAX_PEOPLE]:
+        also = [a for a in json.loads(r['aliases']) if ' ' not in a and a != r['name'].split()[0].lower()][:3]
+        extra = ', '.join(x for x in (r['org'], r['role'], ('also ' + '/'.join(also)) if also else '') if x)
+        lines.append(f"{r['name']}" + (f' ({extra})' if extra else ''))
+    orgs = sorted({r['org'] for r in rows if r['org']})
+    roles = sorted({r['role'] for r in rows if r['role']} - NOT_ROLES)
+    return ('KNOWN PEOPLE: ' + '; '.join(lines) + '\nKNOWN COMPANIES: ' + ', '.join(orgs) +
+            '\nKNOWN ROLES: ' + ', '.join(roles))
+
+
+def understand(conn, question):
+    """The model's reading of a question as a dict, or None when it is switched off or fails. The
+    reading names things; plan() checks every name against the data before using it"""
+    if PLAN_MODE != 'model':
+        return None
+    # nothing to resolve: 'what is on today', 'who is waiting on me', 'catch me up' name no one and no tool
+    open_words = [w for w in re.findall(r"[a-z]{3,}", normalise(question)) if w not in FILLER and w not in QUESTION_WORDS
+                  and w not in TOOL_ANY and w not in ('what', 'who', 'whom', 'how', 'which', 'any', 'all')]
+    if not open_words:
+        return None
+    try:
+        result = llm.chat(PLAN_SYSTEM, f'{_directory(conn)}\n\nQUESTION: {question}', schema=PLAN_SCHEMA, cache=True,
+                          max_tokens=100, model=None if PLAN_MODEL == 'chat' else PLAN_MODEL, role='plan')
+    except llm.ModelError:
+        return None
+    said = llm.parse_json(result['text'], None)
+    if not isinstance(said, dict):
+        return None
+    usage = {k: result.get(k, 0) for k in ('prompt_tokens', 'completion_tokens', 'cost', 'projected_cost')}
+    return ground(conn, said, question, usage)
+
+
+TOOL_ANY = frozenset()
+TOOL_WORDS = {'email': ('email', 'emails', 'mail', 'gmail'), 'slack': ('slack', 'message', 'messages'),
+              'notion': ('notion', 'page', 'pages', 'doc', 'docs', 'wiki'), 'crm': ('crm', 'deal', 'deals'),
+              'linear': ('linear', 'issue', 'issues', 'ticket', 'tickets'), 'github': ('github', 'pr', 'prs'),
+              'calendar': ('calendar', 'invite', 'invites')}
+
+
+def ground(conn, said, question, usage):
+    """Keep only what the data and the question both back. A mention counts when its words are in the
+    question and what it refers to is a person, company or role we know. The tool counts when the question
+    has a word for it. Returns people (ids), company, role and source"""
+    low = ' ' + re.sub(r'[^a-z0-9]+', ' ', question.lower()) + ' '
+    rows = [dict(r) for r in conn.execute('SELECT id, name, org, role FROM people')]
+    people, company, role = [], '', ''
+    for m in said.get('mentions') or []:
+        if not isinstance(m, dict):
+            continue
+        words = re.sub(r'[^a-z0-9]+', ' ', str(m.get('words', '')).lower()).strip()
+        meant = str(m.get('refers_to', '')).strip().lower()
+        if not words or f' {words} ' not in low or not meant:
+            continue
+        people += [r['id'] for r in rows if r['name'].lower() == meant and r['id'] not in people]
+        company = company or next((r['org'].split()[0] for r in rows if r['org'].lower() == meant), '')
+        role = role or next((r['role'] for r in rows if r['role'] and r['role'].lower() == meant and r['role'] not in NOT_ROLES), '')
+    source = said.get('source') if said.get('source') in SOURCES else ''
+    if source and not any(f' {w} ' in low for w in TOOL_WORDS[source]):
+        source = ''
+    return {'people': people, 'company': company, 'role': role, 'source': source, 'usage': usage}
+
+
 def rows_by_id(rows, pid):
     return next(r for r in rows if r['id'] == pid)
 
@@ -263,12 +383,15 @@ def plan(conn, question):
     vocab = vocabulary(conn)
     q, fixes = fix_typos(q, vocab)
     window = day_window(q)
+    said = understand(conn, question)
     people, ambiguous = match_people(conn, q, question)
     if not people:
         for word, ids in unseen_nicknames(conn, q, vocab, set(fixes.values())).items():
             people += ids
             if len(ids) > 1:
                 ambiguous[word] = ids
+    # people the model read that the rules did not ('dk', 'becky'), already checked against the question
+    people += [i for i in (said or {}).get('people', []) if i not in people]
     mine = bool(re.search(r"\b(i|my|me|mine|i have|i am)\b", q))
     kind = 'topic'
     for name, pattern in KIND_PATTERNS:
@@ -292,9 +415,10 @@ def plan(conn, question):
     # is about Sam Okafor even though his emails never say 'Hooli'. a bare
     # company name stays a topic question, since a company is more than its contacts
     org_people, orgs = [], []
+    named_company = (said or {}).get('company', '').lower().split()[:1] or [None]
     if not people:
         for row in conn.execute("SELECT id, org FROM people WHERE org != ''"):
-            if any(t == row['org'].lower().split()[0] for t in terms):
+            if any(t == row['org'].lower().split()[0] for t in terms) or row['org'].lower().split()[:1] == named_company:
                 org_people.append(row['id'])
                 orgs.append(row['org'].split()[0])
     activity = bool(re.search(r'\b(saying|said|up to|doing|working on|latest from|anything from|hear from)\b', q))
@@ -315,7 +439,11 @@ def plan(conn, question):
     roles = {r['role'] for r in conn.execute("SELECT DISTINCT role FROM people WHERE role != ''")} - NOT_ROLES
     gloss = glossary(conn)
     for role in sorted(roles):
-        if not people and any(t.startswith(role) or role in gloss.get(t, ()) for t in terms):
+        # a model that read the question says which role it means. the glossary is no judge of that: it
+        # relates 'deal' to 'investor', and that made a question about a login problem one about investors
+        meant = any(t.startswith(role) for t in terms)
+        meant = meant or (role == said.get('role', '').lower() if said else any(role in gloss.get(t, ()) for t in terms))
+        if not people and meant:
             ids = [r['id'] for r in conn.execute('SELECT id FROM people WHERE role=?', (role,))]
             people, group = ids, role + 's'
             kind = 'person' if kind == 'topic' else kind
@@ -331,6 +459,9 @@ def plan(conn, question):
     plan_ = Plan(kind=kind, people=people, ambiguous=ambiguous, group=group, expansions=list(dict.fromkeys(expansions)),
                  related=list(dict.fromkeys(related)),
                  terms=terms, mine=mine, fixes=fixes, org_people=org_people, orgs=list(dict.fromkeys(orgs)))
+    if said:
+        plan_.planned, plan_.usage = True, said['usage']
+        plan_.source = (SOURCES[said['source']],) if said['source'] else ()
     if window:
         plan_.start, plan_.end, plan_.day_label = window
     elif kind == 'schedule' and people:

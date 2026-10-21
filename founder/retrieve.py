@@ -171,17 +171,22 @@ def source_kinds(question, conn=None):
     return sorted(named | plain), rest
 
 
-def pull_source(conn, search_text):
+def pull_source(conn, search_text, plan=None):
     """Items of the kind the question names, ranked on the rest of its words. The source word itself
-    is not searched for: 'deal' matches every CRM deal and says nothing about which one"""
-    kinds, rest = source_kinds(search_text, conn)
+    is not searched for: 'deal' matches every CRM deal and says nothing about which one. When a model
+    read the question (plan.planned) it says whether a tool was named, and the word list is not consulted"""
+    if plan is not None and plan.planned:
+        kinds = list(plan.source)
+        rest = ' '.join(t for t in _terms(search_text) if t.lower() not in SOURCE_WORDS)
+    else:
+        kinds, rest = source_kinds(search_text, conn)
     if not kinds:
         return []
     if rest:
         return pull_fts(conn, rest, kinds=kinds)
     # nothing but the source: 'what does the crm say' lists its newest, an ambiguous word lists nothing
     named = [w for w in re.findall(r'[a-z]+', search_text.lower()) if w in NAMED_SOURCES]
-    return pull_fts(conn, search_text, kinds=kinds) if named else []
+    return pull_fts(conn, search_text, kinds=kinds) if named or (plan is not None and plan.planned) else []
 
 
 PLUMBING = frozenset({'noreply', 'reply', 'mailer', 'daemon', 'info'})
@@ -481,7 +486,7 @@ def retrieve(conn, question, k=10, plan=None, disable=None, weights=None):
         'fts': [] if 'fts' in disable else pull_fts(conn, search_text),
         'vector': vector,
         'window': pull_fts(conn, search_text, window) if window and 'window' not in disable else [],
-        'source': [] if 'source' in disable else pull_source(conn, search_text),
+        'source': [] if 'source' in disable else pull_source(conn, search_text, plan),
         'machine': [] if 'machine' in disable else pull_machine(conn, question),
         # the glossary's words get a pull of their own, so they add recall without blurring the question's own words
         'related': pull_fts(conn, ' '.join(plan.related)) if plan and plan.related and 'related' not in disable else [],

@@ -37,7 +37,7 @@ RELATED_COSINE = 0.64        # a newer item this close to the record may be abou
 ENTITY_COSINE = 0.58         # lower bar when they share a specific person or company
 CHANGE_LIKE = 0.60           # gate score of a newer item that reads like a change. lowered from 0.68 once the typed-value and shared-word tests existed: the gate had been the main brake, and it dropped real updates scoring 0.64
 MAX_NEWER = 4                # items shown to the model per record
-MIN_GAP_HOURS = 1            # newer means at least this much later, not the same edit
+MIN_GAP_HOURS = 0            # newer means strictly later. it was one hour, to keep the same edit (an email and its slack post) from reading as an update. replaying ingest with 0 on the sample data changed no stale record and no check, and a real correction can land minutes after the page it corrects, so the hour could only cost a miss
 NEWER_KINDS = ('email', 'message', 'doc', 'note', 'issue')
 
 SCHEMA = {'type': 'object',
@@ -308,7 +308,7 @@ def find_stale(items, vectors, scores, entities, ident=None):
         for new in live:
             if new['kind'] not in NEWER_KINDS or new['id'] == rec['id'] or new['thread_key'] == rec['thread_key']:
                 continue
-            if datetime.fromisoformat(new['ts'].replace('Z', '+00:00')) < floor:
+            if datetime.fromisoformat(new['ts'].replace('Z', '+00:00')) <= floor:
                 continue
             # template mail ('Customer escalation #46: we are blocked on review until Mar 02') is nearly identical to
             # other mail and is not an update to anything, whatever date it carries. the same test that keeps it

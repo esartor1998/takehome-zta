@@ -197,7 +197,7 @@ def render(results):
              row('ask questions over 5s', lambda r: str(r['ask']['latency_over_budget'])),
              row('ask output tokens per second', throughput),
              row('ask latency mean (s)', lambda r: f"{r['ask']['latency_mean']:.1f}"),
-             row('ask questions answered without a model call', lambda r: str(sum(1 for x in r['rows'] if not x['prompt_tokens']))),
+             row('ask questions answered without a model call', lambda r: str(sum(1 for x in r['rows'] if not x['prompt_tokens'] + x['completion_tokens'] - x.get('plan_tokens', 0)))),
              row('ask tokens in/out (mean)', lambda r: f"{r['ask']['tokens_in_mean']:.0f}/{r['ask']['tokens_out_mean']:.0f}"),
              row('ask cost per question ($)', lambda r: f"{r['ask']['actual_cost_mean']:.5f}"),
              row('ask refusals', lambda r: str(r['ask']['refusals'])),

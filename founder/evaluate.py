@@ -147,6 +147,7 @@ def run(judge_model=None, only=None, save=True):
             'found': result['found'], 'cited': result['cited'], **{f'cite_{k}': v for k, v in cites.items()},
             'ungrounded': len(result['ungrounded_sentences']), 'flags': result.get('flags', []), 'cites_dropped': result['cites_dropped'], 'cites_added': result['cites_added'], 'seconds': result['seconds'],
             'prompt_tokens': result['prompt_tokens'], 'completion_tokens': result['completion_tokens'],
+            'plan_tokens': result.get('plan_tokens', 0),
             'cost': result['cost'], 'projected_cost': result['projected_cost'],
         })
         print(f"{q['id']} {'PASS' if correct else 'FAIL'} cite r={cites['recall']:.2f} "

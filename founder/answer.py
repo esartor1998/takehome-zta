@@ -584,12 +584,25 @@ def ambiguity_note(conn, plan):
     return 'Note: ' + '; '.join(parts) + '. Answer for each of them and label which is which.'
 
 
+def charge_plan(result, plan):
+    """Add what reading the question cost to the answer's tokens and cost, and keep it visible apart"""
+    used = plan.usage or {}
+    for key in ('prompt_tokens', 'completion_tokens', 'cost', 'projected_cost'):
+        result[key] = result.get(key, 0) + used.get(key, 0)
+    result['plan_tokens'] = used.get('prompt_tokens', 0) + used.get('completion_tokens', 0)
+    return result
+
+
 def ask(conn, question, k=10):
     started = time.time()
     plan = route.plan(conn, question)
     digest = digest_facts(conn, plan, question)
     if digest:
-        return ask_digest(conn, question, digest, started, plan)
+        return charge_plan(ask_digest(conn, question, digest, started, plan), plan)
+    return charge_plan(ask_found(conn, question, k, started, plan), plan)
+
+
+def ask_found(conn, question, k, started, plan):
     found = retrieve.retrieve(conn, question, k=k, plan=plan)
     intents = list(found['intents'])
     if plan.kind == 'person':
