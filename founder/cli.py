@@ -93,7 +93,7 @@ def main(argv=None):
     br.add_argument('--save', type=Path)
     br.set_defaults(func=cmd_brief)
     ev = sub.add_parser('eval', help='run eval/questions.json and report accuracy, cites, latency')
-    ev.add_argument('--judge-model', help='ollama model for the judge (default: same as answers)')
+    ev.add_argument('--judge-model', help='judge as provider:model (default: gpt-6-luna, never the answering model)')
     ev.add_argument('--only', nargs='*', help='question ids to run')
     ev.set_defaults(func=cmd_eval)
     bn = sub.add_parser('bench', help='run ingest, brief and eval on each model and compare')
@@ -101,14 +101,14 @@ def main(argv=None):
     bn.add_argument('--rejudge', action='store_true', help='re-grade saved answers with the current judge')
     bn.add_argument('--report', action='store_true', help='re-render the table from saved results')
     bn.add_argument('models', nargs='*', help="e.g. ollama:llama3.2:latest anthropic:claude-haiku-4-5-20251001")
-    bn.add_argument('--judge', default='anthropic:claude-haiku-4-5-20251001',
-                    help='fixed judge for every model (default: hosted haiku)')
+    bn.add_argument('--judge', default=config.JUDGE_MODEL,
+                    help='fixed judge for every model (default: gpt-6-luna)')
     bn.add_argument('--warm-cache', action='store_true', help='reuse cached ingest labels')
     bn.set_defaults(func=cmd_bench)
     ab = sub.add_parser('ablate', help='switch retrieval pulls off one at a time and measure the evidence')
     ab.add_argument('--e2e', action='store_true', help='also answer and grade with the vector pull on and off')
     ab.add_argument('--model', help='model whose store and answers to use (default: current)')
-    ab.add_argument('--judge', help='judge for --e2e (default: the answering model)')
+    ab.add_argument('--judge', help='judge for --e2e (default: gpt-6-luna)')
     ab.set_defaults(func=cmd_ablate)
     sub.add_parser('chat', help='interactive questions').set_defaults(func=cmd_chat)
 

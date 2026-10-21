@@ -234,32 +234,40 @@ def pull_person_activity(conn, people, days=ACTIVITY_DAYS):
     for pid in people:
         row = conn.execute('SELECT name FROM people WHERE id=?', (pid,)).fetchone()
         rows = conn.execute(
-            "SELECT id, thread_key, author, title, body, ts, novelty FROM items WHERE state='current' AND ts >= ? AND ts <= ? "
+            "SELECT id, thread_key, author, title, body, ts, novelty, meta FROM items WHERE state='current' AND ts >= ? AND ts <= ? "
             f"AND kind IN ({','.join('?' * len(ACTIVITY_KINDS))}) ORDER BY ts DESC", [since, _iso(config.NOW), *ACTIVITY_KINDS])
-        threads = {}
+        own, named = {}, {}
         for r in rows:
-            # a bare first name in text is not enough: everyone says 'daniel'. the
-            # author field or the full name has to agree
-            if r['author'] != pid and row['name'].lower() not in f"{r['title']} {r['body']}".lower():
-                continue
-            threads.setdefault(r['thread_key'], []).append(r)
-        picked = []
-        for thread in threads.values():
-            # rows are newest first. the newest message says where a conversation is, and the most
-            # distinctive one often says what it is about ('it is back, confirm a fix before Mar 20'
-            # sat under a later 'still looping'), so a thread contributes both
-            picked.append(thread[0])
-            lead = max(thread, key=lambda r: r['novelty'])
-            if lead is not thread[0]:
-                picked.append(lead)
-        # the most distinctive items, shown newest first. recency alone gave a
-        # list of template status mail and buried the one message about a deal
-        top = sorted(sorted(picked, key=lambda r: -r['novelty'])[:ACTIVITY_PER_PERSON], key=lambda r: r['ts'], reverse=True)
-        per_person.append([r['id'] for r in top])
+            # a bare first name in text is not enough on its own: everyone says 'daniel'. the author
+            # field or the full name has to agree. a first name that only this person has (see
+            # identity.link_mentions) is a weaker tie, kept apart so it can never crowd out the rest
+            if r['author'] == pid or row['name'].lower() in f"{r['title']} {r['body']}".lower():
+                own.setdefault(r['thread_key'], []).append(r)
+            elif pid in json.loads(r['meta'] or '{}').get('mentions', []):
+                named.setdefault(r['thread_key'], []).append(r)
+        top = _decisive(own)[:ACTIVITY_PER_PERSON]
+        spare = ACTIVITY_PER_PERSON - len(top)
+        if spare:
+            top += _decisive(named)[:spare]
+        per_person.append([r['id'] for r in sorted(top, key=lambda r: r['ts'], reverse=True)])
     out = []
     for group in zip(*[p + [None] * (ACTIVITY_PER_PERSON - len(p)) for p in per_person]) if per_person else []:
         out += [i for i in group if i]
     return out
+
+
+def _decisive(threads):
+    """Per conversation the newest message, which says where it stands, and the most distinctive one, which
+    often says what it is about ('it is back, confirm a fix before Mar 20' sat under a later 'still
+    looping'). Most distinctive first, since recency alone gave a list of template status mail and buried
+    the one message about a deal"""
+    picked = []
+    for thread in threads.values():           # rows are newest first
+        picked.append(thread[0])
+        lead = max(thread, key=lambda r: r['novelty'])
+        if lead is not thread[0]:
+            picked.append(lead)
+    return sorted(picked, key=lambda r: -r['novelty'])
 
 
 def pull_named_refs(conn, question):

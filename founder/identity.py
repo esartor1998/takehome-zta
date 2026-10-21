@@ -32,6 +32,10 @@ AUTOMATED_LOCAL_RE = re.compile(r'^(no-?reply|notifications?|newsletter|news|bil
                                 r'calendar-notification|alerts?|support|mailer)', re.I)
 
 
+SIGNATURE_LINE_RE = re.compile(r'\s*(--|—|-\s)')
+PLAIN_WORD_DF = 3         # items that must use a name in lower case before it counts as an ordinary word
+
+
 @dataclass
 class Person:
     id: str
@@ -318,6 +322,50 @@ class IdentityResolver:
                         person.nicknames.add(token)
                         learned += 1
         return learned
+
+    def link_mentions(self, items):
+        """Record in item['meta']['mentions'] the people a bare first name or nickname in the text stands for
+        ('Jordan says they cannot close before May 15' is about Jordan Pryce though no surname appears). Three
+        guards keep it from linking by accident:
+          - a capitalised word that the mail also writes in lower case three or more times is a plain word
+            ('will', 'mark', 'grace'), so only a full name links it
+          - a name that fits several people ('daniel') links only when exactly one of them is in the
+            conversation, as author or participant; otherwise it stays unlinked and the question is ambiguous
+          - a greeting and a sign-off name the reader and the writer, not a subject
+        Returns how many items got a link"""
+        lower_df = {}
+        for item in items:
+            for word in set(re.findall(r'\b[a-z]{3,}\b', f"{item['title']} {item['body']}")):
+                lower_df[word] = lower_df.get(word, 0) + 1
+        who = {}
+        for person in self.people.values():
+            for alias in {person.first} | person.nicknames:
+                who.setdefault(alias, set()).add(person.id)
+        thread = {}
+        for item in items:
+            thread.setdefault(item['thread_key'], set()).update(set(item['people']) | {item['author']})
+        linked = 0
+        for item in items:
+            lines = [l for l in item['body'].splitlines() if not SIGNATURE_LINE_RE.match(l)]
+            if lines and (greeting := SALUTATION_RE.match(lines[0])):
+                lines[0] = lines[0][greeting.end():]            # 'Hi Priya,' names the reader, not a subject
+            body = '\n'.join(lines)
+            found = set()
+            for token in set(re.findall(r'\b[A-Z][a-z]{2,}\b', f"{item['title']}\n{body}")):
+                low = token.lower()
+                ids = who.get(low, set())
+                if not ids or lower_df.get(low, 0) >= PLAIN_WORD_DF:
+                    continue
+                if len(ids) > 1:
+                    ids = ids & thread[item['thread_key']]
+                    if len(ids) != 1:
+                        continue
+                found |= ids
+            found -= {item['author']}
+            if found:
+                item['meta']['mentions'] = sorted(found)
+                linked += 1
+        return linked
 
     def from_slack(self, user_id):
         return self.by_slack.get(user_id)

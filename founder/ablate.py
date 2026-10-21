@@ -178,7 +178,7 @@ def summarise(cases, results, title, levels=1):
 
 def end_to_end(cases, judge):
     """Answer and grade the same questions with the vector pull on and off"""
-    judge = judge or config.CHAT_MODEL
+    judge = judge or config.JUDGE_MODEL
     ids = [q['id'] for q, _ in cases]
     out = {}
     for name, disabled in (('full', set()), ('no_vector', {'vector'})):

@@ -184,7 +184,12 @@ def typed_values(text, base=None):
     return typed
 
 
-def conflict_strength(record_text, newer_text, record_title='', newer_title='', record_base=None, newer_base=None):
+def word_weight(word, df):
+    """What a shared word is worth: a rare one ('beta', 'timeline') names a plan, a common one does not"""
+    return 1.0 / (1.0 + math.log(max(1, df.get(word, 1))))
+
+
+def conflict_strength(record_text, newer_text, record_title='', newer_title='', record_base=None, newer_base=None, df=None):
     """How strongly the newer text contradicts the record, 0 for not at all. A
     different value of the thing the record states a value of. Three tests, all code:
       1. same kind of value: another date where the record has a date, another
@@ -202,7 +207,8 @@ def conflict_strength(record_text, newer_text, record_title='', newer_title='', 
     A status change with no number ('accepted another offer') also counts, weakly.
     The strength is the number of subject words the new value's sentence shares
     with the record, which ranks the real update above a template email that
-    happens to mention the same company"""
+    happens to mention the same company. With df (how many items use each word) the words are
+    weighted by how rare they are, so the strength is on the same scale as a soft change's overlap"""
     old, new = typed_values(record_text, record_base), typed_values(newer_text, newer_base)
     best = 0.0
     for kind in new:
@@ -216,12 +222,13 @@ def conflict_strength(record_text, newer_text, record_title='', newer_title='', 
         # the record's own title says what it is about, so its words count on the record
         # side. the newer title does not count: a template email titled 'Initech renewal #45'
         # is about latency, whatever its subject line says
-        shared = len(new_labels & (old_labels | _label_words(record_title)))
+        common = new_labels & (old_labels | _label_words(record_title))
+        shared = sum(word_weight(w, df) for w in common) if df is not None else len(common)
         if shared:
             best = max(best, float(shared))
     if best:
         return best
-    return 0.25 if STATUS_CHANGE_RE.search(newer_text) else 0.0
+    return STATUS_STRENGTH if STATUS_CHANGE_RE.search(newer_text) else 0.0
 
 
 SOFT_SCHEMA = {'type': 'object', 'properties': {'changed': {'type': 'boolean'}}, 'required': ['changed']}
@@ -241,7 +248,7 @@ SOFT_SYSTEM = (
 SOFT_MAX_SENTENCES = 2
 SOFT_MAX_ITEMS = 3          # newer items the model reads per record
 SOFT_MIN_SHARED = 2         # subject words a sentence must share with the record. one is often incidental
-SOFT_STRENGTH = 0.5         # below any value that contradicts the record (those are 1 or more)
+STATUS_STRENGTH = 0.25      # a status change with no value ('accepted another offer'), the weakest evidence there is
 
 
 def candidate_sentences(record, new):
@@ -323,10 +330,10 @@ def find_stale(items, vectors, scores, entities, ident=None):
             related = [(c, n) for c, n in related if parties & set(re.findall(r'[a-z]{4,}', f"{n['title']} {n['body']}".lower()))]
         rec_base = datetime.fromisoformat(rec['ts'].replace('Z', '+00:00'))
         strength = {n['id']: conflict_strength(rec['body'], n['body'], rec['title'], n['title'], rec_base,
-                                               datetime.fromisoformat(n['ts'].replace('Z', '+00:00'))) for _, n in related}
+                                               datetime.fromisoformat(n['ts'].replace('Z', '+00:00')), df) for _, n in related}
         # a plan can slip without a new date only if it had a time to slip from
         timed = set(typed_values(rec['body'], rec_base)) & {'date', 'month', 'quarter', 'duration'}
-        eligible = [t for t in related if scores.get(t[1]['id'], 0) >= CHANGE_LIKE and strength[t[1]['id']] < SOFT_STRENGTH] if timed else []
+        eligible = [t for t in related if scores.get(t[1]['id'], 0) >= CHANGE_LIKE and strength[t[1]['id']] <= STATUS_STRENGTH] if timed else []
         for _, n in eligible:
             soft_scores[(rec['id'], n['id'])] = subject_overlap(rec, n, df)
         prepared.append((rec, related, strength, eligible))
@@ -343,7 +350,9 @@ def find_stale(items, vectors, scores, entities, ident=None):
             # no contradicting value: perhaps it says the plan slipped, without saying to when
             said[n['id']] = soft_change(rec, n)
             if said[n['id']]:
-                strength[n['id']] = SOFT_STRENGTH
+                # on the scale typed conflicts use, so a message that shares the record's rare words
+                # outranks a page that shares one ordinary word with it and carries a date
+                strength[n['id']] = soft_scores[(rec['id'], n['id'])]
         related = [(c, n) for c, n in related if scores.get(n['id'], 0) >= CHANGE_LIKE and strength[n['id']] > 0]
         if not related:
             continue

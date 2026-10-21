@@ -9,7 +9,7 @@ import tempfile
 from pathlib import Path
 
 from founder import answer, dates, followups, stale
-from founder.identity import parse_addresses
+from founder.identity import IdentityResolver, Person, parse_addresses
 from founder.names import NameSense
 from founder.normalize import calendar_items, html_to_text, issue_refs, split_quote
 
@@ -240,6 +240,49 @@ class Calendar(unittest.TestCase):
         allday = self.rows(rows)[1]
         self.assertEqual(allday['start'], '2026-03-16T07:00:00Z')
         self.assertEqual(allday['meta']['start_local'], '2026-03-16')
+
+
+class MentionAndWeightTests(unittest.TestCase):
+    def resolver(self):
+        ident = IdentityResolver.__new__(IdentityResolver)
+        ident.people = {'P1': Person('P1', 'Alex Chen'), 'P2': Person('P2', 'Jordan Pryce'),
+                        'P3': Person('P3', 'Daniel Kim'), 'P4': Person('P4', 'Daniel Foster'),
+                        'P5': Person('P5', 'Will Stone')}
+        return ident
+
+    def item(self, n, body, author='P1', people=(), thread=None):
+        return {'id': n, 'title': '', 'body': body, 'author': author, 'people': list(people),
+                'thread_key': thread or n, 'meta': {}}
+
+    def test_a_unique_first_name_links(self):
+        items = [self.item('a', 'Jordan says they cannot close before May 15.', author='P3')]
+        self.resolver().link_mentions(items)
+        self.assertEqual(items[0]['meta']['mentions'], ['P2'])
+
+    def test_an_ambiguous_name_links_only_through_the_conversation(self):
+        items = [self.item('a', 'Daniel is out until Monday.', thread='t'),
+                 self.item('b', 'Daniel is out until Monday.', thread='u', people=['P4'])]
+        self.resolver().link_mentions(items)
+        self.assertNotIn('mentions', items[0]['meta'])
+        self.assertEqual(items[1]['meta']['mentions'], ['P4'])
+
+    def test_a_name_the_mail_also_uses_as_a_word_does_not_link(self):
+        words = [self.item(f'w{i}', 'we will ship it') for i in range(3)]
+        items = words + [self.item('a', 'Will we ship it?')]
+        self.resolver().link_mentions(items)
+        self.assertNotIn('mentions', items[-1]['meta'])
+
+    def test_greeting_and_sign_off_are_not_mentions(self):
+        items = [self.item('a', 'Hi Jordan,\nsee attached.\n-- Alex', author='P3')]
+        self.resolver().link_mentions(items)
+        self.assertNotIn('mentions', items[0]['meta'])
+
+    def test_rare_shared_words_outweigh_one_ordinary_word(self):
+        df = {'ships': 3, 'beta': 2, 'timeline': 3, 'plan': 60}
+        one = sum(stale.word_weight(w, df) for w in ['ships'])
+        two = sum(stale.word_weight(w, df) for w in ['beta', 'timeline'])
+        self.assertGreater(two, one)
+        self.assertGreater(stale.word_weight('beta', df), stale.word_weight('plan', df))
 
 
 if __name__ == '__main__':

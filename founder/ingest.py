@@ -68,6 +68,7 @@ def run(skip_decisions=False):
     ident = IdentityResolver(config.RAW_DIR, embed=llm.embed)
     items = normalize_all(config.RAW_DIR, ident)
     print(f'{ident.learn_nicknames(items)} nicknames learned from the mail')
+    print(f'{ident.link_mentions(items)} items mention a person by first name')
     for line in format_report(resolution_report(items)):
         print(line)
     order = dates.detect_slash_order(f"{i['title']} {i['body']}" for i in items)

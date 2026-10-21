@@ -90,7 +90,7 @@ def citation_scores(question, result):
 def rejudge(path, judge_model=None):
     """Re-grade saved answers with the current judge. Lets a judge change be
     measured on its own, without re-running the system under test"""
-    judge_model = judge_model or config.CHAT_MODEL
+    judge_model = judge_model or config.JUDGE_MODEL
     questions = {q['id']: q for q in json.loads(QUESTIONS_PATH.read_text())}
     data = json.loads(path.read_text())
     for row in data['rows']:
@@ -101,7 +101,7 @@ def rejudge(path, judge_model=None):
 
 
 def run(judge_model=None, only=None, save=True):
-    judge_model = judge_model or config.CHAT_MODEL
+    judge_model = judge_model or config.JUDGE_MODEL
     questions = json.loads(QUESTIONS_PATH.read_text())
     if only:
         questions = [q for q in questions if q['id'] in only]

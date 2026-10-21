@@ -137,19 +137,30 @@ def _call_anthropic(name, system, user, schema, max_tokens):
 def _call_openai(name, system, user, schema, max_tokens):
     """Any server speaking the openai chat completions api: openai itself,
     openrouter, vllm, lm studio, or ollama's own /v1. FOUNDER_OPENAI_BASE picks
-    the server and OPENAI_API_KEY the key (local servers ignore it)"""
+    the server and OPENAI_API_KEY (or OPENAI_KEY) the key (local servers ignore it)"""
     base = os.environ.get('FOUNDER_OPENAI_BASE', 'https://api.openai.com/v1').rstrip('/')
-    payload = {'model': name, 'max_tokens': max_tokens, 'temperature': 0,
-               'messages': [{'role': 'system', 'content': system}, {'role': 'user', 'content': user}]}
+    hosted = base.startswith('https://api.openai.com')
+    payload = {'model': name, 'messages': [{'role': 'system', 'content': system}, {'role': 'user', 'content': user}]}
+    if hosted:
+        # the current models reject max_tokens and a fixed temperature, and count the tokens they
+        # spend reasoning against the limit, so a small budget would come back empty
+        payload['max_completion_tokens'] = max_tokens + OPENAI_REASONING_ROOM
+    else:
+        payload.update({'max_tokens': max_tokens, 'temperature': 0})
     if schema:
         payload['response_format'] = {'type': 'json_schema',
                                       'json_schema': {'name': 'respond', 'schema': schema, 'strict': False}}
-    key = os.environ.get('OPENAI_API_KEY', 'none')
+    if hosted and not config.OPENAI_KEY:
+        raise ModelError('no OPENAI_API_KEY or OPENAI_KEY in the environment or .env')
     resp = _http(base + '/chat/completions', payload,
-                 {'Content-Type': 'application/json', 'Authorization': f'Bearer {key}'}, timeout=900)
+                 {'Content-Type': 'application/json', 'Authorization': f'Bearer {config.OPENAI_KEY or "none"}'},
+                 timeout=900)
     usage = resp.get('usage', {})
     return {'text': resp['choices'][0]['message']['content'] or '',
             'prompt_tokens': usage.get('prompt_tokens', 0), 'completion_tokens': usage.get('completion_tokens', 0)}
+
+
+OPENAI_REASONING_ROOM = 1500    # tokens a hosted reasoning model may spend thinking, on top of the answer
 
 
 PROVIDERS = {'ollama': _call_ollama, 'anthropic': _call_anthropic, 'openai': _call_openai}

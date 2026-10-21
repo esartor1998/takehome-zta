@@ -27,6 +27,7 @@ load_dotenv()
 CHAT_MODEL = os.environ.get('FOUNDER_MODEL', 'ollama:llama3.2:latest')
 EMBED_MODEL = os.environ.get('FOUNDER_EMBED_MODEL', 'nomic-embed-text')
 ANTHROPIC_KEY = os.environ.get('ANTHROPIC_API_KEY') or os.environ.get('ANTHROPIC_KEY', '')
+OPENAI_KEY = os.environ.get('OPENAI_API_KEY') or os.environ.get('OPENAI_KEY', '')
 
 
 def model_slug(spec):
@@ -76,6 +77,9 @@ KEEP_ALIVE = '30m'  # keeps the model warm so load time is not charged to answer
 PRICES = {
     'claude-haiku-4-5-20251001': (1.0, 5.0),
 }
+# the grader is never the model being graded: a model scores its own wording higher than a
+# different model does. override with FOUNDER_JUDGE
+JUDGE_MODEL = os.environ.get('FOUNDER_JUDGE', 'openai:gpt-6-luna')
 PROJECTED_PRICE_IN = 1.0
 PROJECTED_PRICE_OUT = 5.0
 
