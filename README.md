@@ -14,7 +14,7 @@ The model is a setting, not a dependency. Any chat model can be swapped in with 
 - cancelled, tentative, all-day and other-timezone events
 - vague questions ('what's on today', 'what is daniel saying', 'anything urgent') routed before any model runs
 - cited answers where every citation is checked in code
-- an eval set of 70 questions (the nine the take-home names, vague ones, typos, multi-step ones, unanswerable ones, plans that slipped without a date, and people who go by other names), 18 semantic probes for the vector store, 46 unit tests that need no model, and a benchmark that compares models
+- an eval set of 70 questions (the nine the take-home names, vague ones, typos, multi-step ones, unanswerable ones, plans that slipped without a date, and people who go by other names), 18 semantic probes for the vector store, 51 unit tests that need no model, and a benchmark that compares models
 
 ## How to run
 
@@ -43,9 +43,10 @@ A model is named `provider:name`. Everything that touches a model goes through `
 
 | provider | example | notes |
 | --- | --- | --- |
-| ollama | `ollama:llama3.2:latest` | local, schema output through `format`, qwen3 and later run with thinking off |
+| ollama | `ollama:llama3.2:latest` | local, schema output through `format`, models that think by default run with thinking off |
 | anthropic | `anthropic:claude-haiku-4-5-20251001` | key in `.env` as `ANTHROPIC_KEY` or `ANTHROPIC_API_KEY`, schema output through a forced tool call |
 | openai | `openai:gpt-4o-mini` | any server that speaks chat completions, with `FOUNDER_OPENAI_BASE` and `OPENAI_API_KEY`, checked here against ollama's `/v1` |
+| openrouter | `openrouter:xiaomi/mimo-v2.6-pro` | one key for many hosted models, `OPENROUTER_KEY` or `OPENROUTER_API_KEY` in `.env`, reasoning switched off unless `FOUNDER_THINK=1`, prices in `config.PRICES`. Wired in and not yet benchmarked |
 
 ```bash
 FOUNDER_MODEL=anthropic:claude-haiku-4-5-20251001 .venv/bin/founder ask "who's waiting on me"
@@ -157,78 +158,93 @@ question -> route (kind, people, day) -> digest by code | hybrid retrieval -> nu
 
 `founder bench` runs four tasks on each model against one fixed judge, so scores compare: load, ingest (cold, with the llm cache cleared), the brief, and every eval question. Per model it reports where the model runs and how much of it is on the GPU, calls, tokens, cost and wall time for each task, latency (p50, p95, max, mean, questions over the 5s budget), output tokens per second, accuracy split into original and vague questions, citation recall and precision, uncited sentences, refusals, schema failures, retries, and ingest checks against the answer key (decisions, stale records, follow-ups).
 
-The judge is `openai:gpt-6-luna` for every column (`FOUNDER_JUDGE` or `--judge` change it). It used to be Haiku, which was also a competitor, and a model grades its own wording more kindly than another model's. **Numbers from before the switch are not comparable with these.** Re-grading the same saved answers with Luna gave Haiku 70% (83% from its own judging), Llama 51% (71%) and the 9B 57% (80%). Luna is the stricter judge: it failed 11, 14 and 18 answers that the Haiku judge passed and passed 2, 0 and 2 that it failed, so it agrees with the Haiku judge on 81%, 80% and 71% of verdicts. The 35B model (`qwen3.6:35b-a3b`) was dropped: on this machine it ingested in 2,550s, answered in a median of 20s and scored no better than the 9B.
+The judge is `openai:gpt-6-luna` for every column (`FOUNDER_JUDGE` or `--judge` change it). It used to be Haiku, which was also a competitor, and a model grades its own wording more kindly than another model's. **Numbers from before the switch are not comparable with these.** Re-grading the same saved answers with Luna gave Haiku 70% (83% from its own judging), Llama 51% (71%) and the 9B 57% (80%). Luna is the stricter judge: it failed 11, 14 and 18 answers that the Haiku judge passed and passed 2, 0 and 2 that it failed, so it agrees with the Haiku judge on 81%, 80% and 71% of verdicts. Both Qwen models were dropped for time. The 35B (`qwen3.6:35b-a3b`) ingested in 2,550s and answered in a median of 20s. The 9B (`qwen3.5:9b`) ingested in 1,815s, answered 47 of 70 questions over the 5s budget and scored 56%, no better than Llama. Their numbers appear below only where a measurement was made while the 9B was still in the benchmark, and say so.
 
 70 questions, one model at a time on an otherwise idle machine (RTX 2060 6GB, 23GB RAM, 4 cores). Every column is from the same code and the same data. Timings are wall clock. The full per-question results are in `eval/results/models/*.json`.
 
-| metric | anthropic:claude-haiku-4-5-20251001 | ollama:llama3.2:latest | ollama:qwen3.5:9b |
-| --- | --- | --- | --- |
-| where it runs | hosted | 3.1 GB, 100% on gpu | 6.4 GB, 66% on gpu |
-| first call incl. load (s) | 0.7 | 9.2 | 33.5 |
-| **ingest** wall (s) | 281.1 | 303.5 | 1815.1 |
-| ingest model calls | 175 | 174 | 175 |
-| ingest tokens in/out | 171788/24460 | 51566/30227 | 51590/14623 |
-| ingest cost ($) | 0.2941 | 0.0000 | 0.0000 |
-| ingest checks passed (decisions, stale, follow-ups) | 51/51 | 50/51 | 51/51 |
-| **brief** wall (s) | 2.0 | 0.8 | 13.9 |
-| brief cost ($) | 0.00109 | 0.00000 | 0.00000 |
-| brief invalid ids | 0 | 0 | 0 |
-| brief stale record called out | yes | yes | yes |
-| brief meeting in focus | yes | yes | yes |
-| **ask** accuracy (judge) | 77% | 57% | 56% |
-| ask accuracy, original questions (q*) | 14/18 | 11/18 | 9/18 |
-| ask accuracy, vague questions (v*) | 17/23 | 14/23 | 12/23 |
-| ask citation recall | 89% | 86% | 90% |
-| ask citation recall, vague (v*) | 87% | 86% | 93% |
-| ask citation precision | 55% | 50% | 52% |
-| ask answers with a citation flag | 6 | 11 | 1 |
-| ask flag precision (flagged and judged wrong) | 0% | 73% | 100% |
-| ask flag recall (wrong answers that were flagged) | 0% | 27% | 3% |
-| ask forbidden cites | 0 | 1 | 1 |
-| ask uncited sentences | 21 | 32 | 12 |
-| ask latency p50 (s) | 1.8 | 0.9 | 9.7 |
-| ask latency p95 (s) | 3.5 | 3.2 | 26.3 |
-| ask latency max (s) | 4.8 | 4.4 | 34.3 |
-| ask questions over 5s | 0 | 0 | 47 |
-| ask output tokens per second | 61 | 79 | 7 |
-| ask latency mean (s) | 1.6 | 1.2 | 9.7 |
-| ask questions answered without a model call | 23 | 23 | 23 |
-| ask tokens in/out (mean) | 1015/99 | 740/94 | 730/71 |
-| ask cost per question ($) | 0.00151 | 0.00000 | 0.00000 |
-| ask refusals | 5 | 3 | 2 |
-| judge verdicts that failed (counted wrong) | 0 | 0 | 0 |
-| schema failures (ask+judge) | 0 | 0 | 0 |
-| http retries (rate limits, 5xx) | 0 | 0 | 0 |
-| whole benchmark wall time (s) | 595 | 607 | 2769 |
-| judge cost for this run ($) | 0.1171 | 0.1215 | 0.1207 |
+| metric | anthropic:claude-haiku-4-5-20251001 | ollama:llama3.2:latest |
+| --- | --- | --- |
+| where it runs | hosted | 3.1 GB, 100% on gpu |
+| first call incl. load (s) | 0.7 | 9.2 |
+| **ingest** wall (s) | 281.1 | 303.5 |
+| ingest model calls | 175 | 174 |
+| ingest tokens in/out | 171788/24460 | 51566/30227 |
+| ingest cost ($) | 0.2941 | 0.0000 |
+| ingest checks passed (decisions, stale, follow-ups) | 51/51 | 50/51 |
+| **brief** wall (s) | 2.0 | 0.8 |
+| brief cost ($) | 0.00109 | 0.00000 |
+| brief invalid ids | 0 | 0 |
+| brief stale record called out | yes | yes |
+| brief meeting in focus | yes | yes |
+| **ask** accuracy (judge) | 77% | 57% |
+| ask accuracy, original questions (q*) | 14/18 | 11/18 |
+| ask accuracy, vague questions (v*) | 17/23 | 14/23 |
+| ask citation recall | 89% | 86% |
+| ask citation recall, vague (v*) | 87% | 86% |
+| ask citation precision | 55% | 50% |
+| ask answers with a citation flag | 6 | 11 |
+| ask flag precision (flagged and judged wrong) | 0% | 73% |
+| ask flag recall (wrong answers that were flagged) | 0% | 27% |
+| ask forbidden cites | 0 | 1 |
+| ask uncited sentences | 21 | 32 |
+| ask latency p50 (s) | 1.8 | 0.9 |
+| ask latency p95 (s) | 3.5 | 3.2 |
+| ask latency max (s) | 4.8 | 4.4 |
+| ask questions over 5s | 0 | 0 |
+| ask output tokens per second | 61 | 79 |
+| ask latency mean (s) | 1.6 | 1.2 |
+| ask questions answered without a model call | 23 | 23 |
+| ask tokens in/out (mean) | 1015/99 | 740/94 |
+| ask cost per question ($) | 0.00151 | 0.00000 |
+| ask refusals | 5 | 3 |
+| judge verdicts that failed (counted wrong) | 0 | 0 |
+| schema failures (ask+judge) | 0 | 0 |
+| http retries (rate limits, 5xx) | 0 | 0 |
+| whole benchmark wall time (s) | 595 | 607 |
+| judge cost for this run ($) | 0.1171 | 0.1215 |
 
 The judge's cost uses a placeholder rate (1.0 and 5.0 dollars per million tokens), because the price of `gpt-6-luna` is not in `config.PRICES`. Hosted answers and ingest are costed at Haiku's real rate.
 
-**How much of a gap is noise.** Three measurements on this run say not to read small gaps:
+**How much of a gap is noise.** Three measurements, taken when the 9B column was still in the run, say not to read small gaps:
 
 - Haiku scored 70% on the same code a few hours earlier (a warm ingest, one judge pass) and 77% here (a cold ingest). 9 of 70 verdicts flipped between the two runs, in both directions.
 - 23 pairs of answers across the three columns are byte-for-byte identical (code-rendered lists that no model wrote). Luna graded 5 of those pairs differently. It has no temperature setting, and its verdicts on identical input are not stable.
-- The 23 questions answered by code with no model call are not written by a model, yet the columns score 21, 18 and 16 on them. Follow-up wording comes from each model's ingest labels, and the judge adds the rest.
+- The 23 questions answered by code with no model call are not written by a model, yet the three columns scored 21, 18 and 16 on them. Follow-up wording comes from each model's ingest labels, and the judge adds the rest.
 
-So Haiku at 77% against 57% and 56% is a real gap, and 57% against 56% is a tie. Where a model writes the answer (47 questions), Haiku gets 33, Llama 22 and the 9B 23.
+So Haiku at 77% against 57% is a real gap, and Llama against the dropped 9B (56%) was a tie. Where a model writes the answer (47 questions), Haiku got 33, Llama 22 and the 9B 23.
 
 What the numbers say:
 
 - **Haiku 4.5 is the only model that is both accurate and inside the budget.** 77%, 1.8s median, 4.8s slowest, about $0.0015 per question including the checks it runs on its own citations. Ingesting everything once costs $0.29 (175 calls, 4.7 minutes).
-- **The two local models tie at 56% to 57% and fail the latency budget differently.** Llama 3B is fast (0.9s median, ingest in 303s) and weakest at writing answers. The 9B is as accurate and slow: 47 of 70 questions take over 5s, ingest takes 30 minutes. Local speed is memory bound on this machine; the 9B has two thirds of itself on the card and runs at 7 tokens per second.
-- **15 questions fail on every model.** Reading each answer against its reference splits them four ways. Five are references stricter than a correct answer: `q01` wants the personal email address, `q09` wants that Slack said 'closed' (that message never reached the context, and the key lists it as interchangeable with the email that did), `n01` wants 'approved by Alex on Mar 12', `n02` wants the CRM deal and the Linear issue named when the question was about the Notion page, `t03` wants the request dated Mar 13 and the answer gives the Mar 16 due date. Six are pipeline misses that were traced: `q15` (the correcting message never reaches the context), `v16` (the word 'deal' in 'what's the deal with sso' filters the search to CRM deals), `v17` (open issues for a company are never looked up when the question is routed as a person), `v21` ('who is jordan' has no directory fact to cite, since a contact's job title is read at ingest and not stored, and an answer that says it cannot find something loses all its citations), `n06` (the line 'cut this slide' answers a quoted line that the context drops) and `n08` (the company digest omits what blocks an issue and the SOC 2 deadline). Three share one cause, `v04`, `v05` and `t04` (what Daniel says): in Daniel Foster's thread the message that asks for a fix confirmation before Mar 20 is neither the newest nor the most distinctive, so it is not chosen, and for Daniel Kim (`v05`) the migration request is not retrieved at all. `v12` (billing) had every needed item in its context, and the answer spent its word limit on invoices and ownership and left out the delay.
-- **Ingest checks against the answer key** (51 checks across decisions, stale records, follow-ups, identity and nicknames): Haiku and the 9B pass all 51, Llama 50.
-- **Citation recall is 86% to 90%, precision 50% to 55%.** Recall is high because citations are checked and added by code. Precision is low because the key lists the minimum and code-rendered lists are not cut, so extra correct citations count against a model.
-- **Citation flags** (a claim whose citation did not hold and could not be repaired): Haiku raised 6 and none landed on a wrong answer, Llama 11 (73% on wrong answers, catching 27% of its wrong ones), the 9B 1. Flags are rare and catch little; read them as a prompt to look.
-- **The brief** names the meeting and calls out the stale record on every model, with no invalid ids. It takes 2.0s on Haiku and 13.9s on the 9B.
+- **Llama 3B is the local model that stays.** It is fast (0.9s median, 4.4s slowest, ingest in 303s), free, and weakest at writing answers (22 of 47 model-written answers). The 9B tied it on accuracy and was far too slow to keep: 47 of 70 questions took over 5s and ingest took 30 minutes, because two thirds of it sat on the card and ran at 7 tokens per second.
+- **15 questions failed on every model in that run (Haiku, Llama and the 9B).** Reading each answer against its reference splits them four ways. Five are references stricter than a correct answer: `q01` wants the personal email address, `q09` wants that Slack said 'closed' (that message never reached the context, and the key lists it as interchangeable with the email that did), `n01` wants 'approved by Alex on Mar 12', `n02` wants the CRM deal and the Linear issue named when the question was about the Notion page, `t03` wants the request dated Mar 13 and the answer gives the Mar 16 due date. Six are pipeline misses that were traced: `q15` (the correcting message never reaches the context), `v16` (the word 'deal' in 'what's the deal with sso' filters the search to CRM deals), `v17` (open issues for a company are never looked up when the question is routed as a person), `v21` ('who is jordan' has no directory fact to cite, since a contact's job title is read at ingest and not stored, and an answer that says it cannot find something loses all its citations), `n06` (the line 'cut this slide' answers a quoted line that the context drops) and `n08` (the company digest omits what blocks an issue and the SOC 2 deadline). Three share one cause, `v04`, `v05` and `t04` (what Daniel says): in Daniel Foster's thread the message that asks for a fix confirmation before Mar 20 is neither the newest nor the most distinctive, so it is not chosen, and for Daniel Kim (`v05`) the migration request is not retrieved at all. `v12` (billing) had every needed item in its context, and the answer spent its word limit on invoices and ownership and left out the delay.
+- **Ingest checks against the answer key** (51 checks across decisions, stale records, follow-ups, identity and nicknames): Haiku passes all 51 and Llama 50 (the 9B passed 51).
+- **Citation recall is 86% to 89%, precision 50% to 55%.** Recall is high because citations are checked and added by code. Precision is low because the key lists the minimum and code-rendered lists are not cut, so extra correct citations count against a model.
+- **Citation flags** (a claim whose citation did not hold and could not be repaired): Haiku raised 6 and none landed on a wrong answer, Llama 11 (73% on wrong answers, catching 27% of its wrong ones), and the dropped 9B 1. Flags are rare and catch little; read them as a prompt to look.
+- **The brief** names the meeting and calls out the stale record on every model, with no invalid ids. It takes 2.0s on Haiku and 0.8s on Llama.
 
 **Changes since the first 70-question run.** The universal failures at that point were traced to the pipeline. Four changes followed: a thread now contributes both its newest and its most distinctive message to a person's activity; 'what should I focus on' lists the whole docket under the top three priorities, including every record that still states an old plan; a bare first name in a message ('Jordan says they cannot close before May 15') is linked at ingest to the one person it can mean, using plain-word, ambiguity, greeting and sign-off guards; and a stale-record candidate is ranked by the rare words it shares with the record, so a general word like 'ships' no longer marks an unrelated page stale. The first-name linking was the risky one. Under Luna Haiku scored 70% with it and 71% without, and 9 verdicts differed between the two runs (4 up, 5 down), which is the run-to-run spread above. Retrieval recall without any model went from 92% to 93%.
 
 **How trustworthy is the judge?** `founder bench --judge-check` re-grades answers with several judges and reports agreement and Cohen's kappa. It was last run with Haiku against Llama on the earlier 61-question set: Haiku agreed with itself on 100% of verdicts, and with Llama on 72% (kappa -0.06, no agreement beyond chance). It has not been run with Luna. The direct evidence is the one above: Luna disagreed with itself on 5 of 23 identical answers. At least `n01`, `t03` and `q01` read as correct to a person while failing. Treat accuracy as a rough ranking and read the per-question table before drawing a conclusion.
 
+**Changes since this benchmark (not yet re-run).** The table above and everything in it describe commit `6ef2890`. The code has changed since, and the next benchmark is the first to measure it:
+
+- **Stale items found by retraction now get a stale record** (`q15`). Before, a record whose value a later message retracted was marked stale only in the decision history, so a question about the record never saw the correction.
+- **A source word filters only when it is unambiguous** (`v16`). 'notion', 'crm', 'linear', 'github', 'slack' always filter. 'deal', 'issue' and 'page' filter only if the rest of the question finds something of that kind, and the source word is no longer searched for. 'What's the deal with sso' no longer lists CRM deals. Known gap: 'what's the deal with globex' still does, because a Globex deal exists.
+- **A company question looks up the company's open issues even when it is routed as a person** (`v17`).
+- **'Who is X' gets a directory line** (`v21`): title, company and CRM status, stored at ingest and cited to the contact's newest deal, since a contact is not an item. A refusal now counts only when the answer is nothing but the refusal.
+- **A reply written between quoted lines shows each answer under the line it answers** (`n06`), in what the model reads and nowhere else.
+- **The company view shows what blocks an issue and the deadline of an ask** (`n08`).
+- **The glossary is remembered by word** and its candidate ordering is deterministic, so a repeat ingest of unchanged data should make no glossary calls. The first ingest still pays for all of them.
+- **A promise is marked kept** when the founder later writes a sentence saying they did it and naming the thing. A question, a negation or a plan does not count, and neither does a thank-you from the person promised.
+- **References are split into core and extra facts** (see Evaluation). The judge decides correctness on core. This changes the grading of all 70 questions, so the next accuracy figure is not comparable with the 77% and 57% above.
+- `v04`, `v05` and `t04` (Daniel's messages) were left alone on purpose.
+
+**Planned runs on OpenRouter.** `xiaomi/mimo-v2.6-pro` ($0.435 in and $0.87 out per million tokens), `deepseek/deepseek-v4.1-flash-1017` ($0.15 and $0.60) and `minimax/minimax-m3.1-flash:free` (free, rate limited, and it accepts `response_format` but not strict schemas). A full benchmark of one model is about 250 hosted calls and, scaled from Haiku's run, about 290,000 tokens in and 32,000 out before any hidden thinking. That puts a whole run at roughly $0.15 to $0.70 for MiMo and $0.06 to $0.40 for DeepSeek, depending on how many reasoning tokens a model spends despite the flag, so all three fit in $5 with room for repeats. These are projections from another model's token counts, not measurements.
+
 ## Evaluation
 
-`eval/questions.json` has 70 questions, each with a reference answer and the item ids that support it (a group lists interchangeable copies, like the same update in gmail and slack). 18 are the original required cases, 3 are the take-home's own wording for what happened across the company, repeated customer issues and blocked tasks, 23 are vague (phrasing a founder would type, two Daniels, a role word, a company name, an issue id, two unanswerable questions), 8 are the same questions with typos and shorthand ('whats on tdy', 'anyting from investers'), 7 cover the earlier scenarios, 7 cover plans changed in soft words ('pushed back for now', 'moved to next friday'), 2 use a nickname or a first-name sign-off, and 2 need several steps ('what do I need to do before the Globex call', 'anything overdue'). `eval/semantic_probes.json` adds 18 questions worded unlike their source for the vector tests. Accuracy comes from an LLM judge (`gpt-6-luna`, never one of the models being graded). Citation recall and precision are plain id comparison. Abstention is judged like every other answer: the judge is told that when the reference says the information is not available, a candidate is right only if it says it cannot find it. An earlier version overrode the judge in code for this. That was removed, and regrading the saved answers changed one verdict out of 164. Ingest checks name items from the answer key and the status each must end with.
+`eval/questions.json` has 70 questions, each with a reference answer split into `core` (what the question asks, and every member of a list it asks for) and `extra` (reasons, dates, history and background), and the item ids that support it (a group lists interchangeable copies, like the same update in gmail and slack). 18 are the original required cases, 3 are the take-home's own wording for what happened across the company, repeated customer issues and blocked tasks, 23 are vague (phrasing a founder would type, two Daniels, a role word, a company name, an issue id, two unanswerable questions), 8 are the same questions with typos and shorthand ('whats on tdy', 'anyting from investers'), 7 cover the earlier scenarios, 7 cover plans changed in soft words ('pushed back for now', 'moved to next friday'), 2 use a nickname or a first-name sign-off, and 2 need several steps ('what do I need to do before the Globex call', 'anything overdue'). `eval/semantic_probes.json` adds 18 questions worded unlike their source for the vector tests. Accuracy comes from an LLM judge (`gpt-6-luna`, never one of the models being graded) and depends on the core only: a short answer that leaves background out is right. How much extra each answer volunteered (all, some, none) is reported next to accuracy and never inside it. The answer prompt asks for the direct answer first and background only if the word limit allows. Citation recall and precision are plain id comparison. Abstention is judged like every other answer: the judge is told that when the reference says the information is not available, a candidate is right only if it says it cannot find it. An earlier version overrode the judge in code for this. That was removed, and regrading the saved answers changed one verdict out of 164. Ingest checks name items from the answer key and the status each must end with.
 
 What running every model through the questions taught us, twice: the same questions failed on every model, so the pipeline was at fault and not the models. 'Is ACME-440 up to date' pulled every decision and buried the issue. 'Decision' in a history question sent it to the list of decisions. A bare 'what is blocked' listed other people's issues first. 'What changed' missed the seed close, the hiring outcome and the renewal terms because the model labelled them decisions and nothing anchored them, so stale records now feed back into the decision history. A template email that named the same issue after the real change became the current state, so only an event that reads like a change can anchor a decision. Each fix helped every model.
 
@@ -243,7 +259,7 @@ Check before relying on this (1):
 - why the launch date was pushed  [not_supported: no source gives a reason]
 ```
 
-**Measured** on the earlier 61 questions (not repeated on 70) with each model investigating its own answers: Haiku flagged 2 answers and 1 was wrong, Llama 4 and 1, the 35B 5 and none, the 9B none. Remarks about the answer ('Nothing is marked STALE', 'What remains open: ...') and answers whose other citations held are no longer flagged, which removed most of the noise of the first version. What is left is rare and catches little, so it works as a prompt to look and does not yet identify bad answers. On the 70-question run Haiku raised 6 flags and none landed on a wrong answer, Llama raised 11 (8 on wrong answers, 27% of its wrong ones) and the 9B raised 1.
+**Measured** on the earlier 61 questions (not repeated on 70) with each model investigating its own answers: Haiku flagged 2 answers and 1 was wrong, Llama 4 and 1, the 35B 5 and none, the 9B none. Remarks about the answer ('Nothing is marked STALE', 'What remains open: ...') and answers whose other citations held are no longer flagged, which removed most of the noise of the first version. What is left is rare and catches little, so it works as a prompt to look and does not yet identify bad answers. On the 70-question run Haiku raised 6 flags and none landed on a wrong answer, Llama raised 11 (8 on wrong answers, 27% of its wrong ones) and the 9B (since dropped) raised 1.
 
 Flags are in the result as `flags` (claim, kind, verdict, reason, cited ids). Only claims whose citation failed (a number, date, id or name in the sentence, and no citation that holds) are examined, at most four per answer, and the rest are flagged without a look. The extra calls count toward the answer's tokens, cost and time. `FOUNDER_VERIFY=0` turns the model step off and leaves the lexical check. `founder bench` reports how many answers carried a flag, and flag precision and recall against the judge's verdicts (what share of flagged answers were wrong, and what share of wrong answers were flagged).
 
@@ -278,7 +294,7 @@ The probes were written by us, from knowledge of the data, to be paraphrases, an
 - **The decision gate is similarity plus a regex, and its recall is only measured on the planted cases.** A change of plan phrased unlike any prototype is missed.
 - **Two decision groups can still merge or split wrongly.** Thresholds were measured on this data, where same-topic similarity ran 0.62 to 0.86 and cross-topic 0.47 to 0.62. Real data will shift them.
 - **Filler is random.** About half the items are template filler. The 'customer issues repeating' section needs a report from the customer or two tools to count, which filters most of it, and a founder with a noisier inbox would want a better test.
-- **Local model speed is memory bound on this machine.** The 6GB card holds a fraction of anything above 3B, so the 9B runs at 7 tokens per second and the mixture of experts at 5. See the table.
+- **Local model speed is memory bound on this machine.** The 6GB card holds a fraction of anything above 3B, so the 9B ran at 7 tokens per second and the mixture of experts at 5, and both were dropped. That leaves one local model.
 - **The noise is mild and was added by us.** Real mail has more kinds of mess than a pass of shorthand, dropped capitals, rare typos and signatures: other languages, screenshots, attachments nobody reads, replies to the wrong thread. The numbers say the pipeline copes with this much, not with that.
 - **Typo correction uses the inbox's own vocabulary.** It fixes 'investers' because the inbox has 'investors', and cannot fix a word the inbox has never seen, or a typo that is itself another word in it.
 - **The vector pull did not improve end-to-end accuracy on our sample**, though it improves the evidence a model sees when the question is worded unlike the source. The weight is probably too high.

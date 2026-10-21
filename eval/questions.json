@@ -4,6 +4,8 @@
     "category": "identity",
     "question": "What did Daniel Kim say about the billing migration?",
     "reference": "Daniel asked Priya to push the billing migration back by a week. He emailed from his personal address (dkim.work@gmail.com) because he was on call, and also said in Slack #eng that the migration was blocked on his side.",
+    "core": "Daniel asked Priya to push the billing migration back by a week.",
+    "extra": "He emailed from his personal address (dkim.work@gmail.com) because he was on call, and also said in Slack #eng that the migration was blocked on his side.",
     "answerable": true,
     "expected_ids": [
       [
@@ -18,6 +20,8 @@
     "category": "decision_reversal",
     "question": "What is the current authentication decision for the v2 API?",
     "reference": "OAuth only. It was decided on Mar 6, reversed to OAuth plus API keys on Mar 8 for Globex, then reverted to OAuth only on Mar 14 after Globex signed the OAuth-only addendum (Rebecca Liu).",
+    "core": "OAuth only.",
+    "extra": "It was decided on Mar 6, reversed to OAuth plus API keys on Mar 8 for Globex, then reverted to OAuth only on Mar 14 after Globex signed the OAuth-only addendum (Rebecca Liu).",
     "answerable": true,
     "expected_ids": [
       [
@@ -36,6 +40,8 @@
     "category": "reschedule",
     "question": "What time is the Weekly Product Sync today?",
     "reference": "16:00 UTC today (Sunday Mar 15). It was moved from Friday Mar 13, and the Friday event is cancelled.",
+    "core": "16:00 UTC today (Sunday Mar 15).",
+    "extra": "It was moved from Friday Mar 13, and the Friday event is cancelled.",
     "answerable": true,
     "expected_ids": [
       [
@@ -51,6 +57,8 @@
     "category": "duplicate_conflict",
     "question": "What is the Q1 ship date?",
     "reference": "March 22. Sofia corrected it from March 20 in email and Slack. The Linear issue ACME-231 still says March 20 and is out of date.",
+    "core": "March 22.",
+    "extra": "Sofia corrected it from March 20 in email and Slack. The Linear issue ACME-231 still says March 20 and is out of date.",
     "answerable": true,
     "expected_ids": [
       [
@@ -65,6 +73,8 @@
     "category": "unanswerable",
     "question": "What is the exact revenue impact of the v2 API delay?",
     "reference": "Not available. No revenue or financial figures exist in any source.",
+    "core": "Not available. No revenue or financial figures exist in any source.",
+    "extra": "",
     "answerable": false,
     "expected_ids": [],
     "forbidden_ids": []
@@ -74,6 +84,8 @@
     "category": "cancelled_meeting",
     "question": "Was the Weekly Product Sync on Friday March 13 cancelled?",
     "reference": "Yes. The Friday Mar 13 calendar event is cancelled because the meeting moved to Sunday Mar 15 at 16:00 UTC.",
+    "core": "Yes. The Friday Mar 13 calendar event is cancelled.",
+    "extra": "The meeting moved to Sunday Mar 15 at 16:00 UTC.",
     "answerable": true,
     "expected_ids": [
       [
@@ -92,6 +104,8 @@
     "category": "cancelled_meeting",
     "question": "Was the Daily Standup on March 13 cancelled?",
     "reference": "Yes, it was cancelled because of the offsite.",
+    "core": "Yes, it was cancelled.",
+    "extra": "It was cancelled because of the offsite.",
     "answerable": true,
     "expected_ids": [
       [
@@ -105,6 +119,8 @@
     "category": "history",
     "question": "What was the original v2 API auth decision on March 6 and who made it?",
     "reference": "Priya Nair decided on March 6 to ship the v2 API with OAuth only.",
+    "core": "Priya Nair decided on March 6 to ship the v2 API with OAuth only.",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -119,6 +135,8 @@
     "category": "identity",
     "question": "What did Rebecca Liu say about the Globex addendum?",
     "reference": "Rebecca said Globex signed the OAuth-only addendum, so the v2 API reverts to OAuth only. In email she asked for ACME-142 to be updated, and in Slack #eng she said it was closed.",
+    "core": "Rebecca said Globex signed the OAuth-only addendum, so the v2 API reverts to OAuth only.",
+    "extra": "In email she asked for ACME-142 to be updated, and in Slack #eng she said it was closed.",
     "answerable": true,
     "expected_ids": [
       [
@@ -133,6 +151,8 @@
     "category": "tasks",
     "question": "Which Linear issues owned by me are blocked?",
     "reference": "ACME-316 (Billing webhook retry), ACME-342 (Add pagination), ACME-349 (Rate limit tuning), ACME-352 (Update dependency) and ACME-365 (Rate limit tuning).",
+    "core": "ACME-316 (Billing webhook retry), ACME-342 (Add pagination), ACME-349 (Rate limit tuning), ACME-352 (Update dependency) and ACME-365 (Rate limit tuning).",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -158,6 +178,8 @@
     "category": "shared_inbox",
     "question": "Who is out of office this week and who has context on billing?",
     "reference": "Daniel Kim was out of office Mar 10 to 14, and said Priya Nair has context on billing. This came from the eng-team shared inbox.",
+    "core": "Daniel Kim was out of office Mar 10 to 14, and said Priya Nair has context on billing.",
+    "extra": "This came from the eng-team shared inbox.",
     "answerable": true,
     "expected_ids": [
       [
@@ -171,6 +193,8 @@
     "category": "topic_summary",
     "question": "Summarize investor-related activity this week.",
     "reference": "Jordan Pryce (Northwind Ventures) followed up on Mar 13 asking for cohort ARR before the Tuesday Mar 17 partner meeting. Caroline Ades (Blue Harbor Capital) asked on Mar 12 about data room access. On Mar 13 Priya said Northwind cannot close before May 15.",
+    "core": "Jordan Pryce (Northwind Ventures) followed up on Mar 13 asking for cohort ARR before the Tuesday Mar 17 partner meeting. Caroline Ades (Blue Harbor Capital) asked on Mar 12 about data room access.",
+    "extra": "On Mar 13 Priya said Northwind cannot close before May 15.",
     "answerable": true,
     "expected_ids": [
       [
@@ -190,6 +214,8 @@
     "category": "decisions",
     "question": "What decisions were made recently?",
     "reference": "Recent decisions: the v2 API auth went back to OAuth only (Mar 14), the Q1 ship date was corrected to Mar 22, pricing is $59 for new customers and $49 for existing (Mar 11), the billing cutover moved to Mar 31, the seed close moved to May 15, and the Taylor Brooks offer is no longer going ahead. The Initech renewal moved to 2 years at 15% (Mar 12).",
+    "core": "Recent decisions: the v2 API auth went back to OAuth only (Mar 14), the Q1 ship date was corrected to Mar 22, pricing is $59 for new customers and $49 for existing (Mar 11), the billing cutover moved to Mar 31, the seed close moved to May 15, the Taylor Brooks offer is no longer going ahead, and the Initech renewal moved to 2 years at 15% (Mar 12).",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -225,6 +251,8 @@
     "category": "meeting_prep",
     "question": "What should I know before my next meeting?",
     "reference": "The next meeting is the Weekly Product Sync today at 16:00 UTC with Priya Nair, Marcus Webb and Hannah Park. It was rescheduled from Friday Mar 13.",
+    "core": "The next meeting is the Weekly Product Sync today at 16:00 UTC.",
+    "extra": "It is with Priya Nair, Marcus Webb and Hannah Park, and was rescheduled from Friday Mar 13.",
     "answerable": true,
     "expected_ids": [
       [
@@ -243,6 +271,8 @@
     "category": "stale_record",
     "question": "Is the Linear issue ACME-231 up to date?",
     "reference": "No. ACME-231 still says freeze Mar 10 and ship Mar 20, but the ship date was corrected to Mar 22 in email and Slack.",
+    "core": "No. ACME-231 still says ship Mar 20, but the ship date was corrected to Mar 22 in email and Slack.",
+    "extra": "It also still says freeze Mar 10.",
     "answerable": true,
     "expected_ids": [
       [
@@ -260,6 +290,8 @@
     "category": "daily_priorities",
     "question": "What should I focus on today?",
     "reference": "Priorities today include the Globex check-in at 17:30 UTC where Daniel Foster is waiting on confirmation that the SSO fix ships before Mar 20, the cohort ARR owed to Jordan Pryce before the Tuesday partner meeting, and stale records that still state old plans.",
+    "core": "Priorities today include the Globex check-in at 17:30 UTC where Daniel Foster is waiting on confirmation that the SSO fix ships before Mar 20, the cohort ARR owed to Jordan Pryce before the Tuesday partner meeting, and stale records that still state old plans.",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -280,6 +312,8 @@
     "category": "followups",
     "question": "What follow-ups am I missing?",
     "reference": "Waiting on you: Priya Nair (cohort ARR for Northwind; approve the Blue Harbor data room request), Jordan Pryce (cohort ARR before Tuesday), Caroline Ades (data room access), Daniel Foster (confirm the SSO fix before Mar 20), Marcus Webb (review PR 231), Omar Haddad (review PR 230), and Hannah Park (add a risks slide to the roadmap deck). Open promises: cohort ARR to Jordan Pryce, data room access to Caroline Ades and the SOC 2 summary to Sam Okafor, all overdue. Also waiting on you, from the added scenarios: Rebecca Liu (sign-off on the Initech redline by Thursday Mar 19, and your thoughts on pushing the docs migration back a week) and Daniel Foster (someone on a call Thursday).",
+    "core": "Waiting on you: Priya Nair (cohort ARR for Northwind; approve the Blue Harbor data room request), Jordan Pryce (cohort ARR before Tuesday), Caroline Ades (data room access), Daniel Foster (confirm the SSO fix before Mar 20), Marcus Webb (review PR 231), Omar Haddad (review PR 230), and Hannah Park (add a risks slide to the roadmap deck). Open promises: cohort ARR to Jordan Pryce, data room access to Caroline Ades and the SOC 2 summary to Sam Okafor, all overdue. Also waiting on you: Rebecca Liu (sign-off on the Initech redline by Thursday Mar 19, and your thoughts on pushing the docs migration back a week) and Daniel Foster (someone on a call Thursday).",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -323,6 +357,8 @@
     "category": "meeting_prep",
     "question": "Which emails relate to upcoming meetings?",
     "reference": "Emails tied to upcoming meetings: Hannah Park's 'Weekly Product Sync moved' (Mar 10), Daniel Foster's SSO thread for today's Globex check-in, Jordan Pryce's emails for the Tuesday Mar 17 Northwind partner update, and the routine 'Sprint planning' emails for Monday's planning.",
+    "core": "Emails tied to upcoming meetings: Hannah Park's 'Weekly Product Sync moved' (Mar 10), Daniel Foster's SSO thread for today's Globex check-in, Jordan Pryce's emails for the Tuesday Mar 17 Northwind partner update, and the routine 'Sprint planning' emails for Monday's planning.",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -344,6 +380,8 @@
     "category": "vague_schedule",
     "question": "what's on today",
     "reference": "Today (Sunday Mar 15): all-day Offsite travel; 09:30 Standup (done); 11:00 Investor update prep (done); 15:00 1:1 Marcus is CANCELLED; 16:00 UTC Weekly Product Sync (moved from Friday); 17:30 UTC Globex check-in with Daniel Foster (10:30 PDT); 19:00 Board prep (tentative).",
+    "core": "Today (Sunday Mar 15): all-day Offsite travel; 09:30 Standup (done); 11:00 Investor update prep (done); 15:00 1:1 Marcus is CANCELLED; 16:00 UTC Weekly Product Sync (moved from Friday); 17:30 UTC Globex check-in with Daniel Foster (10:30 PDT); 19:00 Board prep (tentative).",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -375,6 +413,8 @@
     "category": "vague_schedule",
     "question": "what do i have on the calendar today?",
     "reference": "Today (Sunday Mar 15): all-day Offsite travel; 09:30 Standup (done); 11:00 Investor update prep (done); 15:00 1:1 Marcus is CANCELLED; 16:00 UTC Weekly Product Sync (moved from Friday); 17:30 UTC Globex check-in with Daniel Foster (10:30 PDT); 19:00 Board prep (tentative).",
+    "core": "Today (Sunday Mar 15): all-day Offsite travel; 09:30 Standup (done); 11:00 Investor update prep (done); 15:00 1:1 Marcus is CANCELLED; 16:00 UTC Weekly Product Sync (moved from Friday); 17:30 UTC Globex check-in with Daniel Foster (10:30 PDT); 19:00 Board prep (tentative).",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -397,6 +437,8 @@
     "category": "vague_schedule",
     "question": "tomorrow?",
     "reference": "Tomorrow (Monday Mar 16): 14:00 UTC Sprint Planning (you have not accepted), 15:00 UTC sync w/ priya re raise, and 16:00 Customer escalations review (London).",
+    "core": "Tomorrow (Monday Mar 16): 14:00 UTC Sprint Planning (you have not accepted), 15:00 UTC sync w/ priya re raise, and 16:00 Customer escalations review (London).",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -416,6 +458,8 @@
     "category": "vague_person",
     "question": "what is daniel saying",
     "reference": "There are two Daniels. Daniel Kim (teammate) asked Priya to push the billing migration a week and was out of office Mar 10 to 14. Daniel Foster (Globex) says the SSO login loops are back and asks for confirmation of a fix before Mar 20.",
+    "core": "There are two Daniels. Daniel Kim (teammate) asked Priya to push the billing migration a week. Daniel Foster (Globex) says the SSO login loops are back and asks for confirmation of a fix before Mar 20.",
+    "extra": "Daniel Kim was out of office Mar 10 to 14.",
     "answerable": true,
     "expected_ids": [
       [
@@ -434,6 +478,8 @@
     "category": "vague_person",
     "question": "what's dk up to",
     "reference": "Daniel Kim asked Priya to push the billing migration a week, and was out of office Mar 10 to 14.",
+    "core": "Daniel Kim asked Priya to push the billing migration a week.",
+    "extra": "He was out of office Mar 10 to 14.",
     "answerable": true,
     "expected_ids": [
       [
@@ -451,6 +497,8 @@
     "category": "vague_person",
     "question": "anything from investors?",
     "reference": "Jordan Pryce (Northwind Ventures) asked on Mar 13 for cohort ARR before the Tuesday Mar 17 partner meeting. Caroline Ades (Blue Harbor Capital) asked on Mar 12 about data room access.",
+    "core": "Jordan Pryce (Northwind Ventures) asked for cohort ARR before the Tuesday Mar 17 partner meeting. Caroline Ades (Blue Harbor Capital) asked about data room access.",
+    "extra": "Jordan asked on Mar 13 and Caroline on Mar 12.",
     "answerable": true,
     "expected_ids": [
       [
@@ -469,6 +517,8 @@
     "category": "vague_followups",
     "question": "who's waiting on me",
     "reference": "Waiting on you: Priya Nair (cohort ARR for Northwind; approve the Blue Harbor data room request), Jordan Pryce (cohort ARR before Tuesday), Caroline Ades (data room access), Daniel Foster (confirm the SSO fix before Mar 20), Marcus Webb (review PR 231), Omar Haddad (review PR 230), and Hannah Park (add a risks slide to the roadmap deck). Also waiting on you, from the added scenarios: Rebecca Liu (sign-off on the Initech redline by Thursday Mar 19, and your thoughts on pushing the docs migration back a week) and Daniel Foster (someone on a call Thursday).",
+    "core": "Waiting on you: Priya Nair (cohort ARR for Northwind; approve the Blue Harbor data room request), Jordan Pryce (cohort ARR before Tuesday), Caroline Ades (data room access), Daniel Foster (confirm the SSO fix before Mar 20), Marcus Webb (review PR 231), Omar Haddad (review PR 230), Hannah Park (add a risks slide to the roadmap deck), Rebecca Liu (sign-off on the Initech redline by Thursday Mar 19, and your thoughts on pushing the docs migration back a week) and Daniel Foster (someone on a call Thursday).",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -512,6 +562,8 @@
     "category": "vague_followups",
     "question": "what did i promise people",
     "reference": "You promised Jordan Pryce the cohort ARR (early next week, overdue since Mar 9), Caroline Ades data room access by Mar 10 (overdue), and Sam Okafor at Hooli a SOC 2 summary \"tmrw\" on Mar 11 (due Mar 12, overdue).",
+    "core": "You promised Jordan Pryce the cohort ARR, Caroline Ades data room access, and Sam Okafor at Hooli a SOC 2 summary, all overdue.",
+    "extra": "Jordan's was due early next week (overdue since Mar 9), Caroline's by Mar 10, and Sam's 'tmrw' on Mar 11 (due Mar 12).",
     "answerable": true,
     "expected_ids": [
       [
@@ -531,6 +583,8 @@
     "category": "vague_focus",
     "question": "anything urgent",
     "reference": "Urgent: the Globex check-in at 17:30 UTC today, where Daniel Foster is waiting for confirmation that the SSO fix ships before Mar 20; the cohort ARR owed to Northwind before the Tuesday partner meeting; records that still state old plans.",
+    "core": "Urgent: the Globex check-in at 17:30 UTC today, where Daniel Foster is waiting for confirmation that the SSO fix ships before Mar 20; the cohort ARR owed to Northwind before the Tuesday partner meeting; records that still state old plans.",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -551,6 +605,8 @@
     "category": "vague_catchup",
     "question": "catch me up",
     "reference": "This week: the v2 auth decision went back to OAuth only, the billing cutover moved to Mar 31, pricing is $59 for new customers and $49 for existing, the seed close moved to May 15, the Taylor Brooks offer is dead, and the Globex SSO loop recurred, and the Initech renewal moved to 2 years at 15%.",
+    "core": "This week: the v2 auth decision went back to OAuth only, the billing cutover moved to Mar 31, pricing is $59 for new customers and $49 for existing, the seed close moved to May 15, the Taylor Brooks offer is dead, the Globex SSO loop recurred, and the Initech renewal moved to 2 years at 15%.",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -581,6 +637,8 @@
     "category": "vague_tasks",
     "question": "what's blocked",
     "reference": "Blocked, with the five that are yours first: ACME-316, ACME-342, ACME-349, ACME-352 and ACME-365. The rest of the team has more, and the one facing a customer is ACME-433, the Hooli export timeout, blocked by infra change ACME-420.",
+    "core": "Blocked, with the five that are yours first: ACME-316, ACME-342, ACME-349, ACME-352 and ACME-365. The rest of the team has more.",
+    "extra": "The one facing a customer is ACME-433, the Hooli export timeout, blocked by infra change ACME-420.",
     "answerable": true,
     "expected_ids": [
       [
@@ -609,6 +667,8 @@
     "category": "vague_topic",
     "question": "how's billing going",
     "reference": "The billing cutover moved to Mar 31 (the Notion plan still says Mar 24 and is out of date). Daniel Kim asked to push the migration a week and was out until Mar 16. The webhook retry PR 230 is waiting on your review.",
+    "core": "The billing cutover moved to Mar 31.",
+    "extra": "The Notion plan still says Mar 24 and is out of date. Daniel Kim asked to push the migration a week and was out until Mar 16. The webhook retry PR 230 is waiting on your review.",
     "answerable": true,
     "expected_ids": [
       [
@@ -630,6 +690,8 @@
     "category": "vague_topic",
     "question": "pricing?",
     "reference": "Pricing is $59 per seat for new customers and $49 for existing customers (decided Mar 11). The Notion page Pricing v3 and Linear ACME-440 still say $49 for everyone and are out of date.",
+    "core": "Pricing is $59 per seat for new customers and $49 for existing customers.",
+    "extra": "It was decided Mar 11. The Notion page Pricing v3 and Linear ACME-440 still say $49 for everyone and are out of date.",
     "answerable": true,
     "expected_ids": [
       [
@@ -645,6 +707,8 @@
     "category": "vague_topic",
     "question": "did we hire taylor",
     "reference": "No. An offer of $165k was approved on Mar 3, put on hold on Mar 10 for the budget freeze, and on Mar 13 Taylor accepted another offer. The Notion hiring page still says the offer is out.",
+    "core": "No. Taylor accepted another offer on Mar 13.",
+    "extra": "An offer of $165k was approved on Mar 3 and put on hold on Mar 10 for the budget freeze. The Notion hiring page still says the offer is out.",
     "answerable": true,
     "expected_ids": [
       [
@@ -663,6 +727,8 @@
     "category": "vague_topic",
     "question": "when do we close the round",
     "reference": "May 15, per Jordan at Northwind (Slack, Mar 13). The Notion plan says Apr 30 and the Northwind CRM deal says Mar 31, both out of date.",
+    "core": "May 15, per Jordan at Northwind (Slack, Mar 13).",
+    "extra": "The Notion plan says Apr 30 and the Northwind CRM deal says Mar 31, both out of date.",
     "answerable": true,
     "expected_ids": [
       [
@@ -676,6 +742,8 @@
     "category": "vague_topic",
     "question": "what's the deal with sso",
     "reference": "Globex SSO redirect loop (ACME-431): reported Mar 3, fixed Mar 10 in PR 218, came back Mar 12 for Okta users and ACME-431 was reopened. PR 231 is open and waiting for your review. Daniel Foster wants confirmation of the fix before Mar 20 (their rollout is Mar 23).",
+    "core": "Globex SSO redirect loop (ACME-431): fixed Mar 10 in PR 218, came back Mar 12 for Okta users and ACME-431 was reopened. PR 231 is open and waiting for your review.",
+    "extra": "It was reported Mar 3. Daniel Foster wants confirmation of the fix before Mar 20 (their rollout is Mar 23).",
     "answerable": true,
     "expected_ids": [
       [
@@ -695,6 +763,8 @@
     "category": "vague_topic",
     "question": "what's hooli saying",
     "reference": "Sam Okafor at Hooli says the nightly export timed out again, the second time this month. ACME-433 tracks it and is blocked by infra change ACME-420.",
+    "core": "Sam Okafor at Hooli says the nightly export timed out again, the second time this month.",
+    "extra": "ACME-433 tracks it and is blocked by infra change ACME-420.",
     "answerable": true,
     "expected_ids": [
       [
@@ -712,6 +782,8 @@
     "category": "vague_person",
     "question": "what did mei say",
     "reference": "Mei Tanaka (Initech) asked about invoice INV-2207, which shows 40 seats where they bought 35. Alex confirmed it should be 35 and promised a credit note.",
+    "core": "Mei Tanaka (Initech) asked about invoice INV-2207, which shows 40 seats where they bought 35.",
+    "extra": "Alex confirmed it should be 35 and promised a credit note.",
     "answerable": true,
     "expected_ids": [
       [
@@ -726,6 +798,8 @@
     "category": "vague_stale",
     "question": "is ACME-440 up to date",
     "reference": "No. ACME-440 still says $49 per seat for everyone, but pricing is now $59 for new customers and $49 for existing (ACME-441 is done).",
+    "core": "No. ACME-440 still says $49 per seat for everyone, but pricing is now $59 for new customers and $49 for existing.",
+    "extra": "ACME-441 is done.",
     "answerable": true,
     "expected_ids": [
       [
@@ -744,6 +818,8 @@
     "category": "vague_schedule",
     "question": "any meetings with investors coming up",
     "reference": "Yes: the Northwind Ventures partner update on Tuesday Mar 17 at 15:00 UTC (11:00 New York) with Jordan Pryce and Priya.",
+    "core": "Yes: the Northwind Ventures partner update on Tuesday Mar 17 at 15:00 UTC.",
+    "extra": "It is at 11:00 New York, with Jordan Pryce and Priya.",
     "answerable": true,
     "expected_ids": [
       [
@@ -757,6 +833,8 @@
     "category": "vague_person",
     "question": "who is jordan",
     "reference": "Jordan Pryce is a partner at Northwind Ventures, the lead candidate for the seed extension.",
+    "core": "Jordan Pryce is a partner at Northwind Ventures.",
+    "extra": "He is the lead candidate for the seed extension.",
     "answerable": true,
     "expected_ids": [
       [
@@ -772,6 +850,8 @@
     "category": "unanswerable",
     "question": "how much runway do we have",
     "reference": "Not available. There is no cash, burn or runway figure in any source, only fundraising targets.",
+    "core": "Not available. There is no cash, burn or runway figure in any source, only fundraising targets.",
+    "extra": "",
     "answerable": false,
     "expected_ids": [],
     "forbidden_ids": []
@@ -781,6 +861,8 @@
     "category": "unanswerable",
     "question": "who's our CFO",
     "reference": "Not available. No source says who the CFO is.",
+    "core": "Not available. No source says who the CFO is.",
+    "extra": "",
     "answerable": false,
     "expected_ids": [],
     "forbidden_ids": []
@@ -790,6 +872,8 @@
     "category": "spec_company_week",
     "question": "What happened across the company this week?",
     "reference": "This week: the v2 auth decision went back to OAuth only (Mar 14), the billing cutover moved to Mar 31 (Mar 12), pricing went live at $59 for new customers and $49 for existing (Mar 13), the seed close moved to May 15 (Mar 13), the Taylor Brooks offer ended when she accepted elsewhere (Mar 13), the Globex SSO loop came back (Mar 12), and the Initech renewal became 2 years at 15% (Mar 12).",
+    "core": "This week: the v2 auth decision went back to OAuth only (Mar 14), the billing cutover moved to Mar 31 (Mar 12), pricing went live at $59 for new customers and $49 for existing (Mar 13), the seed close moved to May 15 (Mar 13), the Taylor Brooks offer ended when she accepted elsewhere (Mar 13), the Globex SSO loop came back (Mar 12), and the Initech renewal became 2 years at 15% (Mar 12).",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -828,6 +912,8 @@
     "category": "spec_customer_issues",
     "question": "What customer issues are showing up repeatedly?",
     "reference": "Globex SSO redirect loop (ACME-431): reported Mar 3, fixed Mar 10, came back Mar 12 for Okta users. Hooli export timeouts: reported Mar 4 and again Mar 11 (ACME-433, blocked by infra change ACME-420).",
+    "core": "Globex SSO redirect loop (ACME-431): reported Mar 3, fixed Mar 10, came back Mar 12 for Okta users. Hooli export timeouts: reported Mar 4 and again Mar 11.",
+    "extra": "The Hooli issue is ACME-433, blocked by infra change ACME-420.",
     "answerable": true,
     "expected_ids": [
       [
@@ -848,6 +934,8 @@
     "category": "spec_blocked",
     "question": "Which tasks are blocked?",
     "reference": "Blocked, with the five that are yours first: ACME-316, ACME-342, ACME-349, ACME-352 and ACME-365. The rest of the team has more, and the one facing a customer is ACME-433, the Hooli export timeout, blocked by infra change ACME-420.",
+    "core": "Blocked, with the five that are yours first: ACME-316, ACME-342, ACME-349, ACME-352 and ACME-365. The rest of the team has more.",
+    "extra": "The one facing a customer is ACME-433, the Hooli export timeout, blocked by infra change ACME-420.",
     "answerable": true,
     "expected_ids": [
       [
@@ -876,6 +964,8 @@
     "category": "typo",
     "question": "whats on tdy",
     "reference": "Today (Sunday Mar 15): all-day Offsite travel; 09:30 Standup (done); 11:00 Investor update prep (done); 15:00 1:1 Marcus is CANCELLED; 16:00 UTC Weekly Product Sync (moved from Friday); 17:30 UTC Globex check-in with Daniel Foster; 19:00 Board prep (tentative).",
+    "core": "Today (Sunday Mar 15): all-day Offsite travel; 09:30 Standup (done); 11:00 Investor update prep (done); 15:00 1:1 Marcus is CANCELLED; 16:00 UTC Weekly Product Sync (moved from Friday); 17:30 UTC Globex check-in with Daniel Foster; 19:00 Board prep (tentative).",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -898,6 +988,8 @@
     "category": "typo",
     "question": "who is waitng on me",
     "reference": "Waiting on you: Priya Nair (cohort ARR for Northwind; approve the Blue Harbor data room request), Jordan Pryce (cohort ARR before Tuesday), Caroline Ades (data room access), Daniel Foster (confirm the SSO fix before Mar 20), Marcus Webb (review PR 231), Omar Haddad (review PR 230), and Hannah Park (add a risks slide to the roadmap deck). Also waiting on you, from the added scenarios: Rebecca Liu (sign-off on the Initech redline by Thursday Mar 19, and your thoughts on pushing the docs migration back a week) and Daniel Foster (someone on a call Thursday).",
+    "core": "Waiting on you: Priya Nair (cohort ARR for Northwind; approve the Blue Harbor data room request), Jordan Pryce (cohort ARR before Tuesday), Caroline Ades (data room access), Daniel Foster (confirm the SSO fix before Mar 20), Marcus Webb (review PR 231), Omar Haddad (review PR 230), Hannah Park (add a risks slide to the roadmap deck), Rebecca Liu (sign-off on the Initech redline by Thursday Mar 19, and your thoughts on pushing the docs migration back a week) and Daniel Foster (someone on a call Thursday).",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -941,6 +1033,8 @@
     "category": "typo",
     "question": "anyting from investers",
     "reference": "Jordan Pryce (Northwind Ventures) asked on Mar 13 for cohort ARR before the Tuesday Mar 17 partner meeting. Caroline Ades (Blue Harbor Capital) asked on Mar 12 about data room access.",
+    "core": "Jordan Pryce (Northwind Ventures) asked for cohort ARR before the Tuesday Mar 17 partner meeting. Caroline Ades (Blue Harbor Capital) asked about data room access.",
+    "extra": "Jordan asked on Mar 13 and Caroline on Mar 12.",
     "answerable": true,
     "expected_ids": [
       [
@@ -959,6 +1053,8 @@
     "category": "typo",
     "question": "whats dnaiel sayin",
     "reference": "There are two Daniels. Daniel Kim (teammate) asked Priya to push the billing migration a week and was out of office Mar 10 to 14. Daniel Foster (Globex) says the SSO login loops are back and asks for confirmation of a fix before Mar 20.",
+    "core": "There are two Daniels. Daniel Kim (teammate) asked Priya to push the billing migration a week. Daniel Foster (Globex) says the SSO login loops are back and asks for confirmation of a fix before Mar 20.",
+    "extra": "Daniel Kim was out of office Mar 10 to 14.",
     "answerable": true,
     "expected_ids": [
       [
@@ -977,6 +1073,8 @@
     "category": "typo",
     "question": "did we hire taylr",
     "reference": "No. An offer of $165k was approved on Mar 3, put on hold on Mar 10, and on Mar 13 Taylor accepted another offer.",
+    "core": "No. Taylor accepted another offer on Mar 13.",
+    "extra": "An offer of $165k was approved on Mar 3 and put on hold on Mar 10.",
     "answerable": true,
     "expected_ids": [
       [
@@ -995,6 +1093,8 @@
     "category": "typo",
     "question": "when do we clse the round",
     "reference": "May 15, per Jordan at Northwind (Slack, Mar 13). The Notion plan says Apr 30 and the Northwind CRM deal says Mar 31, both out of date.",
+    "core": "May 15, per Jordan at Northwind (Slack, Mar 13).",
+    "extra": "The Notion plan says Apr 30 and the Northwind CRM deal says Mar 31, both out of date.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1008,6 +1108,8 @@
     "category": "typo",
     "question": "prcing?",
     "reference": "Pricing is $59 per seat for new customers and $49 for existing customers (decided Mar 11). Notion Pricing v3 and Linear ACME-440 still say $49 for everyone and are out of date.",
+    "core": "Pricing is $59 per seat for new customers and $49 for existing customers.",
+    "extra": "It was decided Mar 11. Notion Pricing v3 and Linear ACME-440 still say $49 for everyone and are out of date.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1023,6 +1125,8 @@
     "category": "typo",
     "question": "whats blockd",
     "reference": "Blocked, with the five that are yours first: ACME-316, ACME-342, ACME-349, ACME-352 and ACME-365. The rest of the team has more, and the one facing a customer is ACME-433, the Hooli export timeout, blocked by infra change ACME-420.",
+    "core": "Blocked, with the five that are yours first: ACME-316, ACME-342, ACME-349, ACME-352 and ACME-365. The rest of the team has more.",
+    "extra": "The one facing a customer is ACME-433, the Hooli export timeout, blocked by infra change ACME-420.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1051,6 +1155,8 @@
     "category": "renewal",
     "question": "what are the initech renewal terms",
     "reference": "2 years at a 15% discount, approved by Alex on Mar 12 (up from 1 year at 10%), and legal is redlining.",
+    "core": "2 years at a 15% discount, approved by Alex on Mar 12.",
+    "extra": "That is up from 1 year at 10%, and legal is redlining.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1065,6 +1171,8 @@
     "category": "renewal_stale",
     "question": "is the initech renewal page in notion current",
     "reference": "No. The Notion page Initech renewal terms still says 1 year and 10% discount. The terms are now 2 years at 15% (Mar 12). The CRM deal and Linear ACME-460 are also out of date.",
+    "core": "No. The Notion page Initech renewal terms still says 1 year and 10% discount. The terms are now 2 years at 15% (Mar 12).",
+    "extra": "The CRM deal and Linear ACME-460 are also out of date.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1082,6 +1190,8 @@
     "category": "renewal_decision",
     "question": "did i approve the initech discount",
     "reference": "Yes. On Mar 12 Alex replied \"ok by me. 2yr 15% fine, go ahead\" to Rebecca, so the renewal is 2 years at 15%.",
+    "core": "Yes. On Mar 12 Alex approved the renewal at 2 years and 15%.",
+    "extra": "He replied \"ok by me. 2yr 15% fine, go ahead\" to Rebecca.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1095,6 +1205,8 @@
     "category": "promise_informal",
     "question": "what did i promise hooli",
     "reference": "On Mar 11 Alex told Sam Okafor he would send the SOC 2 summary tomorrow (Mar 12). Nothing shows he did. Sam also wants the SOC 2 report by Mar 18.",
+    "core": "On Mar 11 Alex told Sam Okafor he would send the SOC 2 summary tomorrow (Mar 12). Nothing shows he did.",
+    "extra": "Sam also wants the SOC 2 report by Mar 18.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1111,6 +1223,8 @@
     "category": "fact_slash_date",
     "question": "when will the soc2 report be ready",
     "reference": "The audit report lands Mar 20. Before that there is only the pen test executive summary.",
+    "core": "The audit report lands Mar 20.",
+    "extra": "Before that there is only the pen test executive summary.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1124,6 +1238,8 @@
     "category": "inline_reply",
     "question": "what changes did priya ask for on the investor update",
     "reference": "Priya asked to say roughly $1.8M ARR instead of an exact figure, to cut the churn slide, and to add the cohort chart to the asks section.",
+    "core": "Priya asked to say roughly $1.8M ARR instead of an exact figure, to cut the churn slide, and to add the cohort chart to the asks section.",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -1137,6 +1253,8 @@
     "category": "customer_topic",
     "question": "what's the story with hooli",
     "reference": "Sam Okafor at Hooli reported export timeouts on Mar 4 and Mar 11 (ACME-433, blocked by ACME-420), and wants the SOC 2 report by Mar 18 before they renew.",
+    "core": "Sam Okafor at Hooli reported export timeouts on Mar 4 and Mar 11, and wants the SOC 2 report by Mar 18 before they renew.",
+    "extra": "The timeouts are ACME-433, blocked by ACME-420.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1157,6 +1275,8 @@
     "category": "multi_hop",
     "question": "what do i need to do before the globex call",
     "reference": "Before the 17:30 UTC Globex check-in: confirm to Daniel Foster that the SSO fix ships before Mar 20, review PR 231 (the Okta fix, waiting on you), and know that ACME-431 was reopened after the first fix.",
+    "core": "Before the 17:30 UTC Globex check-in: confirm to Daniel Foster that the SSO fix ships before Mar 20, and review PR 231 (the Okta fix, waiting on you).",
+    "extra": "Know that ACME-431 was reopened after the first fix.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1176,6 +1296,8 @@
     "category": "overdue",
     "question": "anything overdue",
     "reference": "Overdue promises: cohort ARR to Jordan Pryce (due Mar 9), data room access to Caroline Ades (due Mar 10), and the SOC 2 summary to Sam Okafor (due Mar 12).",
+    "core": "Overdue promises: cohort ARR to Jordan Pryce (due Mar 9), data room access to Caroline Ades (due Mar 10), and the SOC 2 summary to Sam Okafor (due Mar 12).",
+    "extra": "",
     "answerable": true,
     "expected_ids": [
       [
@@ -1195,6 +1317,8 @@
     "category": "soft_change",
     "question": "is the mobile beta still shipping Apr 3",
     "reference": "No. The Notion Mobile beta plan still says Apr 3, but Marcus Webb said on Mar 12 that the beta timeline was pushed back for now because design is waiting on the new onboarding flow. No new date was given, so the page is out of date.",
+    "core": "No. The Notion Mobile beta plan still says Apr 3, but Marcus Webb said on Mar 12 that the beta timeline was pushed back for now. No new date was given, so the page is out of date.",
+    "extra": "The reason given is that design is waiting on the new onboarding flow.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1211,6 +1335,8 @@
     "category": "soft_change",
     "question": "when is the customer webinar",
     "reference": "The Notion plan says Thursday Mar 19, but Hannah Park emailed on Mar 13 that the speaker had a conflict and she moved it to next Friday, which is Mar 20. The Notion page is out of date.",
+    "core": "The Notion plan says Thursday Mar 19, but Hannah Park emailed on Mar 13 that she moved it to next Friday, which is Mar 20. The Notion page is out of date.",
+    "extra": "The speaker had a conflict.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1227,6 +1353,8 @@
     "category": "soft_change",
     "question": "when does the audit log export ship",
     "reference": "ACME-480 says to ship by Mar 31, but Sofia Reyes said on Mar 12 that it slipped to April because legal wants another pass on the retention wording. The issue is out of date.",
+    "core": "ACME-480 says to ship by Mar 31, but Sofia Reyes said on Mar 12 that it slipped to April. The issue is out of date.",
+    "extra": "Legal wants another pass on the retention wording.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1243,6 +1371,8 @@
     "category": "soft_change",
     "question": "partner api v2 timeline",
     "reference": "ACME-481 targets a Q2 launch, but Priya Nair said on Mar 12 that it is slipping to Q3 because the design partners cannot test before then. The issue is out of date.",
+    "core": "ACME-481 targets a Q2 launch, but Priya Nair said on Mar 12 that it is slipping to Q3. The issue is out of date.",
+    "extra": "The design partners cannot test before then.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1259,6 +1389,8 @@
     "category": "soft_change",
     "question": "are we renewing cloudhost",
     "reference": "Not yet. The Notion page says renew at the current tier on Mar 31, but Omar Haddad emailed on Mar 12 that they are holding off on the renewal until CloudHost publishes new pricing, and will revisit after that. The page is out of date.",
+    "core": "Not yet. The Notion page says renew at the current tier on Mar 31, but Omar Haddad emailed on Mar 12 that they are holding off on the renewal until CloudHost publishes new pricing. The page is out of date.",
+    "extra": "They will revisit after that.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1275,6 +1407,8 @@
     "category": "still_current",
     "question": "is the onboarding checklist redesign still on for Apr 10",
     "reference": "Yes. Sofia Reyes confirmed on Mar 12 that it is still on track for Apr 10, and the Notion page agrees. Nothing is out of date.",
+    "core": "Yes. Sofia Reyes confirmed on Mar 12 that it is still on track for Apr 10.",
+    "extra": "The Notion page agrees, so nothing is out of date.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1291,6 +1425,8 @@
     "category": "still_current",
     "question": "has the docs migration moved",
     "reference": "No. Rebecca Liu only asked on Mar 12 whether to push it back a week and said she was not sure. Nothing was decided, so the target is still Mar 27.",
+    "core": "No. Rebecca Liu only asked on Mar 12 whether to push it back a week. Nothing was decided, so the target is still Mar 27.",
+    "extra": "She said she was not sure.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1307,6 +1443,8 @@
     "category": "nickname",
     "question": "what does becky need from me",
     "reference": "Rebecca Liu needs your sign-off on the Initech redline by Thursday (Mar 19) so legal can proceed.",
+    "core": "Rebecca Liu needs your sign-off on the Initech redline by Thursday (Mar 19).",
+    "extra": "That lets legal proceed.",
     "answerable": true,
     "expected_ids": [
       [
@@ -1320,6 +1458,8 @@
     "category": "nickname",
     "question": "what is dan f saying about sso",
     "reference": "Daniel Foster (Globex) wrote on Mar 13 that SSO is still looping for two of their admins and asked for someone on a call Thursday. In a second message he added that the Okta redirect fails on Safari only.",
+    "core": "Daniel Foster (Globex) wrote on Mar 13 that SSO is still looping for two of their admins and asked for someone on a call Thursday.",
+    "extra": "In a second message he added that the Okta redirect fails on Safari only.",
     "answerable": true,
     "expected_ids": [
       [
